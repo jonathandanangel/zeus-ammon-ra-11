@@ -2336,14 +2336,24 @@ function polygonPoints(sides: number, cx: number, cy: number, r: number, rot = -
   }).join(" ");
 }
 
-function starPoints(points: number, cx: number, cy: number, outer: number, inner: number): string {
-  const verts: string[] = [];
-  for (let i = 0; i < points * 2; i++) {
-    const r = i % 2 === 0 ? outer : inner;
-    const a = -Math.PI / 2 + (i * Math.PI) / points;
-    verts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
-  }
-  return verts.join(" ");
+/** Dense star {n/k} by connecting every k-th vertex of a regular n-gon. */
+function starPolygonPoints(
+  n: number,
+  k: number,
+  cx: number,
+  cy: number,
+  r: number,
+  rot = -Math.PI / 2,
+): string {
+  return Array.from({ length: n }, (_, i) => {
+    const a = rot + (((i * k) % n) * 2 * Math.PI) / n;
+    return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+  }).join(" ");
+}
+
+function vertexAt(i: number, n: number, cx: number, cy: number, r: number, rot = -Math.PI / 2) {
+  const a = rot + (i * 2 * Math.PI) / n;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
 
 function SacredGeometryGlyph({
@@ -2358,98 +2368,317 @@ function SacredGeometryGlyph({
   fancy?: boolean;
 }) {
   const glow = fancy
-    ? `drop-shadow(0 0 6px ${hex}88) drop-shadow(0 0 18px ${hex}44)`
+    ? `drop-shadow(0 0 6px ${hex}88) drop-shadow(0 0 14px ${hex}40)`
     : undefined;
   const stroke = hex;
-  const fill = `${hex}22`;
+  const fill = `${hex}1f`;
   const common = {
     fill: "none" as const,
     stroke,
-    strokeWidth: 2.2,
+    strokeWidth: 1.85,
     strokeLinejoin: "round" as const,
+    strokeLinecap: "round" as const,
   };
+
+  // Tetractys of the decad: 1+2+3+4 = 10 points (point → line → plane → solid)
+  const tetractysDots = (() => {
+    const dots: Array<{ x: number; y: number }> = [];
+    const startY = 26;
+    const rowGap = 15;
+    const colGap = 15;
+    for (let row = 0; row < 4; row++) {
+      const count = row + 1;
+      const width = (count - 1) * colGap;
+      const y = startY + row * rowGap;
+      for (let col = 0; col < count; col++) {
+        dots.push({ x: 50 - width / 2 + col * colGap, y });
+      }
+    }
+    return dots;
+  })();
+
+  // Seed of Life: six equal circles through a common centre (hexad / first perfect number)
+  const flowerPetals = Array.from({ length: 6 }, (_, i) => {
+    const a = -Math.PI / 2 + (i * Math.PI) / 3;
+    return { cx: 50 + 14 * Math.cos(a), cy: 50 + 14 * Math.sin(a) };
+  });
+
+  // Golden ratio for nested pentagon (φ⁻² ≈ 0.382)
+  const PHI_INV2 = 2 / (3 + Math.sqrt(5));
 
   let figure: React.ReactNode = null;
   switch (number) {
     case 1:
+      // Monad: dimensionless centre · circle of unity · orbits of potential
       figure = (
         <>
-          <circle cx="50" cy="50" r="28" {...common} strokeOpacity={0.45} />
-          <circle cx="50" cy="50" r="4.5" fill={stroke} stroke="none" />
-          <circle cx="50" cy="50" r="10" {...common} strokeDasharray="2 3" strokeOpacity={0.7} />
+          <circle cx="50" cy="50" r="36" {...common} strokeOpacity={0.18} />
+          <circle cx="50" cy="50" r="24" {...common} strokeOpacity={0.5} />
+          <circle cx="50" cy="50" r="14" {...common} strokeDasharray="2.5 3" strokeOpacity={0.8} />
+          <line x1="50" y1="14" x2="50" y2="26" {...common} strokeOpacity={0.35} />
+          <line x1="50" y1="74" x2="50" y2="86" {...common} strokeOpacity={0.35} />
+          <line x1="14" y1="50" x2="26" y2="50" {...common} strokeOpacity={0.35} />
+          <line x1="74" y1="50" x2="86" y2="50" {...common} strokeOpacity={0.35} />
+          <circle cx="50" cy="50" r="4.2" fill={stroke} stroke="none" />
+          <circle cx="50" cy="50" r="8" {...common} strokeOpacity={0.4} />
         </>
       );
       break;
-    case 2:
+    case 2: {
+      // Dyad: vesica piscis — centres on each other's rim; mandorla lens; √3 common chord
+      const r = 20;
+      const c1 = 50 - r / 2;
+      const c2 = 50 + r / 2;
+      const h = (r * Math.sqrt(3)) / 2; // classical vesica half-height
+      const lens = `M 50,${50 - h} A ${r} ${r} 0 0 1 50,${50 + h} A ${r} ${r} 0 0 1 50,${50 - h}`;
       figure = (
         <>
-          <circle cx="28" cy="50" r="5" fill={stroke} stroke="none" />
-          <circle cx="72" cy="50" r="5" fill={stroke} stroke="none" />
-          <line x1="28" y1="50" x2="72" y2="50" {...common} />
-          <line x1="20" y1="30" x2="80" y2="70" {...common} strokeOpacity={0.25} />
+          <circle cx={c1} cy="50" r={r} {...common} fill={fill} strokeOpacity={0.75} />
+          <circle cx={c2} cy="50" r={r} {...common} fill={`${hex}12`} strokeOpacity={0.75} />
+          <path d={lens} {...common} fill={`${hex}33`} strokeWidth={2} />
+          <line x1={c1} y1="50" x2={c2} y2="50" {...common} strokeWidth={2.1} />
+          <line
+            x1="50"
+            y1={50 - h}
+            x2="50"
+            y2={50 + h}
+            {...common}
+            strokeWidth={1.6}
+            strokeOpacity={0.9}
+          />
+          {/* equilateral hints from the two centres to the lens tips */}
+          <line x1={c1} y1="50" x2="50" y2={50 - h} {...common} strokeOpacity={0.35} />
+          <line x1={c2} y1="50" x2="50" y2={50 - h} {...common} strokeOpacity={0.35} />
+          <circle cx={c1} cy="50" r="2.6" fill={stroke} stroke="none" />
+          <circle cx={c2} cy="50" r="2.6" fill={stroke} stroke="none" />
+          <circle cx="50" cy={50 - h} r="2.2" fill={stroke} stroke="none" />
+          <circle cx="50" cy={50 + h} r="2.2" fill={stroke} stroke="none" />
         </>
       );
       break;
-    case 3:
-      figure = <polygon points={polygonPoints(3, 50, 52, 32)} {...common} fill={fill} />;
-      break;
-    case 4:
+    }
+    case 3: {
+      // Triad: first plane figure — equilateral with medians (beginning–middle–end)
+      const pts = [0, 1, 2].map((i) => vertexAt(i, 3, 50, 52, 30));
+      const mid = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2,
+      });
+      const m01 = mid(pts[0]!, pts[1]!);
+      const m12 = mid(pts[1]!, pts[2]!);
+      const m20 = mid(pts[2]!, pts[0]!);
       figure = (
         <>
-          <rect x="24" y="24" width="52" height="52" {...common} fill={fill} />
-          <polygon points="50,22 78,72 22,72" {...common} strokeOpacity={0.55} />
+          <circle cx="50" cy="52" r="34" {...common} strokeOpacity={0.2} />
+          <polygon points={polygonPoints(3, 50, 52, 30)} {...common} fill={fill} strokeWidth={2.15} />
+          <circle cx="50" cy="52" r="9" {...common} strokeOpacity={0.4} />
+          <line x1={pts[0]!.x} y1={pts[0]!.y} x2={m12.x} y2={m12.y} {...common} strokeOpacity={0.5} />
+          <line x1={pts[1]!.x} y1={pts[1]!.y} x2={m20.x} y2={m20.y} {...common} strokeOpacity={0.5} />
+          <line x1={pts[2]!.x} y1={pts[2]!.y} x2={m01.x} y2={m01.y} {...common} strokeOpacity={0.5} />
+          {pts.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="2.4" fill={stroke} stroke="none" />
+          ))}
+          <circle cx="50" cy="52" r="2.5" fill={stroke} stroke="none" />
         </>
       );
       break;
-    case 5:
+    }
+    case 4: {
+      // Tetrad: tetractys (oath-figure) · square of justice · tetrahedral tip
+      const apex = tetractysDots[0]!;
+      const baseL = tetractysDots[6]!;
+      const baseR = tetractysDots[9]!;
       figure = (
         <>
-          <polygon points={polygonPoints(5, 50, 50, 34)} {...common} strokeOpacity={0.5} />
-          <polygon points={starPoints(5, 50, 50, 34, 13)} {...common} fill={fill} />
+          <rect x="20" y="20" width="60" height="60" {...common} fill={`${hex}0c`} strokeOpacity={0.3} />
+          <polygon
+            points={`${apex.x},${apex.y} ${baseR.x},${baseR.y} ${baseL.x},${baseL.y}`}
+            {...common}
+            fill={fill}
+            strokeOpacity={0.55}
+          />
+          {/* row guides — musical ratios 4:3 · 3:2 · 2:1 read across the tetractys */}
+          <line
+            x1={tetractysDots[1]!.x}
+            y1={tetractysDots[1]!.y}
+            x2={tetractysDots[2]!.x}
+            y2={tetractysDots[2]!.y}
+            {...common}
+            strokeOpacity={0.28}
+          />
+          <line
+            x1={tetractysDots[3]!.x}
+            y1={tetractysDots[3]!.y}
+            x2={tetractysDots[5]!.x}
+            y2={tetractysDots[5]!.y}
+            {...common}
+            strokeOpacity={0.28}
+          />
+          <line
+            x1={tetractysDots[6]!.x}
+            y1={tetractysDots[6]!.y}
+            x2={tetractysDots[9]!.x}
+            y2={tetractysDots[9]!.y}
+            {...common}
+            strokeOpacity={0.28}
+          />
+          {tetractysDots.map((d, i) => (
+            <circle key={i} cx={d.x} cy={d.y} r={i === 0 ? 3.4 : 2.7} fill={stroke} stroke="none" />
+          ))}
         </>
       );
       break;
+    }
+    case 5: {
+      // Pentad: golden pentagon · pentagram {5/2} · nested φ⁻² pentagon (microcosm)
+      const R = 34;
+      const rInner = R * PHI_INV2;
+      figure = (
+        <>
+          <circle cx="50" cy="50" r="38" {...common} strokeOpacity={0.18} />
+          <polygon points={polygonPoints(5, 50, 50, R)} {...common} strokeOpacity={0.55} />
+          <polygon
+            points={starPolygonPoints(5, 2, 50, 50, R)}
+            {...common}
+            fill={fill}
+            strokeWidth={2}
+          />
+          <polygon
+            points={polygonPoints(5, 50, 50, rInner, Math.PI / 5)}
+            {...common}
+            fill={`${hex}28`}
+            strokeOpacity={0.85}
+            strokeWidth={1.5}
+          />
+          <circle cx="50" cy="50" r="4" fill={stroke} stroke="none" />
+        </>
+      );
+      break;
+    }
     case 6:
+      // Hexad: seed of life · hexagon · hexagram (fire △ + water ▽)
       figure = (
         <>
-          <polygon points={polygonPoints(6, 50, 50, 34)} {...common} strokeOpacity={0.45} />
-          <polygon points={polygonPoints(3, 50, 50, 28)} {...common} fill={fill} />
-          <polygon points={polygonPoints(3, 50, 50, 28, Math.PI / 2)} {...common} />
+          <polygon points={polygonPoints(6, 50, 50, 36)} {...common} strokeOpacity={0.35} />
+          <circle cx="50" cy="50" r="14" {...common} strokeOpacity={0.4} fill={`${hex}14`} />
+          {flowerPetals.map((p, i) => (
+            <circle key={i} cx={p.cx} cy={p.cy} r="14" {...common} strokeOpacity={0.55} />
+          ))}
+          <polygon points={polygonPoints(3, 50, 50, 28)} {...common} fill={fill} strokeWidth={1.8} />
+          <polygon
+            points={polygonPoints(3, 50, 50, 28, Math.PI / 2)}
+            {...common}
+            strokeWidth={1.8}
+          />
+          <circle cx="50" cy="50" r="2.8" fill={stroke} stroke="none" />
         </>
       );
       break;
     case 7:
+      // Heptad: virgin number — heptagon + acute {7/2} + obtuse {7/3}
       figure = (
         <>
-          <polygon points={polygonPoints(7, 50, 50, 34)} {...common} fill={fill} />
+          <circle cx="50" cy="50" r="38" {...common} strokeOpacity={0.15} />
+          <polygon points={polygonPoints(7, 50, 50, 34)} {...common} fill={fill} strokeOpacity={0.7} />
           <polygon
-            points={starPoints(7, 50, 50, 34, 16)}
+            points={starPolygonPoints(7, 2, 50, 50, 34)}
             {...common}
-            strokeOpacity={0.65}
-            strokeWidth={1.6}
+            strokeOpacity={0.95}
+            strokeWidth={1.65}
           />
+          <polygon
+            points={starPolygonPoints(7, 3, 50, 50, 22)}
+            {...common}
+            strokeOpacity={0.45}
+            strokeWidth={1.25}
+          />
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+            const v = vertexAt(i, 7, 50, 50, 34);
+            return <circle key={i} cx={v.x} cy={v.y} r="1.8" fill={stroke} stroke="none" />;
+          })}
+          <circle cx="50" cy="50" r="3" fill={stroke} stroke="none" />
         </>
       );
       break;
-    case 8:
+    case 8: {
+      // Ogdoad: regular octagon + true isometric cube (2³) — 30° equal-edge projection
+      const s = 13; // half-edge in isometric units
+      const dx = s * Math.cos(Math.PI / 6);
+      const dy = s * Math.sin(Math.PI / 6);
+      const ox = 50;
+      const oy = 48;
+      // top face centre slightly above; vertical edges of length 2s
+      const T = { x: ox, y: oy - s }; // top-front of top diamond
+      const TL = { x: ox - dx, y: oy - s + dy };
+      const TR = { x: ox + dx, y: oy - s + dy };
+      const TB = { x: ox, y: oy - s + 2 * dy };
+      const BL = { x: TL.x, y: TL.y + 2 * s };
+      const BR = { x: TR.x, y: TR.y + 2 * s };
+      const BB = { x: TB.x, y: TB.y + 2 * s };
       figure = (
         <>
-          <polygon points={polygonPoints(8, 50, 50, 34)} {...common} fill={fill} />
-          <path
-            d="M35 62 L35 38 L50 28 L65 38 L65 62 Z"
+          <polygon
+            points={polygonPoints(8, 50, 50, 40, Math.PI / 8)}
             {...common}
-            strokeOpacity={0.85}
+            fill={`${hex}10`}
+            strokeOpacity={0.4}
           />
-          <path d="M35 38 L65 38 M50 28 L50 20" {...common} strokeOpacity={0.55} />
+          <polygon
+            points={`${TL.x},${TL.y} ${T.x},${T.y} ${TR.x},${TR.y} ${TB.x},${TB.y}`}
+            {...common}
+            fill={`${hex}30`}
+          />
+          <polygon
+            points={`${TL.x},${TL.y} ${TB.x},${TB.y} ${BB.x},${BB.y} ${BL.x},${BL.y}`}
+            {...common}
+            fill={`${hex}1a`}
+          />
+          <polygon
+            points={`${TB.x},${TB.y} ${TR.x},${TR.y} ${BR.x},${BR.y} ${BB.x},${BB.y}`}
+            {...common}
+            fill={`${hex}0e`}
+          />
+          <polyline
+            points={`${TL.x},${TL.y} ${T.x},${T.y} ${TR.x},${TR.y} ${BR.x},${BR.y} ${BB.x},${BB.y} ${BL.x},${BL.y} ${TL.x},${TL.y}`}
+            {...common}
+            strokeWidth={2}
+          />
+          <line x1={TB.x} y1={TB.y} x2={TL.x} y2={TL.y} {...common} strokeOpacity={0.9} />
+          <line x1={TB.x} y1={TB.y} x2={TR.x} y2={TR.y} {...common} strokeOpacity={0.9} />
+          <line x1={TB.x} y1={TB.y} x2={BB.x} y2={BB.y} {...common} strokeOpacity={0.9} />
         </>
       );
       break;
+    }
     default:
+      // Ennead: enneagon · {9/2} star · triple triangle (3²) at 40° offsets
       figure = (
         <>
-          <polygon points={polygonPoints(9, 50, 50, 34)} {...common} fill={fill} />
-          <polygon points={polygonPoints(3, 50, 50, 18)} {...common} strokeOpacity={0.7} />
-          <polygon points={polygonPoints(3, 50, 50, 12, Math.PI / 2)} {...common} strokeOpacity={0.5} />
+          <polygon points={polygonPoints(9, 50, 50, 37)} {...common} fill={`${hex}0c`} strokeOpacity={0.4} />
+          <polygon
+            points={starPolygonPoints(9, 2, 50, 50, 37)}
+            {...common}
+            strokeOpacity={0.35}
+            strokeWidth={1.2}
+          />
+          <polygon points={polygonPoints(3, 50, 50, 30)} {...common} fill={fill} strokeWidth={1.75} />
+          <polygon
+            points={polygonPoints(3, 50, 50, 22, (2 * Math.PI) / 9)}
+            {...common}
+            strokeOpacity={0.8}
+            strokeWidth={1.55}
+          />
+          <polygon
+            points={polygonPoints(3, 50, 50, 14, (4 * Math.PI) / 9)}
+            {...common}
+            strokeOpacity={0.55}
+            strokeWidth={1.4}
+          />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+            const v = vertexAt(i, 9, 50, 50, 37);
+            return <circle key={i} cx={v.x} cy={v.y} r="1.6" fill={stroke} stroke="none" />;
+          })}
+          <circle cx="50" cy="50" r="3" fill={stroke} stroke="none" />
         </>
       );
   }
@@ -2464,14 +2693,14 @@ function SacredGeometryGlyph({
       aria-hidden
     >
       <defs>
-        <radialGradient id={`sg-glow-${number}`} cx="50%" cy="45%" r="55%">
-          <stop offset="0%" stopColor={hex} stopOpacity="0.35" />
-          <stop offset="70%" stopColor={hex} stopOpacity="0.06" />
+        <radialGradient id={`sg-glow-${number}`} cx="50%" cy="42%" r="58%">
+          <stop offset="0%" stopColor={hex} stopOpacity="0.38" />
+          <stop offset="55%" stopColor={hex} stopOpacity="0.08" />
           <stop offset="100%" stopColor={hex} stopOpacity="0" />
         </radialGradient>
       </defs>
-      {fancy && <circle cx="50" cy="50" r="46" fill={`url(#sg-glow-${number})`} stroke="none" />}
-      <circle cx="50" cy="50" r="44" fill="none" stroke={hex} strokeOpacity={0.2} strokeWidth={1} />
+      {fancy && <circle cx="50" cy="50" r="47" fill={`url(#sg-glow-${number})`} stroke="none" />}
+      <circle cx="50" cy="50" r="44" fill="none" stroke={hex} strokeOpacity={0.18} strokeWidth={1} />
       {figure}
     </svg>
   );
@@ -3086,10 +3315,23 @@ function NumerologyPanel() {
                 <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-magenta">
                   Tarot · {result.tarot.arcana}
                 </p>
-                <p className="font-mono text-[12px] text-cyan">{result.tarot.name}</p>
-                <p className="mt-2 font-mono text-[11px] leading-relaxed text-moon">
-                  {result.tarot.explanation}
-                </p>
+                <div className="mt-2 flex gap-3">
+                  <img
+                    src={result.tarot.imageUrl}
+                    alt={`${result.tarot.name} — Rider–Waite–Smith`}
+                    className="h-36 w-auto shrink-0 rounded border border-magenta/25 object-contain bg-black/60"
+                    loading="lazy"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-mono text-[12px] text-cyan">{result.tarot.name}</p>
+                    <p className="mt-2 font-mono text-[11px] leading-relaxed text-moon">
+                      {result.tarot.explanation}
+                    </p>
+                    <p className="mt-2 font-mono text-[8px] text-muted-foreground">
+                      Rider–Waite–Smith (1909) · public domain
+                    </p>
+                  </div>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <RunButton type="button" onClick={downloadReport}>

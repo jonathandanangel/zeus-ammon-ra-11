@@ -1,0 +1,41 @@
+{
+  "source": "Rider\u2013Waite\u2013Smith Major Arcana (Pamela Colman Smith, 1909) \u00b7 public domain \u00b7 Wikimedia Commons",
+  "cards": {
+    "1": {
+      "file": "major-01.jpg",
+      "commons": "RWS_Tarot_01_Magician.jpg"
+    },
+    "2": {
+      "file": "major-02.jpg",
+      "commons": "RWS_Tarot_02_High_Priestess.jpg"
+    },
+    "3": {
+      "file": "major-03.jpg",
+      "commons": "RWS_Tarot_03_Empress.jpg"
+    },
+    "4": {
+      "file": "major-04.jpg",
+      "commons": "RWS_Tarot_04_Emperor.jpg"
+    },
+    "5": {
+      "file": "major-05.jpg",
+      "commons": "RWS_Tarot_05_Hierophant.jpg"
+    },
+    "6": {
+      "file": "major-06.jpg",
+      "commons": "RWS_Tarot_06_Lovers.jpg"
+    },
+    "7": {
+      "file": "major-07.jpg",
+      "commons": "RWS_Tarot_07_Chariot.jpg"
+    },
+    "8": {
+      "file": "major-08.jpg",
+      "commons": "RWS_Tarot_08_Strength.jpg"
+    },
+    "9": {
+      "file": "major-09.jpg",
+      "commons": "RWS_Tarot_09_Hermit.jpg"
+    }
+  }
+}

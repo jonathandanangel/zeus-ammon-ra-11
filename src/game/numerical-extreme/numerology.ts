@@ -46,6 +46,8 @@ export type TarotCard = {
   name: string;
   arcana: string;
   explanation: string;
+  /** Public-domain Rider–Waite–Smith card image under /numerology/tarot/. */
+  imageUrl: string;
 };
 
 export type NumerologyResult = {
@@ -156,6 +158,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 1,
     name: "The Magician",
     arcana: "Major Arcana I",
+    imageUrl: "/numerology/tarot/major-01.jpg",
     explanation:
       "Will and skill focused into action — tools of the craft laid on the table; the pioneer number made visible as directed force.",
   },
@@ -163,6 +166,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 2,
     name: "The High Priestess",
     arcana: "Major Arcana II",
+    imageUrl: "/numerology/tarot/major-02.jpg",
     explanation:
       "Silent knowledge between pillars — partnership of seen and unseen; balance, diplomacy, and quiet precision.",
   },
@@ -170,6 +174,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 3,
     name: "The Empress",
     arcana: "Major Arcana III",
+    imageUrl: "/numerology/tarot/major-03.jpg",
     explanation:
       "Creative abundance and expression — nature, art, and fertile joy; the creator’s spark given body.",
   },
@@ -177,6 +182,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 4,
     name: "The Emperor",
     arcana: "Major Arcana IV",
+    imageUrl: "/numerology/tarot/major-04.jpg",
     explanation:
       "Structure, law, and foundation — the builder’s order; durable systems and patient authority.",
   },
@@ -184,6 +190,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 5,
     name: "The Hierophant",
     arcana: "Major Arcana V",
+    imageUrl: "/numerology/tarot/major-05.jpg",
     explanation:
       "Teaching, rite, and shared path — yet the explorer’s change presses against fixed doctrine; curiosity seeks new gates.",
   },
@@ -191,6 +198,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 6,
     name: "The Lovers",
     arcana: "Major Arcana VI",
+    imageUrl: "/numerology/tarot/major-06.jpg",
     explanation:
       "Choice, bond, and care — home and devotion; the caretaker’s responsibility between two ways.",
   },
@@ -198,6 +206,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 7,
     name: "The Chariot",
     arcana: "Major Arcana VII",
+    imageUrl: "/numerology/tarot/major-07.jpg",
     explanation:
       "Directed motion through opposing forces — the seeker’s will steering mystery toward a chosen road.",
   },
@@ -205,6 +214,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 8,
     name: "Strength",
     arcana: "Major Arcana VIII",
+    imageUrl: "/numerology/tarot/major-08.jpg",
     explanation:
       "Gentle mastery over raw power — ambition tempered; material force guided by calm authority.",
   },
@@ -212,6 +222,7 @@ const TAROT: Record<number, TarotCard> = {
     number: 9,
     name: "The Hermit",
     arcana: "Major Arcana IX",
+    imageUrl: "/numerology/tarot/major-09.jpg",
     explanation:
       "Lamp in solitude — completion through wisdom and compassion; the universal view after the circle closes.",
   },
