@@ -299,8 +299,7 @@ export function ExtremePuzzle({ onExit }: Props) {
     const key = answers[String(itemNumber)] ?? answers[itemNumber as unknown as string] ?? [];
     const ok = sameAnswerSet(selected, key);
     const nextCorrect = correctCount + (ok ? 1 : 0);
-    if (ok) playSfx("success");
-    else playSfx("fail");
+    if (!ok) playSfx("fail");
 
     if (index >= EXTREME_PUZZLE_ITEM_COUNT - 1) {
       const ageScore = ageReferencedScore(nextCorrect, years, months);
