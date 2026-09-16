@@ -27,3 +27,4 @@
 - [x] Add a futuristic light-blue neon jet with fluid light trails looping across the background (left↔right, occasional 45° climb).
 - [x] Add 150 wing-aerodynamics cards to Aerodynamics Extreme and trigger a red lava skyline in their second half.
 - [x] Add 150 Extreme expansion questions; inferno (red city/jet/moon + lava) starts with expansion question 76 (Extreme question 204, index 203 of 278).
+- [x] Title screen creator credits: WOZKAF (bottom left), Jonathan Angel (bottom right), Music: Das Armageddon (2026) by キ aerzengel, and Portal 2 music for Heat Transfer Intro.
