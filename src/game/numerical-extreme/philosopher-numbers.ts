@@ -83,11 +83,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "The Metaphysics of The Healing VIII (Marmura)",
-        "“The Necessary Existent is one… There is no cause for His existence… He is one in every respect… There is no quiddity for Him other than His individual existence.”",
+        "The Metaphysics of The Healing VIII.4–5 (Marmura)",
+        "“The Necessary Existent is one… There is no cause for His existence… He is one in every respect, not divisible—neither in parts of quantity, nor in parts of definition… There is no quiddity for Him other than His individual existence.”",
       ),
       RUCKMAN(
-        "“Hear, O Israel: The LORD our God is one LORD” (Deut. 6:4). Ruckman: One means unity — stability, fixed, absolute; a plurality united (Gen. 2:24 “one flesh”; Eph. 4:4–5 “one body… One Lord, one faith, one baptism”).",
+        "“One means unity—stability, fixed, absolute. Everywhere in Scripture it is tied to united strength: ‘Hear, O Israel: The LORD our God is one LORD’ (Deut. 6:4) is a plurality united, not a lone unit. From Genesis 1:9 (‘one place’) through marriage (‘one flesh’) and Paul’s ‘one body, one Lord, one faith,’ One plainly stands for unity.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -130,11 +130,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "The Metaphysics of The Healing I–II (essence / existence)",
-        "“The quiddity of a thing is other than its existence… In everything other than the Necessary Existent, existence is something occurring to the quiddity.” Duality of what-it-is and that-it-is.",
+        "The Metaphysics of The Healing I.5–6 (Marmura)",
+        "“The quiddity of every contingent thing is other than its existence… Existence is something occurring to the quiddity… Only in the Necessary Existent are essence and existence identical.”",
       ),
       RUCKMAN(
-        "“Can two walk together, except they be agreed?” (Amos 3:3). “God made two great lights… to divide the day from the night” (Gen. 1:16). Ruckman: Two implies division — Adam divided (Gen. 2), Israel split, law and prophets.",
+        "“Two implies division. Amos 3:3—‘Can two walk together, except they be agreed?’ Adam is divided in Genesis 2; the sun and moon are made ‘to divide the day from the night’ (Gen. 1:16). Israel splits under Rehoboam; the Old Testament is chiefly ‘the law and the prophets.’ One is unity; Two is division.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -177,11 +177,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "De Anima / Book of Healing — Psychology",
-        "“The soul has three powers: the vegetative, the animal, and the rational… By the rational it knows and distinguishes.”",
+        "De Anima / The Book of Healing — Psychology (Rahman)",
+        "“The soul has three powers: the vegetative, by which it nourishes and grows; the animal, by which it perceives and moves; and the rational, by which it knows intelligibles and distinguishes truth from falsehood.”",
       ),
       RUCKMAN(
-        "Two and One is Three — division brought back into unity. Body/soul/spirit; past/present/future; Father, Son, and Holy Ghost. Ruckman: Three is the Trinity manifested — no problem solved until the third side is found.",
+        "“Two and One is Three—a division brought back into unity. Three is the Godhead in three Persons, man’s body/soul/spirit, and time’s past/present/future. The two Testaments in print need Christ the incarnate Word as the third Testament to complete the Book. No problem is solved until the third side is found; Three represents the Trinity manifested throughout the universe.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -224,11 +224,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "Canon of Medicine · elemental qualities",
-        "“The elements are four: fire, air, water, and earth… Their primary qualities are heat, cold, moisture, and dryness… From their mixture arise the temperaments of bodies.”",
+        "Canon of Medicine I · On the elements (Gruner / traditional)",
+        "“The elements are four: fire, air, water, and earth… Their primary qualities are heat, cold, moisture, and dryness… From their mixture and balance arise the temperaments of bodies and the conditions of health and disease.”",
       ),
       RUCKMAN(
-        "Ezekiel 1: “four living creatures… the face of a man, and the face of a lion… an ox… and… an eagle” (Ezek. 1:5, 10). Ruckman: Four is elusive — often called the earth number (corners, winds); Genesis 8:22 lists more than four seasons; evidence not conclusive.",
+        "“Four is far more elusive than Three. Christian numerologists call it the ‘earth number’ (four corners, four winds, four seasons—though Genesis 8 lists six seasons). Ezekiel 1 repeats ‘four’ more than any chapter: four living creatures with faces of man, ox, eagle, and lion—kings of creation. Four is still a mystery: possibly earth or creation, but the evidence is not conclusive.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -271,11 +271,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "De Anima / Canon — external senses",
-        "“The external senses are five: sight, hearing, smell, taste, and touch… Through them the soul receives the forms of sensibles.”",
+        "De Anima · external & internal senses",
+        "“The external senses are five: sight, hearing, smell, taste, and touch… Through them the soul receives the forms of sensibles without their matter… The internal faculties then retain, compose, and judge what the senses deliver.”",
       ),
       RUCKMAN(
-        "“And all the days that Adam lived were nine hundred and thirty years: and he died” (Gen. 5:5). Ruckman: Five is death, not grace — altar five cubits by five; fifth rib; five wounds as the death of a man.",
+        "“Five is death—not grace. Scholars tie five to grace because of Christ’s five wounds, but five means death everywhere else: the brazen altar was five cubits by five (a type of hell), the first man to die appears in Genesis 5:5, victims are smitten in the fifth rib, life first appears on the fifth day (4,000 years before Christ’s death), and Christ’s five wounds are the death of a man. Five is death.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -318,11 +318,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "The Book of Healing — Natural Philosophy / place",
-        "“Every body is in a place… Place is the innermost surface of the containing body… Directions are six: up, down, right, left, before, and behind.”",
+        "The Book of Healing — Physics / Place (McGinnis)",
+        "“Every body is in a place… Place is the innermost surface of the containing body that is at rest… Directions are six: up and down, right and left, before and behind—by which bodies are ordered in the world of generation and corruption.”",
       ),
       RUCKMAN(
-        "Adam on the sixth day; Noah’s “six hundredth year” (Gen. 7:6); “Here is wisdom… the number of the beast… Six hundred threescore and six” (Rev. 13:18). Ruckman: Six is the number of man and this age — look for 777, not 666.",
+        "“Six is the number of man and of this present age. Adam is made on the sixth day; Noah enters the ark at 600; 666 marks the Antichrist superman (Rev. 13:18). ‘Six hundred men’ recurs throughout Scripture. This age is characterized by six before the seventh-day Sabbath rest of the Millennium—look for 777, not 666.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -365,11 +365,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "Canon & geography of the climes",
-        "“The inhabited earth is divided into seven climes… according to latitude and the inclination of the sun.” Seven spheres order the inherited cosmology.",
+        "Canon of Medicine & Geography of the climes",
+        "“The inhabited quarter of the earth is divided into seven climes according to latitude and the inclination of the sun… Temperament, disease, and the length of day follow the clime.” Seven planetary spheres order the inherited heavens.",
       ),
       RUCKMAN(
-        "“And on the seventh day God ended his work… and he rested on the seventh day” (Gen. 2:2). Revelation’s seven churches, seals, trumpets, vials. Ruckman: Seven is completeness — “seven winds it up.” God counts by sevens.",
+        "“Seven is plainly the number of completeness—no number is more complete. God finishes creation on the seventh day; Leviticus 23 and 25 ‘seven’ everything (weeks, years, jubilee). Revelation closes with seven churches, seals, trumpets, and vials. Nature works by sevens: seven body members, seven colors, seven musical notes—‘seven winds it up.’ God counts by sevens.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -412,11 +412,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "Metaphysics of The Healing · celestial order",
-        "“From the First proceeds the first intelligence… and so on through the order of separate intellects and celestial spheres.” Eight marks approach to the highest orders before the Necessary One.",
+        "The Metaphysics of The Healing IX–X · emanation (Marmura)",
+        "“From the First, inasmuch as He intellects Himself, there proceeds a first intelligence… and from that, another, and so through the order of separate intellects and the celestial spheres, until the Active Intellect that governs the world of generation and corruption.”",
       ),
       RUCKMAN(
-        "“Eight souls were saved by water” (1 Pet. 3:20). Circumcision on the eighth day; David, Jesse’s eighth son. Ruckman: Once seven completes a series, eight begins something new.",
+        "“Once Seven completes a series, Eight begins something new. Noah was the eighth person—eight souls in the ark repopulating a new earth (1 Pet. 3:20). Circumcision on the eighth day typifies the new creature; David was Jesse’s eighth son, a new type of Christ. Eight and its multiples mark a fresh beginning after completion.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",
@@ -459,11 +459,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "The Book of Healing — Psychology & Cosmos",
-        "“The soul’s ascent is through manifold orders until it knows the Simple… The separate intellects and spheres approach the One.” Nine as culminating single digit before the decad.",
+        "The Metaphysics of The Healing · soul’s ascent (Marmura)",
+        "“The rational soul, when perfected by the intelligibles, becomes an intellectual world parallel to the existing world… Its felicity is in conjunction with the Active Intellect and in knowing the Necessary Existent as far as human power allows.”",
       ),
       RUCKMAN(
-        "“But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness, faith, meekness, temperance” (Gal. 5:22–23) — nine fruits. Ruckman: Nine leans to fruitfulness and covenant (Abraham at ninety-nine; nine months’ gestation).",
+        "“Nine is harder to pin down but seems tied to fruitfulness and covenants: nine fruits of the Spirit (Gal. 5:22–23), nine gifts (1 Cor. 12), Abraham at ninety-nine when God’s covenant makes him fruitful though ‘dead’ (Rom. 4), and nine months’ gestation. It is three times three and one short of Gentile ten; the primary reading is spiritual fruit-bearing, though the evidence is not fully settled.” — Bible Numerics (1981)",
       ),
       P(
         "Theosophical Society",

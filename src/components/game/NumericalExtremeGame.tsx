@@ -3537,6 +3537,10 @@ function ReferencesPanel() {
           Design priority: main functionality and mechanistic usefulness are maximized — runnable
           methods, inspectable intermediates, and lab-style controls over decorative chrome.
         </p>
+        <p className="mt-3 font-mono text-[11px] leading-relaxed text-amber/90">
+          {PHILOSOPHY_DISCLAIMER} Numerology tradition cards quote primary sources (including harsh
+          Bible Numerics readings and Avicenna for balance); display is historical/educational only.
+        </p>
       </Panel>
     </div>
   );

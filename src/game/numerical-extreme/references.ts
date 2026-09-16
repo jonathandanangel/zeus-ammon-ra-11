@@ -399,62 +399,62 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
   {
     heading: "NUMEROLOGY tab · people, books & source texts",
     blurb:
-      "Word → digital-root lore (A=1…Z=26, mod 9) cross-reads classical, theosophical, biblical, lexicographic, and mythographic sources. Only the lore for the typed word’s path number is shown, plus dictionary / doctrine / verse / myth passages matched to that word.",
+      "Word → digital-root lore (A=1…Z=26, mod 9) shows primary-source quotations for the typed word’s path digit (1–9), plus dictionary / doctrine / verse / myth passages matched to that word. On-panel notice: “The creator does not endorse these views nor LLMs.”",
     entries: [
       {
         title: "Pythagoras · Nicomachus of Gerasa (trad.)",
-        authors: "Pythagoras; Nicomachus, Introduction to Arithmetic; Theon of Smyrna / Iamblichus (trad.)",
+        authors: "Pythagoras; Nicomachus, Introduction to Arithmetic (D’Ooge); Theon of Smyrna / Euclid Elements VII Def. 22",
         detail:
-          "Monad–ennead sacred geometry for digits 1–9 (point/circle, line, triangle, square, pentagram, hexagon, heptagon, cube/ogdoad, enneagon). Forms the geometric and colour–note spine of each path number.",
-        venue: "NUMEROLOGY · seven traditions panel",
+          "Quoted Nicomachean arithmetic (monad as potential perfect; perfect numbers equal to their parts — 6, 28; even-times-even 1–2–4–8; primes/incomposites) beside sacred geometry for digits 1–9.",
+        venue: "NUMEROLOGY · seven traditions panel · philosopher-numbers.ts",
       },
       {
         title: "The Secret Teachings of All Ages (1928)",
         authors: "Manly P. Hall",
         detail:
-          "Symbolic readings of 1–9 (Absolute, duad corridor, triad of manifestation, quaternary of the world, etc.) paraphrased beside Pythagorean geometry for each path number.",
-        venue: "NUMEROLOGY · Manly P. Hall card",
+          "Direct quotations from the Pythagorean Mathematics chapter (monad “Sire of Gods and men,” duad, triad, tetrad/tetractys oath, pentad/pentagram, hexad, heptad “Motherless Virgin,” ogdoad/cube, ennead/horizon) for each path number.",
+        venue: "NUMEROLOGY · Manly P. Hall card · sacred-texts.com/eso/sta/",
       },
       {
-        title: "Metaphysics (Γ & I) · Categories",
-        authors: "Aristotle",
+        title: "Metaphysics · Physics · Poetics · De Anima",
+        authors: "Aristotle (Ross / Hardie & Gaye / Butcher / Smith)",
         detail:
-          "Being/unity, contraries, and formal structure of number as philosophical commentary on each digit’s path meaning.",
+          "Quoted lines on being/unity (Met. Γ), contraries (Phys. I), beginning–middle–end (Poetics 7), four causes (Phys. II.3), and the five senses (De Anima II) mapped to path digits.",
         venue: "NUMEROLOGY · Aristotle card",
       },
       {
-        title: "Summa Theologica (I, qq. on unity, creation, distinction)",
-        authors: "Thomas Aquinas",
+        title: "Summa Theologiae (I qq.11, 27–43, 73–74; I–II qq.61, 68; III q.54)",
+        authors: "Thomas Aquinas (New Advent / Dominican Fathers)",
         detail:
-          "Scholastic readings of divine oneness, creator/creature duality, and ordered creation mapped to path digits 1–9.",
+          "Quoted Summa text: “one” as undivided being; Trinity; six days’ perfection as 1+2+3; seventh-day rest; cardinal virtues; gifts of the Spirit; five wounds — tied to digits 1–9.",
         venue: "NUMEROLOGY · Thomas Aquinas card",
       },
       {
-        title: "The Book of Healing — Metaphysics",
-        authors: "Avicenna (Ibn Sina)",
+        title: "The Metaphysics of The Healing · Canon · De Anima",
+        authors: "Avicenna (Ibn Sina) · Marmura / McGinnis / Rahman / Gruner",
         detail:
-          "Necessary Existent, essence/existence duality, and emanation notes used as Islamic-philosophical parallels for each number.",
+          "Balancing primary quotes opposite Ruckman: Necessary Existent’s absolute oneness; essence≠existence in contingents; three soul powers; four elements/qualities; five senses; six directions of place; seven climes; emanation of intellects/spheres; soul’s intellectual felicity.",
         venue: "NUMEROLOGY · Avicenna card",
       },
       {
         title: "Bible Numerics (1981)",
         authors: "Dr. Peter S. Ruckman",
         detail:
-          "KJV-centred number meanings (unity, division, Trinity, earth/four, death/five, man/six, completeness/seven, new beginning/eight, fruitfulness/nine). Cited Scripture is cross-referenced to exact 1611 text.",
+          "Attributed Bible Numerics readings kept as quotes — including harsh ones (e.g. five = death not grace; brazen altar as type of hell; six = man / Antichrist “superman” / 666 vs 777). Digits: unity, division, Trinity, elusive four, death/five, man/six, completeness/seven, new beginning/eight, fruitfulness/nine. Not endorsed by the creator.",
         venue: "NUMEROLOGY · Ruckman card · public/kjv/ruckman-cited.json",
       },
       {
         title: "King James Version with Apocrypha (1611 text)",
         authors: "Church of England translators (1611); davince.com/bible PDF extract",
         detail:
-          "Exact verse text for passages Ruckman cites on the active path number only (e.g. Deut 6:4, Amos 3:3, Gen 5:5, Rev 13:18, Gal 5:22–23).",
+          "Exact verse text for passages Ruckman cites on the active path number only (e.g. Deut 6:4, Amos 3:3, Gen 5:5, Exod 27:1, Rev 13:18, Gal 5:22–23).",
         venue: "NUMEROLOGY · 1611 KJV verse blocks · npm run build:kjv-ruckman",
       },
       {
         title: "Thought-Forms (1901) · Theosophical colour–sound–number",
         authors: "Annie Besant & C. W. Leadbeater; Theosophical Society; H. P. Blavatsky (colour–ray scale)",
         detail:
-          "Prismatic colour / musical note per digit, sacred-geometry glyphs, and Thought-Forms plate imagery (Gutenberg #16269) filtered to the typed word’s number.",
+          "Quoted Thought-Forms lines (double effect of thought; colour / form / outline; colour keywords) plus prismatic colour / musical note and plate imagery filtered to the typed word’s number.",
         venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/",
       },
       {
