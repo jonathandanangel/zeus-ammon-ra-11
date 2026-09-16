@@ -36,6 +36,18 @@ public/extreme-puzzle/answers.json
 public/extreme-puzzle/manifest.json
 tmp-tri52/
 
+# Android / Capacitor local build outputs
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+
+
 # Johnson build inputs (run npm run build:johnson with LEME XML + UCF zip locally)
 .tmp-johnson-sample/
 public/johnson/johnson-1755.xml
