@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 import { runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
 import { FREE_DETECTORS, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
 import {
-  estimateWritingIq,
+  estimateWritingIqClient,
+  WRITING_IQ_DISCLAIMER,
   WRITING_IQ_SOURCE,
   type WritingIqResult,
 } from "@/game/ai-detector/writingIq";
@@ -55,18 +56,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
     try {
       const iqJob =
         wordCount >= 50
-          ? estimateWritingIq({ data: { content } }).catch(
-              (err): WritingIqResult => ({
-                ok: false,
-                iq: null,
-                bandLabel: "",
-                resultText: "",
-                errorMessage: err instanceof Error ? err.message : "Writing to IQ failed.",
-                status: null,
-                sourceUrl: WRITING_IQ_SOURCE.siteUrl,
-                endpointUrl: WRITING_IQ_SOURCE.endpointUrl,
-              }),
-            )
+          ? estimateWritingIqClient(content)
           : Promise.resolve(null);
 
       if (mode === "free") {
@@ -136,6 +126,9 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
                 {WRITING_IQ_SOURCE.siteUrl}
               </a>
               , no key).
+            </p>
+            <p className="mt-2 max-w-3xl font-mono text-[11px] font-bold leading-relaxed text-amber">
+              {WRITING_IQ_DISCLAIMER}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -322,6 +315,9 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               <p className="font-mono text-[10px] text-muted-foreground">
                 {writingIq.resultText}. Vocabulary-based estimate for curiosity — not a
                 standardized IQ test, and not part of the AI consensus vote.
+              </p>
+              <p className="font-mono text-[11px] font-bold text-amber">
+                {WRITING_IQ_DISCLAIMER}
               </p>
             </>
           ) : (

@@ -6,16 +6,17 @@
  * Response: { "result": "Estimated IQ: 143 (genius)" }
  * Not an AI-detector vote — companion insight only.
  */
-import { createServerFn } from "@tanstack/react-start";
-
 /** Canonical public source for the Writing to IQ estimator. */
 export const WRITING_IQ_SOURCE = {
   name: "Writing to IQ",
   siteUrl: "https://www.writingtoiq.com/",
   endpointUrl: "https://www.writingtoiq.com/background_process",
+  endpointUrlAlt: "https://texttoiq.herokuapp.com/background_process",
   about:
     "Vocabulary-based IQ estimate from writingtoiq.com — cleans text, scores vocabulary, maps to an IQ-like band for curiosity (not a standardized test).",
 } as const;
+
+export const WRITING_IQ_DISCLAIMER = "High writing IQ does not mean AI generated!";
 
 export type WritingIqResult = {
   ok: boolean;
@@ -28,13 +29,15 @@ export type WritingIqResult = {
   endpointUrl: string;
 };
 
-const MAX_CHARS = 3500;
+/** Site allows 3500; keep GET query under typical proxy URL limits. */
+const MAX_CHARS = 1800;
+const MIN_WORDS = 50;
 
-function wordCount(text: string): number {
+export function writingIqWordCount(text: string): number {
   return (text.trim().match(/\S+/g) || []).length;
 }
 
-function failResult(opts: {
+export function failWritingIq(opts: {
   errorMessage: string;
   status: number | null;
   resultText?: string;
@@ -51,74 +54,152 @@ function failResult(opts: {
   };
 }
 
-export const estimateWritingIq = createServerFn({ method: "POST" })
-  .inputValidator((input: { content: string }) => {
-    const content = typeof input?.content === "string" ? input.content.trim() : "";
-    if (wordCount(content) < 50) {
-      throw new Error("Writing to IQ needs at least 50 words.");
-    }
-    return { content: content.slice(0, MAX_CHARS) };
-  })
-  .handler(async ({ data }): Promise<WritingIqResult> => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 30_000);
-    try {
-      const url = `${WRITING_IQ_SOURCE.endpointUrl}?${new URLSearchParams({
-        textsample: data.content,
-      })}`;
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "ZEUS-AMMON-RA-11-AiDetector/1.0",
-        },
-        signal: controller.signal,
-      });
-      const text = await res.text();
-      let json: { result?: string } = {};
-      try {
-        json = text ? (JSON.parse(text) as { result?: string }) : {};
-      } catch {
-        return failResult({
-          errorMessage: `Writing to IQ returned non-JSON (HTTP ${res.status}).`,
-          status: res.status,
-        });
-      }
-      if (!res.ok) {
-        return failResult({ errorMessage: `HTTP ${res.status}`, status: res.status });
-      }
-      const result = typeof json.result === "string" ? json.result : "";
-      if (
-        result === "Text too short for IQ estimation" ||
-        result === "Not enough data or not enough variance to estimate IQ"
-      ) {
-        return failResult({ errorMessage: result, status: res.status, resultText: result });
-      }
-      const match = result.match(/^Estimated IQ:\s*(\d+)\s*\(([^)]+)\)$/i);
-      if (!match) {
-        return failResult({
-          errorMessage: result || "Unexpected Writing to IQ response.",
-          status: res.status,
-          resultText: result,
-        });
-      }
-      const iq = Number(match[1]);
-      return {
-        ok: true,
-        iq: Number.isFinite(iq) ? iq : null,
-        bandLabel: match[2]!.trim(),
-        resultText: result,
-        errorMessage: "",
-        status: res.status,
-        sourceUrl: WRITING_IQ_SOURCE.siteUrl,
-        endpointUrl: WRITING_IQ_SOURCE.endpointUrl,
-      };
-    } catch (e) {
-      return failResult({
-        errorMessage: e instanceof Error ? e.message : "Network error",
-        status: null,
-      });
-    } finally {
-      clearTimeout(timer);
-    }
+function parseIqPayload(result: string, status: number): WritingIqResult {
+  if (
+    result === "Text too short for IQ estimation" ||
+    result === "Not enough data or not enough variance to estimate IQ"
+  ) {
+    return failWritingIq({ errorMessage: result, status, resultText: result });
+  }
+  const match = result.match(/^Estimated IQ:\s*(\d+)\s*\(([^)]+)\)$/i);
+  if (!match) {
+    return failWritingIq({
+      errorMessage: result || "Unexpected Writing to IQ response.",
+      status,
+      resultText: result,
+    });
+  }
+  const iq = Number(match[1]);
+  return {
+    ok: true,
+    iq: Number.isFinite(iq) ? iq : null,
+    bandLabel: match[2]!.trim(),
+    resultText: result,
+    errorMessage: "",
+    status,
+    sourceUrl: WRITING_IQ_SOURCE.siteUrl,
+    endpointUrl: WRITING_IQ_SOURCE.endpointUrl,
+  };
+}
+
+async function getJson(
+  url: string,
+  signal: AbortSignal,
+): Promise<{ status: number; text: string; json: { result?: string } }> {
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "User-Agent":
+        "Mozilla/5.0 (compatible; ZEUS-AMMON-RA-11; +https://www.writingtoiq.com/)",
+      Referer: WRITING_IQ_SOURCE.siteUrl,
+    },
+    signal,
+    redirect: "follow",
   });
+  const text = await res.text();
+  let json: { result?: string } = {};
+  try {
+    json = text ? (JSON.parse(text) as { result?: string }) : {};
+  } catch {
+    json = {};
+  }
+  return { status: res.status, text, json };
+}
+
+/** Server-side call to Writing to IQ (API routes / server fns only). */
+export async function analyzeWritingIq(rawContent: string): Promise<WritingIqResult> {
+  const content = rawContent.trim().slice(0, MAX_CHARS);
+  if (writingIqWordCount(content) < MIN_WORDS) {
+    return failWritingIq({
+      errorMessage: `Writing to IQ needs at least ${MIN_WORDS} words.`,
+      status: null,
+    });
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  const params = new URLSearchParams({ textsample: content });
+  const primary = `${WRITING_IQ_SOURCE.endpointUrl}?${params}`;
+  const alt = `${WRITING_IQ_SOURCE.endpointUrlAlt}?${params}`;
+
+  try {
+    let { status, text, json } = await getJson(primary, controller.signal);
+    if (status >= 500 || (status === 200 && typeof json.result !== "string")) {
+      try {
+        ({ status, text, json } = await getJson(alt, controller.signal));
+      } catch {
+        // keep primary outcome
+      }
+    }
+    if (status !== 200) {
+      return failWritingIq({
+        errorMessage: `Writing to IQ HTTP ${status}${text ? `: ${text.slice(0, 120)}` : ""}`,
+        status,
+      });
+    }
+    if (typeof json.result !== "string") {
+      return failWritingIq({
+        errorMessage: `Writing to IQ returned non-JSON (HTTP ${status}).`,
+        status,
+      });
+    }
+    return parseIqPayload(json.result, status);
+  } catch (e) {
+    const msg =
+      e instanceof Error
+        ? e.name === "AbortError"
+          ? "Writing to IQ timed out. Try a shorter sample."
+          : e.message === "Failed to fetch"
+            ? "Could not reach writingtoiq.com. Try again, or open https://www.writingtoiq.com/ directly."
+            : e.message
+        : "Network error";
+    return failWritingIq({ errorMessage: msg, status: null });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Browser entry: same-origin POST /api/writing-iq (no CSRF, no CORS).
+ */
+export async function estimateWritingIqClient(content: string): Promise<WritingIqResult> {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const url = `${origin}/api/writing-iq`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ content: content.trim().slice(0, MAX_CHARS) }),
+    });
+    const text = await res.text();
+    let json: WritingIqResult | null = null;
+    try {
+      json = text ? (JSON.parse(text) as WritingIqResult) : null;
+    } catch {
+      json = null;
+    }
+    if (json && typeof json === "object" && typeof json.ok === "boolean") {
+      return {
+        ...json,
+        sourceUrl: json.sourceUrl || WRITING_IQ_SOURCE.siteUrl,
+        endpointUrl: json.endpointUrl || WRITING_IQ_SOURCE.endpointUrl,
+      };
+    }
+    return failWritingIq({
+      errorMessage: `Writing to IQ proxy HTTP ${res.status}. Source: ${WRITING_IQ_SOURCE.siteUrl}`,
+      status: res.status,
+    });
+  } catch (e) {
+    return failWritingIq({
+      errorMessage:
+        e instanceof Error
+          ? e.message === "Failed to fetch"
+            ? `Writing to IQ unavailable right now. Source: ${WRITING_IQ_SOURCE.siteUrl}`
+            : e.message
+          : "Writing to IQ failed.",
+      status: null,
+    });
+  }
+}
