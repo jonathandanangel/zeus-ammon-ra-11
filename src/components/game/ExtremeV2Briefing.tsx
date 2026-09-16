@@ -81,7 +81,7 @@ export function ExtremeV2Briefing({ reducedMotion, onComplete }: ExtremeV2Briefi
   }, [stage, onComplete, reducedMotion]);
 
   const skipBtn =
-    "rounded-sm border border-fuchsia-300/60 bg-deepblue/50 backdrop-blur-sm px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#e879f9] transition-colors hover:bg-[#e879f9]/20";
+    "rounded-sm border border-fuchsia-300/60 bg-deepblue/50 backdrop-blur-md px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#e879f9] transition-colors hover:bg-[#e879f9]/20";
 
   if (stage === "outro") {
     return (
@@ -117,7 +117,7 @@ export function ExtremeV2Briefing({ reducedMotion, onComplete }: ExtremeV2Briefi
         {slide.title}
       </h2>
 
-      <div className="w-full rounded-sm border border-[#e879f9]/40 bg-deepblue/50 backdrop-blur-sm p-3">
+      <div className="w-full rounded-sm border border-[#e879f9]/40 bg-deepblue/50 backdrop-blur-md p-3">
         <img src={slide.url} alt={slide.alt} className="mx-auto max-h-[58vh] w-auto max-w-full object-contain" />
       </div>
 

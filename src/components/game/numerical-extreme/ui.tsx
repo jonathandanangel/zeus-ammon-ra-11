@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const NumericalComputeContext = React.createContext<() => void>(() => {});
 
 const controlClass =
-  "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+  "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-md px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
 
 /** Monospace equation / telemetry box — matches MAIN / ALGORITHMS engine logs. */
 export function EquationBox({
@@ -49,7 +49,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "nx-panel zeus-outline-box overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm",
+        "nx-panel zeus-outline-box overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-md",
         className,
       )}
     >
@@ -329,7 +329,7 @@ export function GhostButton({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-moon/80 transition hover:border-amber/50 hover:text-amber disabled:opacity-40",
+        "inline-flex items-center justify-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-md px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-moon/80 transition hover:border-amber/50 hover:text-amber disabled:opacity-40",
         className,
       )}
       {...props}

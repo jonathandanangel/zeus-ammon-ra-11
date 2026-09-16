@@ -367,7 +367,7 @@ function MainPanel() {
       onSubmit={runFunction}
       className="grid gap-3 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]"
     >
-      <aside className="space-y-4 rounded-sm border border-cyan/35 bg-deepblue/50 backdrop-blur-sm p-3">
+      <aside className="space-y-4 rounded-sm border border-cyan/35 bg-deepblue/50 backdrop-blur-md p-3">
         <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-amber">Inputs</p>
         <div className="space-y-2">
           <Field label="f(x)">
@@ -444,7 +444,7 @@ function MainPanel() {
               <TextInput value={degrees} onChange={(e) => setDegrees(e.target.value)} />
             </Field>
           </div>
-          <label className="flex items-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-sm px-3 py-2 font-mono text-[10px] text-moon/80">
+          <label className="flex items-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-md px-3 py-2 font-mono text-[10px] text-moon/80">
             <input
               type="checkbox"
               checked={shift}
@@ -2004,7 +2004,7 @@ function BezierPanel() {
           role="img"
           aria-label="Bézier freehand canvas"
           className={cn(
-            "block rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-sm",
+            "block rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-md",
             done ? "cursor-default" : "cursor-crosshair",
           )}
           onClick={handleClick}
@@ -3548,7 +3548,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           onDone={() => setOverloadBurst(0)}
         />
 
-        <header className="nx-header zeus-outline-box overflow-hidden rounded-sm border border-cyan/50 bg-deepblue/50 backdrop-blur-sm">
+        <header className="nx-header zeus-outline-box overflow-hidden rounded-sm border border-cyan/50 bg-deepblue/50 backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cyan/30 px-4 py-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-magenta">
@@ -3564,7 +3564,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
             <button
               type="button"
               onClick={onMenu}
-              className="rounded-sm border border-amber/50 bg-deepblue/50 backdrop-blur-sm px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
+              className="rounded-sm border border-amber/50 bg-deepblue/50 backdrop-blur-md px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
             >
               Main menu
             </button>

@@ -68,7 +68,7 @@ export function HeatTransferIntroBriefing({
   }, [stage, onComplete, reducedMotion]);
 
   const skipBtn =
-    "rounded-sm border border-orange-400/70 bg-deepblue/50 backdrop-blur-sm px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff8c1a] transition-colors hover:bg-[#ff8c1a]/20";
+    "rounded-sm border border-orange-400/70 bg-deepblue/50 backdrop-blur-md px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff8c1a] transition-colors hover:bg-[#ff8c1a]/20";
 
   if (stage === "outro") {
     return (

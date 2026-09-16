@@ -35,7 +35,7 @@ export function HeatTransferIntroReview({
             : "Restart with the Three Modes stage and use the hint on every unfamiliar concept.";
 
   const btn =
-    "rounded-sm border border-[#ff8c1a]/70 bg-deepblue/50 backdrop-blur-sm px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff8c1a] hover:bg-[#ff8c1a]/20";
+    "rounded-sm border border-[#ff8c1a]/70 bg-deepblue/50 backdrop-blur-md px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff8c1a] hover:bg-[#ff8c1a]/20";
 
   return (
     <div className="ht-intro-shell mx-auto w-full max-w-3xl space-y-5">
