@@ -91,13 +91,18 @@ const HT_BED_URL = {
   intro: "/audio/ht-portal-bed.mp3",
 } as const;
 
-/** Bananza: Armageddon (from 34:20) → Portal OST → repeat. */
+/** Bananza: Armageddon (from 34:20) → Portal OST → repeat.
+ *  Das Armageddon (2026) — キ aerzengel (@AERZENGEL).
+ *  Related: Berdysh, Occult Tripping KVLT, Shypunch, SERAPHRID, Luxen.
+ */
 const BANANZA_PLAYLIST = [
   "/audio/ht-bananza-bed.mp3",
   "/audio/ht-bananza-portal.mp3",
 ] as const;
 
-/** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats. */
+/** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats.
+ *  Iasos – Crystal Vista (1981); Das Armageddon (2026) — キ aerzengel (@AERZENGEL).
+ */
 const TITLE_PLAYLIST = [
   "/audio/title-crystal-vista.mp3",
   "/audio/title-armageddon.mp3",
