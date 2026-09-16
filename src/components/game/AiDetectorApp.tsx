@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
+import { FREE_DETECTORS, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
 import {
   DETECTORS,
   toneForBand,
@@ -10,19 +11,18 @@ import {
 } from "@/game/ai-detector/types";
 
 type KeyMap = Partial<Record<DetectorId, string>>;
+type Mode = "free" | "api";
 
 export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
+  const [mode, setMode] = React.useState<Mode>("free");
   const [keys, setKeys] = React.useState<KeyMap>({});
   const [enabled, setEnabled] = React.useState<Record<DetectorId, boolean>>(() =>
-    Object.fromEntries(DETECTORS.map((d) => [d.id, d.id === "wasitai" || d.id === "gptzero"])) as Record<
-      DetectorId,
-      boolean
-    >,
+    Object.fromEntries(DETECTORS.map((d) => [d.id, false])) as Record<DetectorId, boolean>,
   );
   const [content, setContent] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [status, setStatus] = React.useState(
-    "Not guaranteed blank — paste text, enable detectors you have keys for, then multi-scan.",
+    "Free mode works without keys — paste ~50+ words and multi-scan.",
   );
   const [results, setResults] = React.useState<DetectorScanResult[] | null>(null);
   const [consensus, setConsensus] = React.useState<EnsembleConsensus | null>(null);
@@ -37,35 +37,48 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
   const activeIds = DETECTORS.filter((d) => enabled[d.id]).map((d) => d.id);
   const readyIds = activeIds.filter((id) => (keys[id] ?? "").trim().length > 0);
 
-  async function multiScan() {
-    if (readyIds.length === 0) {
-      setStatus("Enable at least one detector and paste its API key first.");
-      return;
-    }
+  async function runScan() {
     if (wordCount < 40) {
-      setStatus("Paste ~50+ words. Short snippets are unreliable across detectors.");
+      setStatus("Paste ~50+ words. Short snippets are unreliable.");
       return;
     }
     setBusy(true);
     setResults(null);
     setConsensus(null);
-    setStatus(`Running ${readyIds.length} detector(s) in parallel…`);
     try {
-      const payloadKeys: KeyMap = {};
-      for (const id of readyIds) payloadKeys[id] = keys[id]!.trim();
-      const out = await runAiDetectorEnsemble({
-        data: { content, keys: payloadKeys, enabled: readyIds },
-      });
-      setResults(out.results);
-      setConsensus(out.consensus);
-      const okN = out.results.filter((r) => r.ok).length;
-      setStatus(
-        okN === 0
-          ? "All scans failed — check keys, credits, and network."
-          : out.consensus.summary,
-      );
+      if (mode === "free") {
+        setStatus("Free multi-scan starting…");
+        const out = await runFreeEnsemble(content, setStatus);
+        setResults(out.results);
+        setConsensus(out.consensus);
+        const okN = out.results.filter((r) => r.ok).length;
+        setStatus(
+          okN === 0
+            ? "Free scanners failed — check network for the first HC3 model download."
+            : out.consensus.summary,
+        );
+      } else {
+        if (readyIds.length === 0) {
+          setStatus("API mode needs at least one enabled detector with a key — or use Free mode.");
+          return;
+        }
+        setStatus(`Running ${readyIds.length} API detector(s)…`);
+        const payloadKeys: KeyMap = {};
+        for (const id of readyIds) payloadKeys[id] = keys[id]!.trim();
+        const out = await runAiDetectorEnsemble({
+          data: { content, keys: payloadKeys, enabled: readyIds },
+        });
+        setResults(out.results);
+        setConsensus(out.consensus);
+        const okN = out.results.filter((r) => r.ok).length;
+        setStatus(
+          okN === 0
+            ? "All API scans failed — check keys/credits, or use Free mode."
+            : out.consensus.summary,
+        );
+      }
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Multi-scan failed.");
+      setStatus(err instanceof Error ? err.message : "Scan failed.");
     } finally {
       setBusy(false);
     }
@@ -83,8 +96,8 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               AI DETECTOR BENCH
             </h1>
             <p className="mt-1 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
-              Six remote detectors (WasItAI · GPTZero · Sapling · Winston · ZeroGPT · Originality).
-              Keys stay in session memory only. Results are evidence, not proof.
+              Free mode: 6 local detectors (HC3 RoBERTa + stylometrics) — no keys. API mode: GPTZero /
+              WasItAI / Sapling / Winston / ZeroGPT / Originality when you have keys.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -102,94 +115,128 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
         </div>
         {showInfo && (
           <div className="space-y-2 border-b border-cyan/20 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
-            <p className="text-amber">
-              Will paste-and-scan always work? No. Each enabled detector needs a valid API key and
-              credits from that vendor. Failed keys show per-row errors; consensus only uses
-              successful scans.
+            <p className="text-mint">
+              Free mode works without API keys. First free scan downloads the open HC3 RoBERTa ONNX
+              model into your browser cache; after that it runs offline-friendly.
             </p>
             <p>
-              Sign up links live on each card. GPTZero:{" "}
-              <a className="text-cyan underline" href="https://gptzero.me/" target="_blank" rel="noreferrer">
-                gptzero.me
-              </a>
-              . WasItAI:{" "}
-              <a
-                className="text-cyan underline"
-                href="https://wasitaigenerated.com/sign-up"
-                target="_blank"
-                rel="noreferrer"
-              >
-                wasitaigenerated.com
-              </a>
-              .
+              Quality note: free neural detector is HC3-era (ChatGPT-focused). Commercial GPTZero /
+              WasItAI are usually stronger on newest models — use API mode when you have keys.
+              Consensus is evidence, not proof.
             </p>
           </div>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em]">
           <span className={cn(busy ? "text-amber" : "text-mint")}>{status}</span>
-          <span className="text-muted-foreground">
-            {wordCount} words · {readyIds.length}/{activeIds.length} keyed
-          </span>
+          <span className="text-muted-foreground">{wordCount} words</span>
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {DETECTORS.map((d) => (
-          <div
-            key={d.id}
-            className="zeus-outline-box space-y-2 rounded-sm border border-cyan/35 bg-deepblue/50 p-3 backdrop-blur-md"
+      <nav className="flex flex-wrap gap-2">
+        {(
+          [
+            ["free", "Free (no keys)"],
+            ["api", "API keys"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={cn(
+              btn,
+              mode === id && "border-cyan bg-cyan/20 text-moon shadow-[0_0_18px_rgba(34,211,238,0.25)]",
+            )}
+            onClick={() => {
+              setMode(id);
+              setResults(null);
+              setConsensus(null);
+              setStatus(
+                id === "free"
+                  ? "Free mode — paste text and multi-scan. No keys required."
+                  : "API mode — enable detectors and paste vendor keys.",
+              );
+            }}
           >
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={enabled[d.id]}
-                onChange={(e) => setEnabled((prev) => ({ ...prev, [d.id]: e.target.checked }))}
-              />
-              <span>
-                <span className="block font-display text-xs uppercase tracking-[0.14em] text-cyan">
-                  {d.name}
-                </span>
-                <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
-                  {d.blurb}
-                </span>
-              </span>
-            </label>
-            <input
-              type="password"
-              className={field}
-              disabled={!enabled[d.id]}
-              value={keys[d.id] ?? ""}
-              onChange={(e) => setKeys((prev) => ({ ...prev, [d.id]: e.target.value }))}
-              placeholder={d.keyHint}
-              autoComplete="off"
-            />
-            <a
-              className="font-mono text-[10px] text-cyan/80 underline"
-              href={d.signupUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Get key →
-            </a>
-          </div>
+            {label}
+          </button>
         ))}
-      </section>
+      </nav>
+
+      {mode === "free" ? (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {FREE_DETECTORS.map((d) => (
+            <div
+              key={d.id}
+              className="zeus-outline-box rounded-sm border border-cyan/35 bg-deepblue/50 p-3 backdrop-blur-md"
+            >
+              <p className="font-display text-xs uppercase tracking-[0.14em] text-cyan">{d.name}</p>
+              <p className="mt-1 font-mono text-[10px] text-muted-foreground">{d.blurb}</p>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {DETECTORS.map((d) => (
+            <div
+              key={d.id}
+              className="zeus-outline-box space-y-2 rounded-sm border border-cyan/35 bg-deepblue/50 p-3 backdrop-blur-md"
+            >
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={enabled[d.id]}
+                  onChange={(e) => setEnabled((prev) => ({ ...prev, [d.id]: e.target.checked }))}
+                />
+                <span>
+                  <span className="block font-display text-xs uppercase tracking-[0.14em] text-cyan">
+                    {d.name}
+                  </span>
+                  <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground">
+                    {d.blurb}
+                  </span>
+                </span>
+              </label>
+              <input
+                type="password"
+                className={field}
+                disabled={!enabled[d.id]}
+                value={keys[d.id] ?? ""}
+                onChange={(e) => setKeys((prev) => ({ ...prev, [d.id]: e.target.value }))}
+                placeholder={d.keyHint}
+                autoComplete="off"
+              />
+              <a
+                className="font-mono text-[10px] text-cyan/80 underline"
+                href={d.signupUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Get key →
+              </a>
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="zeus-outline-box space-y-3 rounded-sm border border-cyan/40 bg-deepblue/50 p-4 backdrop-blur-md">
         <textarea
           className={cn(field, "min-h-[200px] leading-relaxed")}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Paste the passage to multi-scan (~50+ words). Ensemble runs only detectors you enabled and keyed."
+          placeholder="Paste the passage (~50+ words). Free mode runs 6 local detectors with no keys."
         />
         <button
           type="button"
           className={cn(btn, "w-full py-3 sm:w-auto")}
-          disabled={busy || readyIds.length === 0 || wordCount < 40}
-          onClick={multiScan}
+          disabled={busy || wordCount < 40 || (mode === "api" && readyIds.length === 0)}
+          onClick={runScan}
         >
-          {busy ? "Scanning…" : `Multi-scan (${readyIds.length})`}
+          {busy
+            ? "Scanning…"
+            : mode === "free"
+              ? "Free multi-scan (6)"
+              : `API multi-scan (${readyIds.length})`}
         </button>
       </section>
 

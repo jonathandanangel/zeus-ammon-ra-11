@@ -71,7 +71,7 @@ export const DETECTORS: DetectorCard[] = [
 ];
 
 export type DetectorScanResult = {
-  id: DetectorId;
+  id: string;
   name: string;
   ok: boolean;
   errorMessage: string;
@@ -154,7 +154,7 @@ export function buildConsensus(results: DetectorScanResult[]): EnsembleConsensus
       aiVotes: 0,
       uncertainVotes: 0,
       agreement: "insufficient",
-      summary: "No detectors returned a score. Add keys and retry.",
+      summary: "No detectors returned a score. Try Free mode, or add API keys and retry.",
     };
   }
   const scores = ok.map((r) => r.aiScore).sort((a, b) => a - b);
