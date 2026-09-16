@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
  */
 export const LEGEND_SPLASHES = [
   "Rarity of beating game is 1 in 10³⁹!",
+  "Jk its just 1 in 10⁵ to beat this game for a skilled master!",
   "Big secret at the end!",
   "There's a Dune reference?!",
   "Improves executive function!",
