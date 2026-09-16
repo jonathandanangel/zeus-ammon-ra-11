@@ -270,7 +270,10 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "spirit-bound" || mode === "numerical-extreme") {
+    if (mode === "numerical-extreme") {
+      return undefined;
+    }
+    if (mode === "spirit-bound") {
       audio.setGenre("supersonic", 1);
       audio.setExtremeTrack(1);
       audio.setTempoMultiplier(1.4);
@@ -745,7 +748,11 @@ export function AeroGrid() {
             setScreen("spirit-bound");
           }}
           onNumericalExtreme={() => {
-            startAudio();
+            // SFX only — no background music for Numerical Extreme.
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
             setMode("numerical-extreme");
             setReviewIds([]);
             setLocalIndex(0);
