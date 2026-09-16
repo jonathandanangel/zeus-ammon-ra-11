@@ -616,7 +616,13 @@ export function AeroGrid() {
   // Heat Transfer Intro stays visually calm — no inferno escalation.
 
   return (
-    <div className={cn("min-h-screen px-4 py-6", progress.bloodMoonAwakened && "blood-moon-active")}>
+    <div
+      className={cn(
+        "min-h-screen",
+        screen === "title" ? "px-0 py-0" : "px-4 py-6",
+        progress.bloodMoonAwakened && "blood-moon-active",
+      )}
+    >
       <WorldBackground
         progress={worldProgress}
         scanlines={settings.scanlines}
