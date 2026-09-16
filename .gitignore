@@ -42,3 +42,6 @@ public/johnson/johnson-1755.xml
 public/johnson/johnson-hocr.txt.gz
 public/johnson/lexicon.json
 public/johnson/lexicon.json.gz
+
+# Full KJV book dumps (optional local extract); app ships ruckman-cited.json only
+public/kjv/_full/

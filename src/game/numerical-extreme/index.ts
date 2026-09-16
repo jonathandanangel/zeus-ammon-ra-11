@@ -154,6 +154,8 @@ export {
 } from "./thought-forms";
 export { searchSecretDoctrine, loadSecretDoctrineManifest } from "./secret-doctrine";
 export type { SecretDoctrinePassage, SecretDoctrineQuery } from "./secret-doctrine";
+export { getRuckmanVersesForNumber } from "./ruckman-kjv";
+export type { RuckmanVerse } from "./ruckman-kjv";
 
 /** Format a number for display (null-safe). */
 export function formatNumber(

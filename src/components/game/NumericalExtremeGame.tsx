@@ -54,6 +54,7 @@ import {
   loadJohnsonResources,
   lookupJohnsonFull,
   searchSecretDoctrine,
+  getRuckmanVersesForNumber,
   THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
@@ -65,6 +66,7 @@ import {
   type NumerologyResult,
   type JohnsonSense,
   type SecretDoctrinePassage,
+  type RuckmanVerse,
   type NumberPhilosophy,
   type Point2,
   type VibrationResult,
@@ -2594,9 +2596,13 @@ function RelevantThoughtForms({
 function PhilosophyThoughtsBlock({
   philosophy,
   showGeometry = true,
+  ruckmanVerses = [],
+  ruckmanSource = "",
 }: {
   philosophy: NumberPhilosophy;
   showGeometry?: boolean;
+  ruckmanVerses?: RuckmanVerse[];
+  ruckmanSource?: string;
 }) {
   const accent: Record<string, string> = {
     Pythagoras: "border-amber/45 bg-amber/10",
@@ -2633,6 +2639,25 @@ function PhilosophyThoughtsBlock({
           </p>
           <p className="font-mono text-[9px] leading-relaxed text-muted-foreground">{t.work}</p>
           <p className="mt-2 font-mono text-[11px] leading-relaxed text-moon">{t.thought}</p>
+          {t.philosopher === "Dr. Peter S. Ruckman" && ruckmanVerses.length > 0 && (
+            <div className="mt-3 space-y-2 border-t border-orange-400/25 pt-3">
+              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-orange-300">
+                1611 KJV · verses he cites for {philosophy.number}
+              </p>
+              {ruckmanVerses.map((verse) => (
+                <blockquote
+                  key={verse.ref}
+                  className="rounded border border-orange-400/20 bg-black/35 px-2.5 py-2"
+                >
+                  <p className="font-mono text-[10px] font-bold text-orange-200">{verse.ref}</p>
+                  <p className="mt-1 font-mono text-[11px] leading-relaxed text-moon">{verse.text}</p>
+                </blockquote>
+              ))}
+              {ruckmanSource && (
+                <p className="font-mono text-[8px] text-muted-foreground">{ruckmanSource}</p>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -2805,6 +2830,8 @@ function NumerologyPanel() {
   const [secretPassages, setSecretPassages] = React.useState<SecretDoctrinePassage[]>([]);
   const [secretSource, setSecretSource] = React.useState("");
   const [secretLoading, setSecretLoading] = React.useState(false);
+  const [ruckmanVerses, setRuckmanVerses] = React.useState<RuckmanVerse[]>([]);
+  const [ruckmanSource, setRuckmanSource] = React.useState("");
   const johnsonResourcesRef = React.useRef<Awaited<ReturnType<typeof loadJohnsonResources>> | null>(null);
   const compute = React.useContext(NumericalComputeContext);
 
@@ -2845,6 +2872,8 @@ function NumerologyPanel() {
       setSecretPassages([]);
       setSecretSource("");
       setSecretLoading(false);
+      setRuckmanVerses([]);
+      setRuckmanSource("");
       return;
     }
 
@@ -2881,6 +2910,12 @@ function NumerologyPanel() {
         setSecretLoading(false);
       });
 
+    getRuckmanVersesForNumber(result.number).then(({ verses, source }) => {
+      if (cancelled) return;
+      setRuckmanVerses(verses);
+      setRuckmanSource(source);
+    });
+
     return () => {
       cancelled = true;
     };
@@ -2893,6 +2928,7 @@ function NumerologyPanel() {
       ...result,
       johnsonWord: johnsonWordEntry ?? result.johnsonWord,
       secretDoctrine: secretPassages,
+      ruckmanKjv: ruckmanVerses,
       report: formatNumerologyReport(result),
     });
   }
@@ -3066,7 +3102,12 @@ function NumerologyPanel() {
             title={`Number ${result.number} · ${result.philosophy.sacredName}`}
             eyebrow={`${result.philosophy.geometry.colorName} · geometry · seven traditions`}
           >
-            <PhilosophyThoughtsBlock philosophy={result.philosophy} showGeometry={false} />
+            <PhilosophyThoughtsBlock
+              philosophy={result.philosophy}
+              showGeometry={false}
+              ruckmanVerses={ruckmanVerses}
+              ruckmanSource={ruckmanSource}
+            />
           </Panel>
           <RelevantThoughtForms
             number={result.number}
