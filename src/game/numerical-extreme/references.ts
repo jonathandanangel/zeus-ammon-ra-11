@@ -397,6 +397,28 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
     ],
   },
   {
+    heading: "AI Detector bench · Writing to IQ & commercial scanners",
+    blurb:
+      "Free neural/stylometric AI detection plus a companion vocabulary IQ estimate. Writing to IQ is cited as the public source for the IQ sidecar (not part of AI consensus voting).",
+    entries: [
+      {
+        title: "Writing to IQ",
+        authors: "WritingToIQ.com",
+        detail:
+          "Public vocabulary-based IQ estimator. ZEUS calls GET /background_process?textsample=… (no API key) and parses { result: \"Estimated IQ: N (label)\" }. Companion insight only — not a standardized IQ test and not an AI-detector vote.",
+        venue:
+          "https://www.writingtoiq.com/ · endpoint https://www.writingtoiq.com/background_process",
+      },
+      {
+        title: "AI content detectors (API mode)",
+        authors: "GPTZero · WasItAIGenerated · Sapling · Winston AI · ZeroGPT · Originality.ai",
+        detail:
+          "Optional keyed commercial scanners in API mode; Free mode uses on-device ONNX detectors and GPTZero-style stylometrics without vendor keys.",
+        venue: "AI DETECTOR · Title screen · System",
+      },
+    ],
+  },
+  {
     heading: "NUMEROLOGY tab · people, books & source texts",
     blurb:
       "Word → digital-root lore (A=1…Z=26, mod 9) shows primary-source quotations for the typed word’s path digit (1–9), plus dictionary / doctrine / verse / myth passages matched to that word. On-panel notice: “The creator does not endorse these views nor LLMs.”",

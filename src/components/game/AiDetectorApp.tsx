@@ -3,6 +3,11 @@ import { cn } from "@/lib/utils";
 import { runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
 import { FREE_DETECTORS, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
 import {
+  estimateWritingIq,
+  WRITING_IQ_SOURCE,
+  type WritingIqResult,
+} from "@/game/ai-detector/writingIq";
+import {
   DETECTORS,
   toneForBand,
   type DetectorId,
@@ -26,6 +31,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
   );
   const [results, setResults] = React.useState<DetectorScanResult[] | null>(null);
   const [consensus, setConsensus] = React.useState<EnsembleConsensus | null>(null);
+  const [writingIq, setWritingIq] = React.useState<WritingIqResult | null>(null);
   const [showInfo, setShowInfo] = React.useState(true);
 
   const field =
@@ -45,12 +51,30 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
     setBusy(true);
     setResults(null);
     setConsensus(null);
+    setWritingIq(null);
     try {
+      const iqJob =
+        wordCount >= 50
+          ? estimateWritingIq({ data: { content } }).catch(
+              (err): WritingIqResult => ({
+                ok: false,
+                iq: null,
+                bandLabel: "",
+                resultText: "",
+                errorMessage: err instanceof Error ? err.message : "Writing to IQ failed.",
+                status: null,
+                sourceUrl: WRITING_IQ_SOURCE.siteUrl,
+                endpointUrl: WRITING_IQ_SOURCE.endpointUrl,
+              }),
+            )
+          : Promise.resolve(null);
+
       if (mode === "free") {
-        setStatus("Free multi-scan starting…");
-        const out = await runFreeEnsemble(content, setStatus);
+        setStatus("Free multi-scan + Writing to IQ…");
+        const [out, iq] = await Promise.all([runFreeEnsemble(content, setStatus), iqJob]);
         setResults(out.results);
         setConsensus(out.consensus);
+        setWritingIq(iq);
         const okN = out.results.filter((r) => r.ok).length;
         setStatus(
           okN === 0
@@ -62,14 +86,18 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
           setStatus("API mode needs at least one enabled detector with a key — or use Free mode.");
           return;
         }
-        setStatus(`Running ${readyIds.length} API detector(s)…`);
+        setStatus(`Running ${readyIds.length} API detector(s) + Writing to IQ…`);
         const payloadKeys: KeyMap = {};
         for (const id of readyIds) payloadKeys[id] = keys[id]!.trim();
-        const out = await runAiDetectorEnsemble({
-          data: { content, keys: payloadKeys, enabled: readyIds },
-        });
+        const [out, iq] = await Promise.all([
+          runAiDetectorEnsemble({
+            data: { content, keys: payloadKeys, enabled: readyIds },
+          }),
+          iqJob,
+        ]);
         setResults(out.results);
         setConsensus(out.consensus);
+        setWritingIq(iq);
         const okN = out.results.filter((r) => r.ok).length;
         setStatus(
           okN === 0
@@ -98,7 +126,16 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
             <p className="mt-1 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
               Free mode: GPTZero-style perplexity+burstiness twin + 3 neural ONNX detectors +
               stylometrics — no keys. API mode: real GPTZero / WasItAI / Sapling / Winston / ZeroGPT /
-              Originality when you have keys.
+              Originality when you have keys. Every scan also calls Writing to IQ (
+              <a
+                className="text-cyan underline"
+                href={WRITING_IQ_SOURCE.siteUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {WRITING_IQ_SOURCE.siteUrl}
+              </a>
+              , no key).
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -151,10 +188,11 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               setMode(id);
               setResults(null);
               setConsensus(null);
+              setWritingIq(null);
               setStatus(
                 id === "free"
-                  ? "Free mode — paste text and multi-scan. No keys required."
-                  : "API mode — enable detectors and paste vendor keys.",
+                  ? "Free mode — paste text and multi-scan. Writing to IQ runs with every scan."
+                  : "API mode — enable detectors and paste vendor keys. Writing to IQ still runs (no key).",
               );
             }}
           >
@@ -165,6 +203,25 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
 
       {mode === "free" ? (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="zeus-outline-box rounded-sm border border-amber/40 bg-deepblue/50 p-3 backdrop-blur-md">
+            <p className="font-display text-xs uppercase tracking-[0.14em] text-amber">
+              {WRITING_IQ_SOURCE.name}
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+              {WRITING_IQ_SOURCE.about}
+            </p>
+            <a
+              className="mt-2 inline-block font-mono text-[10px] text-cyan underline"
+              href={WRITING_IQ_SOURCE.siteUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source: {WRITING_IQ_SOURCE.siteUrl}
+            </a>
+            <p className="mt-1 break-all font-mono text-[9px] text-muted-foreground">
+              Endpoint: {WRITING_IQ_SOURCE.endpointUrl}
+            </p>
+          </div>
           {FREE_DETECTORS.map((d) => (
             <div
               key={d.id}
@@ -240,6 +297,49 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               : `API multi-scan (${readyIds.length})`}
         </button>
       </section>
+
+      {writingIq && (
+        <section className="zeus-outline-box space-y-2 rounded-sm border border-amber/45 bg-deepblue/50 p-4 backdrop-blur-md">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-sm uppercase tracking-[0.16em] text-amber">
+              {WRITING_IQ_SOURCE.name}
+            </h2>
+            <a
+              className="font-mono text-[10px] text-cyan underline"
+              href={writingIq.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source →
+            </a>
+          </div>
+          {writingIq.ok && writingIq.iq != null ? (
+            <>
+              <p className="font-display text-3xl tracking-[0.08em] text-moon">{writingIq.iq}</p>
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber">
+                {writingIq.bandLabel}
+              </p>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {writingIq.resultText}. Vocabulary-based estimate for curiosity — not a
+                standardized IQ test, and not part of the AI consensus vote.
+              </p>
+            </>
+          ) : (
+            <p className="font-mono text-[11px] text-red-300/90">
+              {writingIq.errorMessage || "Could not estimate IQ from this sample."}
+            </p>
+          )}
+          <p className="font-mono text-[9px] leading-relaxed text-muted-foreground">
+            Source:{" "}
+            <a className="text-cyan underline" href={writingIq.sourceUrl} target="_blank" rel="noreferrer">
+              {writingIq.sourceUrl}
+            </a>
+            <br />
+            API:{" "}
+            <span className="break-all text-moon/80">{writingIq.endpointUrl}</span>
+          </p>
+        </section>
+      )}
 
       {consensus && (
         <section className="zeus-outline-box space-y-3 rounded-sm border border-cyan/40 bg-deepblue/50 p-4 backdrop-blur-md">
