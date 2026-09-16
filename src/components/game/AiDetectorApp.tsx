@@ -22,7 +22,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
   const [content, setContent] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [status, setStatus] = React.useState(
-    "Free mode works without keys — paste ~50+ words and multi-scan.",
+    "Free mode works without keys — GPTZero-style neural + stylometric stack. Paste ~50+ words.",
   );
   const [results, setResults] = React.useState<DetectorScanResult[] | null>(null);
   const [consensus, setConsensus] = React.useState<EnsembleConsensus | null>(null);
@@ -54,7 +54,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
         const okN = out.results.filter((r) => r.ok).length;
         setStatus(
           okN === 0
-            ? "Free scanners failed — check network for the first HC3 model download."
+            ? "Free scanners failed — check network for first model downloads (OpenAI/HC3/ModernBERT)."
             : out.consensus.summary,
         );
       } else {
@@ -96,8 +96,9 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               AI DETECTOR BENCH
             </h1>
             <p className="mt-1 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
-              Free mode: 6 local detectors (HC3 RoBERTa + stylometrics) — no keys. API mode: GPTZero /
-              WasItAI / Sapling / Winston / ZeroGPT / Originality when you have keys.
+              Free mode: GPTZero-style perplexity+burstiness twin + 3 neural ONNX detectors +
+              stylometrics — no keys. API mode: real GPTZero / WasItAI / Sapling / Winston / ZeroGPT /
+              Originality when you have keys.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -116,13 +117,13 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
         {showInfo && (
           <div className="space-y-2 border-b border-cyan/20 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
             <p className="text-mint">
-              Free mode works without API keys. First free scan downloads the open HC3 RoBERTa ONNX
-              model into your browser cache; after that it runs offline-friendly.
+              Free mode needs no API keys. First scan downloads open ONNX detectors into your browser
+              cache (OpenAI RoBERTa, HC3, ModernBERT). Neural scores are weighted heavier than
+              stylometrics — closer to how GPTZero leans on deep models over surface stats.
             </p>
             <p>
-              Quality note: free neural detector is HC3-era (ChatGPT-focused). Commercial GPTZero /
-              WasItAI are usually stronger on newest models — use API mode when you have keys.
-              Consensus is evidence, not proof.
+              Still evidence, not proof. Commercial GPTZero API (API mode) usually wins on newest
+              LLMs if you have a key.
             </p>
           </div>
         )}
@@ -235,7 +236,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
           {busy
             ? "Scanning…"
             : mode === "free"
-              ? "Free multi-scan (6)"
+              ? "Free multi-scan (10 · GPTZero-style)"
               : `API multi-scan (${readyIds.length})`}
         </button>
       </section>
