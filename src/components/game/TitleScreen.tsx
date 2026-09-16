@@ -77,38 +77,56 @@ export function TitleScreen(p: TitleScreenProps) {
   const [phase, setPhase] = React.useState<Phase>("intro");
   const [leaving, setLeaving] = React.useState(false);
   const [brain, setBrain] = React.useState(() => pickBrainLook());
+  const [brainVisible, setBrainVisible] = React.useState(true);
+  const fadingRef = React.useRef(false);
   const done = React.useRef(false);
   const landingRef = React.useRef<HTMLDivElement | null>(null);
+
+  const FADE_MS = 700;
+
+  const crossfadeBrain = React.useCallback(() => {
+    if (fadingRef.current || reduced) {
+      setBrain((prev) => pickBrainLook(prev.name));
+      return;
+    }
+    fadingRef.current = true;
+    setBrainVisible(false);
+    window.setTimeout(() => {
+      setBrain((prev) => pickBrainLook(prev.name));
+      // next frame so the new asset paints before fade-in
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setBrainVisible(true);
+          fadingRef.current = false;
+        });
+      });
+    }, FADE_MS);
+  }, [reduced]);
 
   const enterLanding = React.useCallback(() => {
     if (done.current) return;
     done.current = true;
     p.onUnlockAudio();
-    // Fresh random neon brain for the main hero behind the title
-    setBrain((prev) => pickBrainLook(prev.name));
+    crossfadeBrain();
     if (reduced) {
       setPhase("landing");
       return;
     }
     setLeaving(true);
     window.setTimeout(() => setPhase("landing"), 700);
-  }, [p, reduced]);
+  }, [p, reduced, crossfadeBrain]);
 
   React.useEffect(() => {
     if (phase !== "intro" || reduced) return;
-    const id = window.setInterval(() => {
-      setBrain((prev) => pickBrainLook(prev.name));
-    }, 2200);
+    const id = window.setInterval(crossfadeBrain, 3200);
     return () => window.clearInterval(id);
-  }, [phase, reduced]);
+  }, [phase, reduced, crossfadeBrain]);
 
   React.useEffect(() => {
     if (phase !== "landing" || reduced) return;
-    const id = window.setInterval(() => {
-      setBrain((prev) => pickBrainLook(prev.name));
-    }, 4800);
+    const id = window.setInterval(crossfadeBrain, 5200);
     return () => window.clearInterval(id);
-  }, [phase, reduced]);
+  }, [phase, reduced, crossfadeBrain]);
 
   React.useEffect(() => {
     if (phase !== "landing") return;
@@ -231,10 +249,9 @@ export function TitleScreen(p: TitleScreenProps) {
         )}
       >
         <img
-          key={brain.name}
           src={brainSrc}
           alt=""
-          className={cn("zeus-intro-brain")}
+          className={cn("zeus-intro-brain", brainVisible ? "zeus-brain-shown" : "zeus-brain-hidden")}
           style={{ filter: brainFilter }}
           decoding="async"
         />
@@ -263,10 +280,12 @@ export function TitleScreen(p: TitleScreenProps) {
       {/* Hero */}
       <section className="relative flex min-h-[88dvh] flex-col items-center justify-center overflow-hidden px-4 pb-16 pt-10 text-center">
         <img
-          key={brain.name}
           src={brainSrc}
           alt=""
-          className="zeus-hero-brain pointer-events-none absolute left-1/2 top-[44%] z-0 -translate-x-1/2 -translate-y-1/2 object-contain"
+          className={cn(
+            "zeus-hero-brain pointer-events-none absolute left-1/2 top-[44%] z-0 -translate-x-1/2 -translate-y-1/2 object-contain",
+            brainVisible ? "zeus-brain-shown" : "zeus-brain-hidden",
+          )}
           style={{ filter: brainFilter }}
           decoding="async"
         />
