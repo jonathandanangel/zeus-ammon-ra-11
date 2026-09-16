@@ -317,6 +317,8 @@ export function TitleScreen(p: TitleScreenProps) {
             <span>WOZKAF</span>
             <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
               Music: Das Armageddon (2026) by キ aerzengel
+              <br />
+              Music for heat transfer intro is from Portal 2.
             </span>
             <span>Jonathan Angel</span>
           </div>
@@ -375,6 +377,8 @@ export function TitleScreen(p: TitleScreenProps) {
           <span>WOZKAF</span>
           <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
             Music: Das Armageddon (2026) by キ aerzengel
+            <br />
+            Music for heat transfer intro is from Portal 2.
           </span>
           <span>Jonathan Angel</span>
         </div>
