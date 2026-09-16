@@ -50,6 +50,7 @@ import {
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
+  NUMBER_PHILOSOPHY,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
   type BezierSegment,
@@ -58,6 +59,7 @@ import {
   type InterpolationResult,
   type NonlinearSystemResult,
   type NumerologyResult,
+  type NumberPhilosophy,
   type Point2,
   type VibrationResult,
 } from "@/game/numerical-extreme";
@@ -2317,6 +2319,37 @@ function GeneticPanel() {
   );
 }
 
+function PhilosophyThoughtsBlock({ philosophy }: { philosophy: NumberPhilosophy }) {
+  const accent: Record<string, string> = {
+    Pythagoras: "border-amber/45 bg-amber/10",
+    "Manly P. Hall": "border-magenta/40 bg-magenta/10",
+    Aristotle: "border-cyan/40 bg-cyan/10",
+    "Thomas Aquinas": "border-yellow-400/35 bg-yellow-400/10",
+    "Avicenna (Ibn Sina)": "border-mint/40 bg-mint/10",
+    "Dr. Peter S. Ruckman": "border-orange-400/40 bg-orange-400/10",
+  };
+
+  return (
+    <div className="space-y-2.5">
+      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-amber">
+        {philosophy.sacredName} · Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman
+      </p>
+      {philosophy.thoughts.map((t) => (
+        <div
+          key={t.philosopher}
+          className={`rounded-lg border p-3 ${accent[t.philosopher] ?? "border-cyan/25 bg-black/30"}`}
+        >
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-cyan">
+            {t.philosopher}
+          </p>
+          <p className="font-mono text-[9px] leading-relaxed text-muted-foreground">{t.work}</p>
+          <p className="mt-2 font-mono text-[11px] leading-relaxed text-moon">{t.thought}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
   const compute = React.useContext(NumericalComputeContext);
@@ -2346,20 +2379,22 @@ function NumerologyPanel() {
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="space-y-3">
+      <div className="grid gap-3 lg:grid-cols-2">
       <div className="space-y-3">
-        <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + Johnson">
+        <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
             <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
               Samuel Johnson Dictionary 1777 federally validated is included — every word of the
-              numerology and tarot explanations is expanded by brute-force Johnson look-up.
+              numerology, tarot, and philosophical explanations is expanded by brute-force Johnson
+              look-up.
             </p>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan">
               BRUTE FORCE METHOD TO FIND DEFINITIONS!
             </p>
             <Field
               label="Type any word or phrase"
-              hint="A=1…Z=26 · mod 9 · classic path meaning · tarot · Johnson expands every word"
+              hint="A=1…Z=26 · mod 9 · path · tarot · five philosophers on your number · Johnson"
             >
               <TextInput
                 value={word}
@@ -2380,7 +2415,7 @@ function NumerologyPanel() {
             </div>
             {error && <ErrorBanner message={error} />}
             <p className="font-mono text-[10px] text-mint/80">
-              READY | Letter-sum path · tarot card · Johnson expands each explanation word.
+              READY | Letter-sum path · tarot · six traditions · Johnson expands each word.
             </p>
           </div>
         </Panel>
@@ -2421,8 +2456,13 @@ function NumerologyPanel() {
         {!result ? (
           <Panel title="Ready" eyebrow="NUMEROLOGY">
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-              Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Classic path meanings and a
-              matching Major Arcana tarot card appear, then{" "}
+              Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Classic path meanings, a
+              matching Major Arcana tarot card, and{" "}
+              <span className="text-cyan">
+                six traditions together on every number 1–9
+              </span>{" "}
+              (Pythagoras, Manly P. Hall, Aristotle, Thomas Aquinas, Avicenna, Dr. Peter S.
+              Ruckman) appear below. Then{" "}
               <span className="text-cyan">BRUTE FORCE METHOD TO FIND DEFINITIONS!</span> expands
               every explanation word with{" "}
               <span className="text-amber">Samuel Johnson Dictionary 1777 federally validated</span>.
@@ -2481,12 +2521,56 @@ function NumerologyPanel() {
               </div>
             </Panel>
 
-            <Panel title="Full report" eyebrow="Digital root · path · tarot · Johnson">
+            <Panel title="Full report" eyebrow="Digital root · path · tarot · philosophy · Johnson">
               <EquationBox label="Telemetry">{formatNumerologyReport(result)}</EquationBox>
             </Panel>
           </>
         )}
       </div>
+      </div>
+
+      {result && (
+        <Panel
+          title={`Number ${result.number} · ${result.philosophy.sacredName}`}
+          eyebrow="Six traditions · all thoughts together"
+        >
+          <PhilosophyThoughtsBlock philosophy={result.philosophy} />
+        </Panel>
+      )}
+
+      <Panel
+        title="Numbers 1–9 · complete philosophical lore"
+        eyebrow="Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman"
+      >
+        <p className="mb-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Every digit carries the same six voices in one place — sacred name, then each thinker’s
+          thought on that number, grouped together. Ruckman’s entries follow his{" "}
+          <span className="text-orange-300">Bible Numerics (1981)</span> survey of the Authorized
+          King James Version.
+        </p>
+        <div className="space-y-6">
+          {Array.from({ length: 9 }, (_, i) => {
+            const philosophy = NUMBER_PHILOSOPHY[i + 1]!;
+            const active = result?.number === philosophy.number;
+            return (
+              <div
+                key={philosophy.number}
+                className={`rounded-xl border p-4 ${
+                  active
+                    ? "border-amber/50 bg-amber/5 shadow-[0_0_24px_rgba(251,191,36,0.12)]"
+                    : "border-cyan/20 bg-black/20"
+                }`}
+              >
+                <p className="mb-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-cyan">
+                  {philosophy.number} · {philosophy.sacredName}
+                  {active ? " · your word" : ""}
+                </p>
+                <PhilosophyThoughtsBlock philosophy={philosophy} />
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
     </div>
   );
 }

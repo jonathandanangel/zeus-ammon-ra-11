@@ -1,4 +1,19 @@
-/** Pythagorean word numerology (A=1…Z=26) + Johnson 1777 brute-force expansion + tarot. */
+/** Pythagorean word numerology (A=1…Z=26) + Johnson 1777 brute-force expansion + tarot + philosophy. */
+
+import {
+  formatPhilosophyBlock,
+  philosophyForNumber,
+  type NumberPhilosophy,
+} from "./philosopher-numbers";
+
+export type { NumberPhilosophy, PhilosopherThought } from "./philosopher-numbers";
+export {
+  NUMBER_PHILOSOPHY,
+  PHILOSOPHER_ORDER,
+  philosophyForNumber,
+  formatPhilosophyBlock,
+  formatAllNumbersPhilosophy,
+} from "./philosopher-numbers";
 
 export type NumerologyLetter = {
   char: string;
@@ -46,6 +61,7 @@ export type NumerologyResult = {
   johnsonExpansions: JohnsonExpansion[];
   johnsonNumber: JohnsonSense | null;
   johnsonWord: JohnsonSense | null;
+  philosophy: NumberPhilosophy;
 };
 
 const VOWELS = new Set(["a", "e", "i", "o", "u"]);
@@ -501,6 +517,7 @@ export function wordToNumerology(word: string): NumerologyResult {
   const { steps: reductionSteps } = digitalRoot(sumPositions);
   const meaning = MEANINGS[number] ?? MEANINGS[9]!;
   const tarot = TAROT[number] ?? TAROT[9]!;
+  const philosophy = philosophyForNumber(number);
 
   const johnsonExpansions = bruteForceJohnsonExpand(
     meaning.title,
@@ -509,6 +526,7 @@ export function wordToNumerology(word: string): NumerologyResult {
     tarot.name,
     tarot.arcana,
     tarot.explanation,
+    ...philosophy.thoughts.map((t) => `${t.philosopher} ${t.work} ${t.thought}`),
   );
 
   const key = normalized.replace(/[^a-z]/g, "");
@@ -536,6 +554,7 @@ export function wordToNumerology(word: string): NumerologyResult {
     johnsonExpansions,
     johnsonNumber,
     johnsonWord,
+    philosophy,
   };
 }
 
@@ -570,6 +589,8 @@ export function formatNumerologyReport(result: NumerologyResult): string {
     "",
     `TAROT: ${result.tarot.arcana} · ${result.tarot.name}`,
     result.tarot.explanation,
+    "",
+    formatPhilosophyBlock(result.philosophy),
     "",
     "BRUTE FORCE METHOD TO FIND DEFINITIONS!",
     "Samuel Johnson Dictionary 1777 federally validated is included.",

@@ -122,13 +122,25 @@ export type {
   SparseLabResult,
 } from "./heat-aerospace";
 
-export { wordToNumerology, formatNumerologyReport, digitalRoot, bruteForceJohnsonExpand } from "./numerology";
+export {
+  wordToNumerology,
+  formatNumerologyReport,
+  digitalRoot,
+  bruteForceJohnsonExpand,
+  NUMBER_PHILOSOPHY,
+  PHILOSOPHER_ORDER,
+  philosophyForNumber,
+  formatPhilosophyBlock,
+  formatAllNumbersPhilosophy,
+} from "./numerology";
 export type {
   NumerologyResult,
   NumerologyLetter,
   JohnsonSense,
   JohnsonExpansion,
   TarotCard,
+  NumberPhilosophy,
+  PhilosopherThought,
 } from "./numerology";
 
 /** Format a number for display (null-safe). */
