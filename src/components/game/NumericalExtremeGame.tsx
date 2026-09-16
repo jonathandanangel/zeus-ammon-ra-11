@@ -3524,6 +3524,11 @@ function ReferencesPanel() {
           This client port reimplements selected demos in TypeScript for education and gameplay; it
           is not an official ACM redistribution of the Fortran/MATLAB source packages.
         </p>
+        <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Reference curation was AI-assisted, but every source listed here was used in building the
+          toolbox — including development and verification work in MATLAB and Octave alongside the
+          TypeScript Neon Composite Lab port.
+        </p>
       </Panel>
     </div>
   );
