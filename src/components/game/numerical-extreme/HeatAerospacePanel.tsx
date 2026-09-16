@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Chart } from "@/components/game/numerical-extreme/Chart";
+import { Field2D, Surface3D } from "@/components/game/numerical-extreme/HeatViz";
 import {
   ErrorBanner,
   Field,
@@ -47,51 +48,18 @@ const LAB_OPTIONS: Array<{ id: LabMode; label: string }> = [
   { id: "adolc", label: "ADOL-C demo (derivatives)" },
 ];
 
-function Heatmap({
-  grid,
-  title,
-}: {
+type FieldViz = {
   grid: number[][];
-  title: string;
-}) {
-  const flat = grid.flat().filter((v) => Number.isFinite(v));
-  const lo = flat.length ? Math.min(...flat) : 0;
-  const hi = flat.length ? Math.max(...flat) : 1;
-  const ny = grid.length;
-  const nx = grid[0]?.length ?? 0;
-  return (
-    <Panel title={title} eyebrow="Field">
-      <div
-        className="mx-auto w-full max-w-md overflow-hidden rounded-lg border border-cyan/30"
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${nx}, minmax(0, 1fr))`,
-          aspectRatio: `${nx} / ${Math.max(ny, 1)}`,
-        }}
-      >
-        {grid.map((row, j) =>
-          row.map((v, i) => {
-            const t = hi === lo ? 0.5 : (v - lo) / (hi - lo);
-            const hue = 220 - t * 180;
-            return (
-              <div
-                key={`${j}-${i}`}
-                title={`${formatNumber(v, 4)} K`}
-                style={{ backgroundColor: `hsl(${hue} 85% ${28 + t * 42}%)` }}
-              />
-            );
-          }),
-        )}
-      </div>
-      <p className="mt-2 font-mono text-[10px] text-muted-foreground">
-        {formatNumber(lo, 4)} → {formatNumber(hi, 4)} (cool → warm)
-      </p>
-    </Panel>
-  );
-}
+  xv: number[];
+  yv: number[];
+  title2d: string;
+  title3d: string;
+  showSurf: boolean;
+};
 
 export function HeatAerospacePanel() {
   const [lab, setLab] = React.useState<LabMode>("steady");
+  const [status, setStatus] = React.useState("READY");
   const [error, setError] = React.useState("");
   const [log, setLog] = React.useState(
     "Heat Transfer Aerospace Numerical Toolbox V2 ready.\nRevision 15 September 2026 · Octave-native labs in TypeScript.",
@@ -100,9 +68,7 @@ export function HeatAerospacePanel() {
   const [chartSeries, setChartSeries] = React.useState<
     Array<{ key: string; label: string; values: Array<number | null>; color: string }>
   >([]);
-  const [heatmap, setHeatmap] = React.useState<{ grid: number[][]; title: string } | null>(
-    null,
-  );
+  const [field, setField] = React.useState<FieldViz | null>(null);
   const [metrics, setMetrics] = React.useState<Array<{ label: string; value: string }>>([]);
   const [exportPayload, setExportPayload] = React.useState<unknown>(null);
 
@@ -126,17 +92,34 @@ export function HeatAerospacePanel() {
   const [altitude, setAltitude] = React.useState(10000);
   const [gamma, setGamma] = React.useState(1.4);
   const [areaRatio, setAreaRatio] = React.useState(2);
-  const [matrixOrder, setMatrixOrder] = React.useState(400);
+  const [matrixOrder, setMatrixOrder] = React.useState(225);
   const [tol, setTol] = React.useState(1e-8);
-  const [maxit, setMaxit] = React.useState(500);
+  const [maxit, setMaxit] = React.useState(200);
   const [solver, setSolver] = React.useState<SparseMethod>("backslash");
 
   function clearViz() {
     setChartX([]);
     setChartSeries([]);
-    setHeatmap(null);
+    setField(null);
     setMetrics([]);
     setExportPayload(null);
+  }
+
+  function selectLab(next: LabMode) {
+    setLab(next);
+    clearViz();
+    setError("");
+    setStatus("READY");
+    // Browser-safe defaults when switching into transient / plate modes
+    if (next === "transient") {
+      setNx(11);
+      setNy(11);
+      setDt(1);
+      setTf(20);
+    } else if (next === "steady") {
+      setNx(21);
+      setNy(21);
+    }
   }
 
   function applyAcmLab(id: (typeof HEAT_ACM_LABS)[number]["id"]) {
@@ -159,7 +142,7 @@ export function HeatAerospacePanel() {
     };
     const next = map[id];
     if (next) {
-      setLab(next);
+      selectLab(next);
       if (id === "lsqr") setSolver("lsqr");
       if (id === "itpack") setSolver("pcg");
       if (id === "umfpack") setSolver("backslash");
@@ -170,22 +153,19 @@ export function HeatAerospacePanel() {
   function run() {
     setError("");
     clearViz();
+    setStatus("RUNNING");
     try {
       if (lab === "steady") {
-        const r = runSteadyPlate({
-          nx,
-          ny,
-          Lx,
-          Ly,
-          k,
-          Tl,
-          Tr,
-          Tb,
-          Tinf,
-          hconv,
-        });
+        const r = runSteadyPlate({ nx, ny, Lx, Ly, k, Tl, Tr, Tb, Tinf, hconv });
         setLog(r.log.join("\n"));
-        setHeatmap({ grid: r.temperature, title: "Steady temperature field" });
+        setField({
+          grid: r.temperature,
+          xv: r.xv,
+          yv: r.yv,
+          title2d: "Steady temperature field",
+          title3d: "Temperature surface",
+          showSurf: true,
+        });
         setMetrics([
           { label: "Unknowns", value: String(r.unknowns) },
           { label: "nnz(A)", value: String(r.nnz) },
@@ -193,6 +173,7 @@ export function HeatAerospacePanel() {
           { label: "Time (s)", value: (r.elapsedMs / 1000).toFixed(4) },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "transient") {
@@ -214,7 +195,15 @@ export function HeatAerospacePanel() {
           tf,
         });
         setLog(r.log.join("\n"));
-        setHeatmap({ grid: r.temperature, title: "Final transient temperature" });
+        // Octave: imagesc on ax1 + mean-T history on ax2 (not surf for transient)
+        setField({
+          grid: r.temperature,
+          xv: r.xv,
+          yv: r.yv,
+          title2d: "Final transient temperature",
+          title3d: "Temperature surface (optional)",
+          showSurf: true,
+        });
         setChartX(r.history.map((h) => h.t));
         setChartSeries([
           {
@@ -232,18 +221,11 @@ export function HeatAerospacePanel() {
           },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "fin") {
-        const r = runStraightFin({
-          L: Lx,
-          k,
-          Tb: T0,
-          Tinf,
-          hconv,
-          P: finP,
-          Ac: finAc,
-        });
+        const r = runStraightFin({ L: Lx, k, Tb: T0, Tinf, hconv, P: finP, Ac: finAc });
         setLog(r.log.join("\n"));
         setChartX(r.x);
         setChartSeries([
@@ -256,6 +238,7 @@ export function HeatAerospacePanel() {
           { label: "η", value: r.efficiency.toFixed(6) },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "atmosphere") {
@@ -279,6 +262,7 @@ export function HeatAerospacePanel() {
           { label: "a", value: formatNumber(r.soundSpeed.at(-1), 6) },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "nozzle") {
@@ -287,31 +271,45 @@ export function HeatAerospacePanel() {
         setChartX(r.Ms);
         setChartSeries([
           { key: "AR", label: "A/A*", values: r.Afr, color: "#22d3ee" },
+          {
+            key: "pr",
+            label: "p/p0 (mapped)",
+            values: r.Ms.map((_, i) => {
+              const m = r.Ms[i]!;
+              const idx = Math.min(
+                r.Mplot.length - 1,
+                Math.max(0, Math.round((m / 5) * (r.Mplot.length - 1))),
+              );
+              return r.pr[idx]!;
+            }),
+            color: "#fbbf24",
+          },
         ]);
         setMetrics([
           { label: "M_sub", value: formatNumber(r.Msub, 10) },
           { label: "M_sup", value: formatNumber(r.Msup, 10) },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "sparse") {
-        const r = runSparseLab(
-          Math.max(3, Math.round(Math.sqrt(matrixOrder))),
-          solver,
-          tol,
-          maxit,
-        );
+        const ngrid = Math.max(3, Math.min(25, Math.round(Math.sqrt(matrixOrder))));
+        const r = runSparseLab(ngrid, solver, tol, maxit);
         setLog(r.log.join("\n"));
-        setHeatmap({ grid: r.solutionGrid, title: `${r.method} solution` });
+        const xv = Array.from({ length: ngrid }, (_, i) => i + 1);
+        const yv = [...xv];
+        setField({
+          grid: r.solutionGrid,
+          xv,
+          yv,
+          title2d: `${r.method} solution`,
+          title3d: "Solution surface",
+          showSurf: true,
+        });
         setChartX(r.history.map((_, i) => i));
         setChartSeries([
-          {
-            key: "res",
-            label: "‖r‖",
-            values: r.history,
-            color: "#34d399",
-          },
+          { key: "res", label: "‖r‖", values: r.history, color: "#34d399" },
         ]);
         setMetrics([
           { label: "Order", value: String(r.n) },
@@ -320,6 +318,7 @@ export function HeatAerospacePanel() {
           { label: "Flag", value: String(r.flag) },
         ]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       if (lab === "lbfgsb") {
@@ -332,6 +331,7 @@ export function HeatAerospacePanel() {
         ]);
         setMetrics([{ label: "x*", value: formatNumber(r.x, 8) }]);
         setExportPayload(r);
+        setStatus("COMPLETE");
         return;
       }
       const r = runAdolcDemo();
@@ -342,8 +342,10 @@ export function HeatAerospacePanel() {
         { label: "complex", value: formatNumber(r.complexStep, 12) },
       ]);
       setExportPayload(r);
+      setStatus("COMPLETE");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "HTANT run failed.");
+      setStatus("ERROR");
     }
   }
 
@@ -357,26 +359,31 @@ export function HeatAerospacePanel() {
   return (
     <div className="space-y-3">
       <Panel title="Heat Transfer Aerospace Numerical Toolbox V2" eyebrow="HTANT · 15 Sep 2026">
-        <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Octave-native laboratories for plate conduction, fins, atmosphere, nozzles, and sparse
-          Krylov solvers — with an ACM reference map (FISHPAK → IFISS). Fidelity tags A–D match the
-          V2 contract: related demos, not line-by-line Fortran ports.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Dual-pane visualization matches the Octave GUI: imagesc + surf(view 38,30) for
+            conduction. Transient is LU-factored once and capped so the tab stays responsive.
+          </p>
+          <p
+            className={cn(
+              "font-mono text-xs font-bold uppercase tracking-[0.16em]",
+              status === "READY" && "text-mint",
+              status === "RUNNING" && "text-amber",
+              status === "COMPLETE" && "text-mint",
+              status === "ERROR" && "text-red-400",
+            )}
+          >
+            {status}
+          </p>
+        </div>
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
         <div className="space-y-3">
-          <Panel title="Laboratory" eyebrow="Mode">
+          <Panel title="INPUTS" eyebrow="Laboratory">
             <div className="space-y-3">
               <Field label="Module">
-                <Select
-                  value={lab}
-                  onChange={(e) => {
-                    setLab(e.target.value as LabMode);
-                    clearViz();
-                    setError("");
-                  }}
-                >
+                <Select value={lab} onChange={(e) => selectLab(e.target.value as LabMode)}>
                   {LAB_OPTIONS.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.label}
@@ -387,11 +394,21 @@ export function HeatAerospacePanel() {
 
               {showPlate && (
                 <div className="grid grid-cols-2 gap-2">
-                  <Field label="Grid Nx">
-                    <NumberInput value={nx} min={3} max={80} onChange={(e) => setNx(Number(e.target.value))} />
+                  <Field label={`Grid Nx${lab === "transient" ? " (≤17)" : " (≤31)"}`}>
+                    <NumberInput
+                      value={nx}
+                      min={3}
+                      max={lab === "transient" ? 17 : 31}
+                      onChange={(e) => setNx(Number(e.target.value))}
+                    />
                   </Field>
-                  <Field label="Grid Ny">
-                    <NumberInput value={ny} min={3} max={80} onChange={(e) => setNy(Number(e.target.value))} />
+                  <Field label={`Grid Ny${lab === "transient" ? " (≤17)" : " (≤31)"}`}>
+                    <NumberInput
+                      value={ny}
+                      min={3}
+                      max={lab === "transient" ? 17 : 31}
+                      onChange={(e) => setNy(Number(e.target.value))}
+                    />
                   </Field>
                   <Field label="Length X (m)">
                     <NumberInput value={Lx} step="any" onChange={(e) => setLx(Number(e.target.value))} />
@@ -437,6 +454,9 @@ export function HeatAerospacePanel() {
                   <Field label="Final time (s)">
                     <NumberInput value={tf} step="any" onChange={(e) => setTf(Number(e.target.value))} />
                   </Field>
+                  <p className="col-span-2 font-mono text-[10px] text-amber/90">
+                    Auto-caps ≤48 steps · LU factored once (browser-safe vs Octave sparse \).
+                  </p>
                 </div>
               )}
 
@@ -500,7 +520,7 @@ export function HeatAerospacePanel() {
                       <NumberInput
                         value={matrixOrder}
                         min={9}
-                        max={1600}
+                        max={625}
                         onChange={(e) => setMatrixOrder(Number(e.target.value))}
                       />
                     </Field>
@@ -511,16 +531,13 @@ export function HeatAerospacePanel() {
                       <NumberInput
                         value={maxit}
                         min={1}
-                        max={5000}
+                        max={2000}
                         onChange={(e) => setMaxit(Number(e.target.value))}
                       />
                     </Field>
                   </div>
                   <Field label="Solver">
-                    <Select
-                      value={solver}
-                      onChange={(e) => setSolver(e.target.value as SparseMethod)}
-                    >
+                    <Select value={solver} onChange={(e) => setSolver(e.target.value as SparseMethod)}>
                       <option value="backslash">Sparse backslash (dense direct)</option>
                       <option value="pcg">PCG / CG</option>
                       <option value="gmres">GMRES</option>
@@ -566,9 +583,7 @@ export function HeatAerospacePanel() {
                   type="button"
                   title={item.blurb}
                   onClick={() => applyAcmLab(item.id)}
-                  className={cn(
-                    "rounded border border-cyan/30 bg-black/40 px-2 py-1 font-mono text-[9px] uppercase tracking-wide text-cyan transition hover:border-amber/50 hover:text-amber",
-                  )}
+                  className="rounded border border-cyan/30 bg-black/40 px-2 py-1 font-mono text-[9px] uppercase tracking-wide text-cyan transition hover:border-amber/50 hover:text-amber"
                 >
                   {item.label} · {item.algo}
                   <span className="ml-1 text-muted-foreground">({item.fidelity})</span>
@@ -579,12 +594,32 @@ export function HeatAerospacePanel() {
         </div>
 
         <div className="space-y-3">
-          {heatmap && <Heatmap grid={heatmap.grid} title={heatmap.title} />}
-          {chartX.length > 0 && chartSeries.length > 0 && (
-            <Chart x={chartX} series={chartSeries} height={280} />
-          )}
-          <Panel title="Output log" eyebrow="HTANT V2">
-            <pre className="max-h-80 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <Panel title="VISUALIZATION" eyebrow="ax1 · ax2">
+            <div className="grid gap-3 xl:grid-cols-2">
+              {field && <Field2D grid={field.grid} title={field.title2d} />}
+              {field?.showSurf && (
+                <Surface3D
+                  xv={field.xv}
+                  yv={field.yv}
+                  grid={field.grid}
+                  title={field.title3d}
+                />
+              )}
+            </div>
+            {chartX.length > 0 && chartSeries.length > 0 && (
+              <div className="mt-3">
+                <Chart x={chartX} series={chartSeries} height={260} />
+              </div>
+            )}
+            {!field && chartX.length === 0 && (
+              <p className="font-mono text-[11px] text-muted-foreground">
+                Run a laboratory to populate imagesc / surf panes (Octave dual-axis layout).
+              </p>
+            )}
+          </Panel>
+
+          <Panel title="OUTPUT LOG" eyebrow="HTANT V2">
+            <pre className="max-h-72 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
               {log}
             </pre>
           </Panel>

@@ -54,28 +54,60 @@ function denseFromSparse(A: SparseCOO): number[][] {
 }
 
 function solveDense(A: number[][], b: number[]): number[] {
-  const n = b.length;
-  const M = A.map((row, i) => [...row, b[i]!]);
+  const fact = luFactor(A);
+  return luSolve(fact, b);
+}
+
+/** In-place LU with partial pivoting; returns factors + pivot vector. */
+function luFactor(A: number[][]): { lu: number[][]; piv: number[] } {
+  const n = A.length;
+  const lu = A.map((row) => [...row]);
+  const piv = Array.from({ length: n }, (_, i) => i);
   for (let col = 0; col < n; col += 1) {
-    let piv = col;
+    let pivRow = col;
+    let maxAbs = Math.abs(lu[col]![col]!);
     for (let r = col + 1; r < n; r += 1) {
-      if (Math.abs(M[r]![col]!) > Math.abs(M[piv]![col]!)) piv = r;
+      const a = Math.abs(lu[r]![col]!);
+      if (a > maxAbs) {
+        maxAbs = a;
+        pivRow = r;
+      }
     }
-    if (Math.abs(M[piv]![col]!) < 1e-15) throw new Error("Singular matrix in direct solve.");
-    if (piv !== col) {
-      const tmp = M[col]!;
-      M[col] = M[piv]!;
-      M[piv] = tmp;
+    if (maxAbs < 1e-15) throw new Error("Singular matrix in LU factorization.");
+    if (pivRow !== col) {
+      const tmp = lu[col]!;
+      lu[col] = lu[pivRow]!;
+      lu[pivRow] = tmp;
+      const tp = piv[col]!;
+      piv[col] = piv[pivRow]!;
+      piv[pivRow] = tp;
     }
-    const diag = M[col]![col]!;
-    for (let j = col; j <= n; j += 1) M[col]![j]! /= diag;
-    for (let r = 0; r < n; r += 1) {
-      if (r === col) continue;
-      const f = M[r]![col]!;
-      for (let j = col; j <= n; j += 1) M[r]![j]! -= f * M[col]![j]!;
+    const diag = lu[col]![col]!;
+    for (let r = col + 1; r < n; r += 1) {
+      const f = lu[r]![col]! / diag;
+      lu[r]![col] = f;
+      for (let j = col + 1; j < n; j += 1) lu[r]![j]! -= f * lu[col]![j]!;
     }
   }
-  return M.map((row) => row[n]!);
+  return { lu, piv };
+}
+
+function luSolve(fact: { lu: number[][]; piv: number[] }, b: number[]): number[] {
+  const n = b.length;
+  const { lu, piv } = fact;
+  const y = new Array<number>(n);
+  for (let i = 0; i < n; i += 1) {
+    let s = b[piv[i]!]!;
+    for (let j = 0; j < i; j += 1) s -= lu[i]![j]! * y[j]!;
+    y[i] = s;
+  }
+  const x = new Array<number>(n);
+  for (let i = n - 1; i >= 0; i -= 1) {
+    let s = y[i]!;
+    for (let j = i + 1; j < n; j += 1) s -= lu[i]![j]! * x[j]!;
+    x[i] = s / lu[i]![i]!;
+  }
+  return x;
 }
 
 function norm2(v: number[]): number {
@@ -174,7 +206,8 @@ export type SteadyPlateResult = {
 };
 
 export function runSteadyPlate(p: PlateParams): SteadyPlateResult {
-  if (p.nx > 80 || p.ny > 80) throw new Error("Steady grid capped at 80×80 in the browser.");
+  // Browser dense solve: keep grids modest (Octave allows up to 250).
+  if (p.nx > 31 || p.ny > 31) throw new Error("Steady grid capped at 31×31 in the browser.");
   const sys = plateMatrix(p);
   const t0 = performance.now();
   const T = solveDense(denseFromSparse(sys.A), sys.b);
@@ -217,9 +250,19 @@ export type TransientPlateResult = {
 export function runTransientPlate(
   p: PlateParams & { rho: number; cp: number; T0: number; dt: number; tf: number },
 ): TransientPlateResult {
-  if (p.nx > 40 || p.ny > 40) throw new Error("Transient grid capped at 40×40 in the browser.");
+  // Dense O(n³) per step crashed the tab — factor M once + hard caps.
+  if (p.nx > 17 || p.ny > 17) {
+    throw new Error("Transient grid capped at 17×17 in the browser (was freezing the page).");
+  }
   if (!(p.dt > 0 && p.tf > 0 && p.rho > 0 && p.cp > 0)) {
     throw new Error("rho, cp, dt, and final time must be positive.");
+  }
+  let dt = p.dt;
+  let steps = Math.ceil(p.tf / dt);
+  const MAX_STEPS = 48;
+  if (steps > MAX_STEPS) {
+    dt = p.tf / MAX_STEPS;
+    steps = MAX_STEPS;
   }
   const sys = plateMatrix(p);
   const n = sys.b.length;
@@ -232,35 +275,40 @@ export function runTransientPlate(
     fixed[j * nx + nx - 1] = true;
   }
   const alpha = p.k / (p.rho * p.cp);
-  // Backward Euler: (I + dt*α L) T^{n+1} = T^n + dt*α b_bc  with L from plate operator
-  // Build dense M = I + dt*α*A_op where A_op is the sparse plate matrix for interiors.
-  // Using full A as in Octave V2: M = I + dt*scale*L with L=K plate matrix.
   const scale = alpha;
   const Ad = denseFromSparse(sys.A);
   const M = Ad.map((row, i) =>
-    row.map((v, j) => (i === j ? 1 + p.dt * scale * v : p.dt * scale * v)),
+    row.map((v, j) => (i === j ? 1 + dt * scale * v : dt * scale * v)),
   );
+  // Dirichlet rows once (matches Octave identity rows on fixed DOFs).
+  for (let i = 0; i < n; i += 1) {
+    if (!fixed[i]) continue;
+    for (let j = 0; j < n; j += 1) M[i]![j] = i === j ? 1 : 0;
+  }
+  const fact = luFactor(M);
   let T = new Array<number>(n).fill(p.T0);
   for (let i = 0; i < n; i += 1) if (fixed[i]) T[i] = sys.b[i]!;
-  const steps = Math.ceil(p.tf / p.dt);
-  const history: TransientPlateResult["history"] = [{ t: 0, meanT: T.reduce((s, v) => s + v, 0) / n }];
+  const history: TransientPlateResult["history"] = [
+    { t: 0, meanT: T.reduce((s, v) => s + v, 0) / n },
+  ];
+  const rhs = new Array<number>(n);
   for (let it = 1; it <= steps; it += 1) {
-    const rhs = T.map((Ti, i) => Ti + p.dt * scale * sys.b[i]!);
-    for (let i = 0; i < n; i += 1) if (fixed[i]) rhs[i] = sys.b[i]!;
-    // Enforce Dirichlet rows of M
     for (let i = 0; i < n; i += 1) {
-      if (!fixed[i]) continue;
-      for (let j = 0; j < n; j += 1) M[i]![j] = i === j ? 1 : 0;
+      rhs[i] = fixed[i] ? sys.b[i]! : T[i]! + dt * scale * sys.b[i]!;
     }
-    T = solveDense(M, rhs);
+    T = luSolve(fact, rhs);
     history.push({
-      t: Math.min(it * p.dt, p.tf),
+      t: Math.min(it * dt, p.tf),
       meanT: T.reduce((s, v) => s + v, 0) / n,
     });
   }
   const temperature = Array.from({ length: ny }, (_, j) =>
     Array.from({ length: nx }, (_, i) => T[i + j * nx]!),
   );
+  const note =
+    dt !== p.dt
+      ? ` (dt auto-adjusted ${p.dt} → ${dt.toPrecision(4)} for ≤${MAX_STEPS} steps)`
+      : "";
   return {
     module: "transient_plate",
     temperature,
@@ -268,7 +316,8 @@ export function runTransientPlate(
     xv: sys.xv,
     yv: sys.yv,
     log: [
-      `Transient plate: ${steps} steps, α = ${alpha.toExponential(4)} m²/s`,
+      `Transient plate: ${steps} steps, α = ${alpha.toExponential(4)} m²/s${note}`,
+      `Factored backward-Euler once (LU) — browser-safe`,
       `Final mean temperature: ${(T.reduce((s, v) => s + v, 0) / n).toPrecision(6)} K`,
     ],
   };
