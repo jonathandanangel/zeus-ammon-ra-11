@@ -50,7 +50,6 @@ import {
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
-  NUMBER_PHILOSOPHY,
   THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
@@ -2530,23 +2529,39 @@ function GeometryColourCard({
   );
 }
 
-function ThoughtFormsGallery() {
+function RelevantThoughtForms({
+  number,
+  colorName,
+}: {
+  number: number;
+  colorName: string;
+}) {
+  const plates = THOUGHT_FORM_PLATES.filter((plate) => {
+    if (plate.id === "colour-chart") return true;
+    if (plate.id === "chladni") return true;
+    if (number === 7 && plate.id === "sevenfold") return true;
+    if ((number === 3 || number === 6) && plate.id === "sevenfold") return true;
+    return false;
+  });
+
   return (
     <Panel
-      title="Thought-Forms · official plates"
-      eyebrow="Besant & Leadbeater · Theosophical Publishing Society · Gutenberg #16269"
+      title="Thought-Forms · for this number"
+      eyebrow={`Theosophy · ${colorName} · vibration → form`}
     >
       <p className="mb-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
-        Official public-domain illustrations from{" "}
-        <span className="text-amber">Thought-Forms (1901)</span> — how vibration builds form, the
-        Meaning of the Colours key, pendulum & Chladni figures, sevenfold manifestation, and musical
-        thought-forms.
+        Official plates from Besant & Leadbeater that bear on{" "}
+        <span style={{ color: "inherit" }} className="text-amber">
+          number {number}
+        </span>
+        : the colour key for your ray, and Chladni’s proof that vibration builds geometry
+        {number === 7 || number === 3 || number === 6 ? ", plus sevenfold / threefold manifestation" : ""}.
       </p>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {THOUGHT_FORM_PLATES.map((plate) => (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {plates.map((plate) => (
           <figure
             key={plate.id}
-            className="overflow-hidden rounded-xl border border-cyan/25 bg-black/40 shadow-[0_0_20px_rgba(34,211,238,0.08)]"
+            className="overflow-hidden rounded-xl border border-cyan/25 bg-black/40"
           >
             <div className="relative aspect-[4/5] overflow-hidden bg-black/60">
               <img
@@ -2570,7 +2585,13 @@ function ThoughtFormsGallery() {
   );
 }
 
-function PhilosophyThoughtsBlock({ philosophy }: { philosophy: NumberPhilosophy }) {
+function PhilosophyThoughtsBlock({
+  philosophy,
+  showGeometry = true,
+}: {
+  philosophy: NumberPhilosophy;
+  showGeometry?: boolean;
+}) {
   const accent: Record<string, string> = {
     Pythagoras: "border-amber/45 bg-amber/10",
     "Manly P. Hall": "border-magenta/40 bg-magenta/10",
@@ -2584,10 +2605,9 @@ function PhilosophyThoughtsBlock({ philosophy }: { philosophy: NumberPhilosophy 
 
   return (
     <div className="space-y-2.5">
-      <GeometryColourCard philosophy={philosophy} />
+      {showGeometry && <GeometryColourCard philosophy={philosophy} />}
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-amber">
-        {philosophy.sacredName} · Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman ·
-        Theosophy
+        Number {philosophy.number} · {philosophy.sacredName} · {philosophy.geometry.colorName}
       </p>
       {philosophy.thoughts.map((t) => (
         <div
@@ -2720,17 +2740,9 @@ function NumerologyPanel() {
         {!result ? (
           <Panel title="Ready" eyebrow="NUMEROLOGY">
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-              Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Classic path meanings, a
-              matching Major Arcana tarot card, and{" "}
-              <span className="text-cyan">
-                seven traditions together on every number 1–9
-              </span>{" "}
-              (Pythagoras, Manly P. Hall, Aristotle, Thomas Aquinas, Avicenna, Dr. Peter S.
-              Ruckman, Theosophical Society) appear below — with Pythagorean geometry coloured by
-              the Theosophical prismatic scale. Then{" "}
-              <span className="text-cyan">BRUTE FORCE METHOD TO FIND DEFINITIONS!</span> expands
-              every explanation word with{" "}
-              <span className="text-amber">Samuel Johnson Dictionary 1777 federally validated</span>.
+              Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Only the lore for{" "}
+              <span className="text-cyan">your number</span> appears — path, tarot, sacred geometry,
+              Theosophy colour, and seven traditions — plus Johnson expansions of those glosses.
             </p>
           </Panel>
         ) : (
@@ -2795,88 +2807,19 @@ function NumerologyPanel() {
       </div>
 
       {result && (
-        <Panel
-          title={`Number ${result.number} · ${result.philosophy.sacredName}`}
-          eyebrow="Seven traditions · geometry · Theosophy colour"
-        >
-          <PhilosophyThoughtsBlock philosophy={result.philosophy} />
-        </Panel>
+        <>
+          <Panel
+            title={`Number ${result.number} · ${result.philosophy.sacredName}`}
+            eyebrow={`${result.philosophy.geometry.colorName} · geometry · seven traditions`}
+          >
+            <PhilosophyThoughtsBlock philosophy={result.philosophy} showGeometry={false} />
+          </Panel>
+          <RelevantThoughtForms
+            number={result.number}
+            colorName={result.philosophy.geometry.colorName}
+          />
+        </>
       )}
-
-      <ThoughtFormsGallery />
-
-      <Panel
-        title="Numbers 1–9 · geometry · colour · lore"
-        eyebrow="Pythagoras forms · Theosophy Red→Violet · seven voices"
-      >
-        <p className="mb-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Each digit shows its Pythagorean figure tinted with the Theosophical prismatic colour
-          (Blavatsky: colours–sounds–numbers from 1→7; 8 rose octave, 9 white-gold synthesis), then
-          seven traditions together. Official{" "}
-          <span className="text-amber">Thought-Forms</span> plates above illustrate vibration → form.
-        </p>
-        <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
-          {Array.from({ length: 9 }, (_, i) => {
-            const philosophy = NUMBER_PHILOSOPHY[i + 1]!;
-            const active = result?.number === philosophy.number;
-            return (
-              <div
-                key={philosophy.number}
-                className={cn(
-                  "flex flex-col items-center rounded-lg border bg-black/40 px-1 py-2",
-                  active
-                    ? "border-amber/60 shadow-[0_0_16px_rgba(251,191,36,0.2)]"
-                    : "border-cyan/20",
-                )}
-                style={{ boxShadow: active ? `0 0 18px ${philosophy.geometry.hex}44` : undefined }}
-                title={`${philosophy.number} · ${philosophy.geometry.figure} · ${philosophy.geometry.colorName}`}
-              >
-                <SacredGeometryGlyph
-                  number={philosophy.number}
-                  hex={philosophy.geometry.hex}
-                  size={56}
-                />
-                <span
-                  className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em]"
-                  style={{ color: philosophy.geometry.hex }}
-                >
-                  {philosophy.number} · {philosophy.geometry.colorName}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="space-y-6">
-          {Array.from({ length: 9 }, (_, i) => {
-            const philosophy = NUMBER_PHILOSOPHY[i + 1]!;
-            const active = result?.number === philosophy.number;
-            return (
-              <div
-                key={philosophy.number}
-                className={`rounded-xl border p-4 ${
-                  active
-                    ? "border-amber/50 bg-amber/5 shadow-[0_0_24px_rgba(251,191,36,0.12)]"
-                    : "border-cyan/20 bg-black/20"
-                }`}
-                style={
-                  active
-                    ? { boxShadow: `0 0 28px ${philosophy.geometry.hex}33` }
-                    : { borderColor: `${philosophy.geometry.hex}33` }
-                }
-              >
-                <p
-                  className="mb-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em]"
-                  style={{ color: philosophy.geometry.hex }}
-                >
-                  {philosophy.number} · {philosophy.sacredName} · {philosophy.geometry.colorName}
-                  {active ? " · your word" : ""}
-                </p>
-                <PhilosophyThoughtsBlock philosophy={philosophy} />
-              </div>
-            );
-          })}
-        </div>
-      </Panel>
     </div>
   );
 }

@@ -526,7 +526,9 @@ export function wordToNumerology(word: string): NumerologyResult {
     tarot.name,
     tarot.arcana,
     tarot.explanation,
-    ...philosophy.thoughts.map((t) => `${t.philosopher} ${t.work} ${t.thought}`),
+    philosophy.sacredName,
+    philosophy.geometry.figure,
+    philosophy.geometry.colorName,
   );
 
   const key = normalized.replace(/[^a-z]/g, "");
