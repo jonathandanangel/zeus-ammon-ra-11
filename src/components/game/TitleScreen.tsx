@@ -20,6 +20,7 @@ export interface TitleScreenProps {
   onSpiritBound: () => void;
   onNumericalExtreme: () => void;
   onVanityApp: () => void;
+  onAiDetector: () => void;
   onSettings: () => void;
   onValidate: () => void;
 }
@@ -227,12 +228,20 @@ export function TitleScreen(p: TitleScreenProps) {
       id: "system",
       eyebrow: "System",
       title: "Settings & validation",
-      blurb: "Photosensitivity, reduced motion, audio, and developer question-bank checks.",
+      blurb:
+        "Photosensitivity, reduced motion, audio, question-bank checks, and the six-detector AI bench.",
       accentClass: "from-moon/15 via-transparent to-cyan/10 border-border",
       buttonClass: "border-cyan/40 text-cyan hover:bg-cyan/15",
       actions: [
         { label: "Settings", onClick: p.onSettings },
         { label: "Developer validation", onClick: p.onValidate },
+        {
+          label: "AI Detector",
+          onClick: p.onAiDetector,
+          sub: "Multi-scan · bring your keys",
+          buttonClass:
+            "border-cyan/55 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(34,211,238,0.22)]",
+        },
       ],
     },
   ];

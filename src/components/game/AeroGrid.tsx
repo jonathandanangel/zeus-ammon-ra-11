@@ -44,6 +44,7 @@ import { SpiritBoundGame } from "./SpiritBoundGame";
 import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
 import { VanityApp } from "./VanityApp";
+import { AiDetectorApp } from "./AiDetectorApp";
 import { WorldBackground } from "./WorldBackground";
 
 type Screen =
@@ -63,7 +64,8 @@ type Screen =
   | "ht-chapter-jump"
   | "spirit-bound"
   | "numerical-extreme"
-  | "vanity-app";
+  | "vanity-app"
+  | "ai-detector";
 type Mode =
   | "campaign"
   | "practice"
@@ -76,7 +78,8 @@ type Mode =
   | "ht-intro"
   | "spirit-bound"
   | "numerical-extreme"
-  | "vanity-app";
+  | "vanity-app"
+  | "ai-detector";
 type Phase = "answering" | "revealed" | "recall";
 type IntermissionGame = "lightcycle" | "maze";
 
@@ -186,6 +189,7 @@ export function AeroGrid() {
       case "spirit-bound":
       case "numerical-extreme":
       case "vanity-app":
+      case "ai-detector":
         return [];
       case "mastery":
         return stableShuffle(allQuestions, "mastery");
@@ -274,8 +278,8 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "spirit-bound") {
-      // Legend of Triangles / Numerical / Vanity manage their own beds — no title or Extreme track.
+    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "ai-detector" || mode === "spirit-bound") {
+      // Legend / Numerical / Vanity / AI Detector manage their own beds — no title or Extreme track.
       return undefined;
     }
     if (isExtremeFamily(mode)) {
@@ -797,6 +801,28 @@ export function AeroGrid() {
             setPsychedelicActive(false);
             setScreen("vanity-app");
           }}
+          onAiDetector={() => {
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
+            setMode("ai-detector");
+            setReviewIds([]);
+            setLocalIndex(0);
+            setAnswer([]);
+            setPhase("answering");
+            setShowHint(false);
+            setExtremeScore(0);
+            setExtremeCorrectCount(0);
+            setV2Log([]);
+            setHtLog([]);
+            setHtiLog([]);
+            setPendingIntermission(null);
+            setGauntletRecovery(false);
+            setOverloadBurst(0);
+            setPsychedelicActive(false);
+            setScreen("ai-detector");
+          }}
           onSettings={() => setScreen("settings")}
           onValidate={() => setScreen("validate")}
         />
@@ -817,6 +843,8 @@ export function AeroGrid() {
       )}
 
       {screen === "vanity-app" && <VanityApp onMenu={() => setScreen("title")} />}
+
+      {screen === "ai-detector" && <AiDetectorApp onMenu={() => setScreen("title")} />}
 
       {screen === "settings" && <SettingsPanel onBack={() => setScreen("title")} />}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}
