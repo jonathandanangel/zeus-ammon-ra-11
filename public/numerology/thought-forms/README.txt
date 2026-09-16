@@ -4,9 +4,11 @@ and the user’s 1905 PDF scan (book/ subfolder).
 
 GENERAL SOURCE (all words / path numbers / scrambles / colour combinations):
 key-to-meanings-of-colours.png
-  — Frontispiece “Key to the Meanings of Colours” (Besant & Leadbeater).
+  — Frontispiece “Key to the Meanings of Colours” (Besant & Leadbeater),
+    high-resolution crop from the 1905 PDF (left plate only, ~2340×3490).
     Always shown in the Numerology tab for every path digit. Use this chart
     when decoding colour mixes, word–number anagrams, and combination rates.
+    Fallback: colorchart.jpg (Project Gutenberg plate).
 
 colorchart.jpg  — Alternate / Gutenberg colour chart scan
 fig1.png        — Fig. 1: Chladni's Sound Plate (vibration → form)

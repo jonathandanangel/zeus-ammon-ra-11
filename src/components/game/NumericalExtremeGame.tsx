@@ -2799,12 +2799,13 @@ function RelevantThoughtForms({
           <p className="font-mono text-[12px] text-cyan">{key.title}</p>
           <p className="font-mono text-[9px] text-muted-foreground">{key.bookRef}</p>
         </div>
-        <div className="relative max-h-[420px] overflow-auto bg-black/70 p-2">
+        <div className="relative max-h-[min(80vh,920px)] overflow-auto bg-[#f4efe4]/95 p-2">
           <img
             src={key.src}
             alt={key.title}
-            className="mx-auto h-auto w-full max-w-3xl object-contain"
-            loading="lazy"
+            className="mx-auto h-auto w-full max-w-4xl object-contain"
+            loading="eager"
+            decoding="async"
             onError={(e) => {
               const img = e.currentTarget;
               if (img.dataset.fallback === "1") return;
