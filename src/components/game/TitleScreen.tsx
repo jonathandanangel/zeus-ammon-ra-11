@@ -181,7 +181,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Thermal",
       title: "Heat Transfer",
       blurb:
-        "Music is Das Armageddon (2026) by キ aerzengel (@AERZENGEL). Related channels: Berdysh (@Berdysh66), Occult Tripping KVLT (@OccultTrippingCult), Shypunch (@Shypunch120), SERAPHRID (@seraphrid78787), Luxen (@Luxen420). Game is extremely hard meant to increase learning rate rapidly for general agency related questions for heat transfer and thermodynamics.",
+        "Music: Iasos – Crystal Vista (1981); Das Armageddon (2026) by キ aerzengel (@AERZENGEL). Related: Berdysh (@Berdysh66), Occult Tripping KVLT (@OccultTrippingCult), Shypunch (@Shypunch120), SERAPHRID (@seraphrid78787), Luxen (@Luxen420). Intro bed from Portal 2. Game is extremely hard meant to increase learning rate rapidly for general agency related questions for heat transfer and thermodynamics.",
       accentClass: "from-[#ff8c1a]/25 via-transparent to-[#ff2a2a]/25 border-[#ff8c1a]/55",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff2a2a] hover:bg-[#ff2a2a]/15 ht-extreme-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
@@ -319,9 +319,11 @@ export function TitleScreen(p: TitleScreenProps) {
           <div className="mt-4 flex w-full max-w-lg items-end justify-between gap-4 px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <span>WOZKAF</span>
             <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
-              Music: Das Armageddon (2026) by キ aerzengel
+              Music: Iasos – Crystal Vista (1981)
               <br />
-              Music for heat transfer intro is from Portal 2.
+              Das Armageddon (2026) by キ aerzengel
+              <br />
+              Heat Transfer Intro: Portal 2
             </span>
             <span>Jonathan Angel</span>
           </div>
@@ -379,9 +381,11 @@ export function TitleScreen(p: TitleScreenProps) {
         <div className="flex w-full max-w-lg items-end justify-between gap-4 self-center px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <span>WOZKAF</span>
           <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
-            Music: Das Armageddon (2026) by キ aerzengel
+            Music: Iasos – Crystal Vista (1981)
             <br />
-            Music for heat transfer intro is from Portal 2.
+            Das Armageddon (2026) by キ aerzengel
+            <br />
+            Heat Transfer Intro: Portal 2
           </span>
           <span>Jonathan Angel</span>
         </div>
