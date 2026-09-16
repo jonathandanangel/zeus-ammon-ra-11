@@ -50,6 +50,9 @@ import {
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
+  lookupJohnsonInline,
+  loadJohnsonResources,
+  lookupJohnsonFull,
   THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
@@ -59,6 +62,7 @@ import {
   type InterpolationResult,
   type NonlinearSystemResult,
   type NumerologyResult,
+  type JohnsonSense,
   type NumberPhilosophy,
   type Point2,
   type VibrationResult,
@@ -2633,8 +2637,86 @@ function PhilosophyThoughtsBlock({
   );
 }
 
+function JohnsonEntryPanel({
+  title,
+  eyebrow,
+  entry,
+  loading,
+}: {
+  title: string;
+  eyebrow: string;
+  entry: JohnsonSense | null;
+  loading?: boolean;
+}) {
+  if (loading) {
+    return (
+      <Panel title={title} eyebrow={eyebrow}>
+        <p className="font-mono text-[10px] text-muted-foreground">Loading Johnson 1755 lexicon…</p>
+      </Panel>
+    );
+  }
+  if (!entry) {
+    return (
+      <Panel title={title} eyebrow={eyebrow}>
+        <p className="font-mono text-[10px] text-muted-foreground">No Johnson headword found for this word.</p>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel title={title} eyebrow={eyebrow}>
+      <div className="space-y-3">
+        <div>
+          <p className="font-mono text-[13px] font-bold text-cyan">{entry.headword}</p>
+          {entry.partOfSpeech && (
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-amber">{entry.partOfSpeech}</p>
+          )}
+        </div>
+        <ol className="list-decimal space-y-2 pl-4 font-mono text-[11px] leading-relaxed text-moon">
+          {entry.senses.map((sense, index) => (
+            <li key={`${entry.headword}-${index}`}>{sense}</li>
+          ))}
+        </ol>
+        {entry.facsimileUrl && (
+          <figure className="overflow-hidden rounded-lg border border-cyan/25 bg-black/50">
+            <img
+              src={entry.facsimileUrl}
+              alt={`Johnson 1755 facsimile page ${entry.facsimilePage ?? ""}`}
+              className="max-h-72 w-full object-contain"
+              loading="lazy"
+            />
+            <figcaption className="border-t border-cyan/15 px-3 py-2 font-mono text-[9px] text-muted-foreground">
+              UCF high-res scan (OneDrive zip){entry.facsimilePage ? ` · page ${entry.facsimilePage}` : ""}
+            </figcaption>
+          </figure>
+        )}
+        <div className="flex flex-wrap gap-2 font-mono text-[9px] text-muted-foreground">
+          <span>{entry.source}</span>
+          {entry.facsimilePage && !entry.facsimileUrl && (
+            <span>· facsimile page ~{entry.facsimilePage} (not extracted from zip)</span>
+          )}
+          {entry.onlineUrl && (
+            <a
+              href={entry.onlineUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-cyan underline-offset-2 hover:underline"
+            >
+              Johnson&apos;s Dictionary Online
+            </a>
+          )}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
+  const [johnsonReady, setJohnsonReady] = React.useState(false);
+  const [johnsonWordEntry, setJohnsonWordEntry] = React.useState<JohnsonSense | null>(null);
+  const [johnsonNumberEntry, setJohnsonNumberEntry] = React.useState<JohnsonSense | null>(null);
+  const johnsonResourcesRef = React.useRef<Awaited<ReturnType<typeof loadJohnsonResources>> | null>(null);
   const compute = React.useContext(NumericalComputeContext);
 
   const { result, error } = React.useMemo(() => {
@@ -2652,6 +2734,59 @@ function NumerologyPanel() {
     }
   }, [word]);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    loadJohnsonResources()
+      .then((resources) => {
+        if (cancelled) return;
+        johnsonResourcesRef.current = resources;
+        setJohnsonReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setJohnsonReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!result) {
+      setJohnsonWordEntry(null);
+      setJohnsonNumberEntry(null);
+      return;
+    }
+
+    const resources = johnsonResourcesRef.current;
+    const wordKey = result.normalized.replace(/[^a-z]/g, "");
+    const numberWord = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][
+      result.number
+    ] ?? "nine";
+
+    if (!resources) {
+      setJohnsonWordEntry(result.johnsonWord);
+      setJohnsonNumberEntry(result.johnsonNumber);
+      return;
+    }
+
+    let cancelled = false;
+    setJohnsonWordEntry(null);
+    setJohnsonNumberEntry(null);
+
+    Promise.all([
+      lookupJohnsonFull(wordKey, resources, lookupJohnsonInline),
+      lookupJohnsonFull(numberWord, resources, lookupJohnsonInline),
+    ]).then(([wordEntry, numberEntry]) => {
+      if (cancelled) return;
+      setJohnsonWordEntry(wordEntry ?? result.johnsonWord);
+      setJohnsonNumberEntry(numberEntry ?? result.johnsonNumber);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [result, johnsonReady]);
+
   function downloadReport() {
     if (!result) return;
     compute();
@@ -2668,9 +2803,8 @@ function NumerologyPanel() {
         <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
             <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
-              Samuel Johnson Dictionary 1777 federally validated is included — every word of the
-              numerology, tarot, and philosophical explanations is expanded by brute-force Johnson
-              look-up.
+              Samuel Johnson&apos;s 1755 Dictionary (LEME XML, 37k headwords) appears for your typed word.
+              UCF facsimile scans from the OneDrive zip show when a page image was extracted.
             </p>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan">
               BRUTE FORCE METHOD TO FIND DEFINITIONS!
@@ -2734,6 +2868,24 @@ function NumerologyPanel() {
             </div>
           </Panel>
         )}
+
+        {result && (
+          <>
+            <JohnsonEntryPanel
+              title={`“${result.normalized}” in Johnson`}
+              eyebrow="1755 · your word"
+              entry={johnsonWordEntry}
+              loading={!johnsonReady}
+            />
+            {johnsonNumberEntry && (
+              <JohnsonEntryPanel
+                title={`Number ${result.number} · ${["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE"][result.number]}`}
+                eyebrow="1755 · path digit"
+                entry={johnsonNumberEntry}
+              />
+            )}
+          </>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -2742,7 +2894,7 @@ function NumerologyPanel() {
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
               Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Only the lore for{" "}
               <span className="text-cyan">your number</span> appears — path, tarot, sacred geometry,
-              Theosophy colour, and seven traditions — plus Johnson expansions of those glosses.
+              Theosophy colour, seven traditions, and Johnson definitions for your word.
             </p>
           </Panel>
         ) : (

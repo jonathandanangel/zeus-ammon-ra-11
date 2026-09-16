@@ -127,12 +127,15 @@ export {
   formatNumerologyReport,
   digitalRoot,
   bruteForceJohnsonExpand,
+  lookupJohnsonInline,
   NUMBER_PHILOSOPHY,
   PHILOSOPHER_ORDER,
   philosophyForNumber,
   formatPhilosophyBlock,
   formatAllNumbersPhilosophy,
 } from "./numerology";
+export { loadJohnsonResources, lookupJohnsonFull, enrichJohnsonSense } from "./johnson-leme";
+export type { JohnsonResources } from "./johnson-leme";
 export type {
   NumerologyResult,
   NumerologyLetter,

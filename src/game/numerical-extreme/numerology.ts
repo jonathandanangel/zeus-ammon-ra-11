@@ -27,6 +27,12 @@ export type JohnsonSense = {
   partOfSpeech: string;
   senses: string[];
   source: string;
+  /** Approximate UCF scan page (HOCR ratio × zip page count). */
+  facsimilePage?: number;
+  /** Local JPG extracted from OneDrive zip when available. */
+  facsimileUrl?: string;
+  /** Johnson's Dictionary Online search permalink. */
+  onlineUrl?: string;
 };
 
 export type JohnsonExpansion = {
@@ -449,7 +455,8 @@ function tokenizeExplanation(...parts: string[]): string[] {
   return out;
 }
 
-function lookupJohnson(word: string): JohnsonSense | null {
+/** Inline fallback lexicon (~200 gloss words for numerology/tarot text). */
+export function lookupJohnsonInline(word: string): JohnsonSense | null {
   const key = word.toLowerCase().replace(/[^a-z]/g, "");
   if (!key) return null;
   if (JOHNSON_LEXICON[key]) return JOHNSON_LEXICON[key]!;
@@ -463,7 +470,7 @@ function lookupJohnson(word: string): JohnsonSense | null {
 /** BRUTE FORCE METHOD TO FIND DEFINITIONS — expand every content-word via Johnson 1777. */
 export function bruteForceJohnsonExpand(...texts: string[]): JohnsonExpansion[] {
   return tokenizeExplanation(...texts).map((word) => {
-    const entry = lookupJohnson(word);
+    const entry = lookupJohnsonInline(word);
     return { word, found: Boolean(entry), entry };
   });
 }
@@ -532,8 +539,8 @@ export function wordToNumerology(word: string): NumerologyResult {
   );
 
   const key = normalized.replace(/[^a-z]/g, "");
-  const johnsonWord = lookupJohnson(key);
-  const johnsonNumber = lookupJohnson(
+  const johnsonWord = lookupJohnsonInline(key);
+  const johnsonNumber = lookupJohnsonInline(
     ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][number] ?? "nine",
   );
 

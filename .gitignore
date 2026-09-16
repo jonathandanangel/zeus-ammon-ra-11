@@ -35,3 +35,10 @@ dist-ssr
 public/extreme-puzzle/answers.json
 public/extreme-puzzle/manifest.json
 tmp-tri52/
+
+# Johnson build inputs (run npm run build:johnson with LEME XML + UCF zip locally)
+.tmp-johnson-sample/
+public/johnson/johnson-1755.xml
+public/johnson/johnson-hocr.txt.gz
+public/johnson/lexicon.json
+public/johnson/lexicon.json.gz
