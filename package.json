@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build:johnson": "python3 scripts/build-johnson-assets.py"
+    "build:johnson": "python3 scripts/build-johnson-assets.py",
+    "build:secret-doctrine": "python3 scripts/build-secret-doctrine.py"
   },
   "overrides": {
     "rolldown": "1.2.1"

@@ -65,7 +65,6 @@ export type NumerologyResult = {
   note: string;
   tarot: TarotCard;
   johnsonExpansions: JohnsonExpansion[];
-  johnsonNumber: JohnsonSense | null;
   johnsonWord: JohnsonSense | null;
   philosophy: NumberPhilosophy;
 };
@@ -540,9 +539,6 @@ export function wordToNumerology(word: string): NumerologyResult {
 
   const key = normalized.replace(/[^a-z]/g, "");
   const johnsonWord = lookupJohnsonInline(key);
-  const johnsonNumber = lookupJohnsonInline(
-    ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][number] ?? "nine",
-  );
 
   return {
     input,
@@ -561,7 +557,6 @@ export function wordToNumerology(word: string): NumerologyResult {
     note: meaning.note,
     tarot,
     johnsonExpansions,
-    johnsonNumber,
     johnsonWord,
     philosophy,
   };

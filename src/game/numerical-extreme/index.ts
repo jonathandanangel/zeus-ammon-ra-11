@@ -152,6 +152,8 @@ export {
   type ThoughtFormPlate,
   type TheosophyRay,
 } from "./thought-forms";
+export { searchSecretDoctrine, loadSecretDoctrineManifest } from "./secret-doctrine";
+export type { SecretDoctrinePassage, SecretDoctrineQuery } from "./secret-doctrine";
 
 /** Format a number for display (null-safe). */
 export function formatNumber(

@@ -53,6 +53,7 @@ import {
   lookupJohnsonInline,
   loadJohnsonResources,
   lookupJohnsonFull,
+  searchSecretDoctrine,
   THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
@@ -63,6 +64,7 @@ import {
   type NonlinearSystemResult,
   type NumerologyResult,
   type JohnsonSense,
+  type SecretDoctrinePassage,
   type NumberPhilosophy,
   type Point2,
   type VibrationResult,
@@ -2637,6 +2639,91 @@ function PhilosophyThoughtsBlock({
   );
 }
 
+function highlightPassage(text: string, matched: string[]): React.ReactNode {
+  if (!matched.length) return text;
+  const unique = [...new Set(matched.map((m) => m.toLowerCase()).filter(Boolean))].sort(
+    (a, b) => b.length - a.length,
+  );
+  const pattern = new RegExp(`\\b(${unique.map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi");
+  const parts = text.split(pattern);
+  return parts.map((part, index) =>
+    unique.some((m) => m.toLowerCase() === part.toLowerCase()) ? (
+      <span key={`${part}-${index}`} className="text-amber">
+        {part}
+      </span>
+    ) : (
+      <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>
+    ),
+  );
+}
+
+function SecretDoctrinePanel({
+  word,
+  passages,
+  source,
+  loading,
+}: {
+  word: string;
+  passages: SecretDoctrinePassage[];
+  source: string;
+  loading?: boolean;
+}) {
+  if (loading) {
+    return (
+      <Panel title="Secret Doctrine" eyebrow="BLAVATSKY · passages">
+        <p className="font-mono text-[10px] text-muted-foreground">
+          Searching The Secret Doctrine for “{word}”…
+        </p>
+      </Panel>
+    );
+  }
+  if (!passages.length) {
+    return (
+      <Panel title="Secret Doctrine" eyebrow="BLAVATSKY · passages">
+        <p className="font-mono text-[10px] text-muted-foreground">
+          No close passages found for “{word}” in The Secret Doctrine.
+        </p>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel
+      title="Secret Doctrine"
+      eyebrow={`BLAVATSKY · ${passages.length} passage${passages.length === 1 ? "" : "s"}`}
+    >
+      <div className="space-y-3">
+        <p className="font-mono text-[9px] leading-relaxed text-amber">
+          Passages using “{word}” (or close forms), ranked for occult / numerical relevance to your
+          path number.
+        </p>
+        <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+          {passages.map((passage) => (
+            <article
+              key={passage.id}
+              className="rounded-lg border border-magenta/25 bg-black/40 px-3 py-2.5"
+            >
+              <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-magenta">
+                PDF p.{passage.page}
+                {passage.matched.length > 0 && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · match {passage.matched.slice(0, 4).join(", ")}
+                  </span>
+                )}
+              </p>
+              <p className="font-mono text-[11px] leading-relaxed text-moon">
+                {highlightPassage(passage.text, passage.matched)}
+              </p>
+            </article>
+          ))}
+        </div>
+        {source && <p className="font-mono text-[9px] text-muted-foreground">{source}</p>}
+      </div>
+    </Panel>
+  );
+}
+
 function JohnsonEntryPanel({
   title,
   eyebrow,
@@ -2715,7 +2802,9 @@ function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
   const [johnsonReady, setJohnsonReady] = React.useState(false);
   const [johnsonWordEntry, setJohnsonWordEntry] = React.useState<JohnsonSense | null>(null);
-  const [johnsonNumberEntry, setJohnsonNumberEntry] = React.useState<JohnsonSense | null>(null);
+  const [secretPassages, setSecretPassages] = React.useState<SecretDoctrinePassage[]>([]);
+  const [secretSource, setSecretSource] = React.useState("");
+  const [secretLoading, setSecretLoading] = React.useState(false);
   const johnsonResourcesRef = React.useRef<Awaited<ReturnType<typeof loadJohnsonResources>> | null>(null);
   const compute = React.useContext(NumericalComputeContext);
 
@@ -2753,34 +2842,44 @@ function NumerologyPanel() {
   React.useEffect(() => {
     if (!result) {
       setJohnsonWordEntry(null);
-      setJohnsonNumberEntry(null);
+      setSecretPassages([]);
+      setSecretSource("");
+      setSecretLoading(false);
       return;
     }
 
     const resources = johnsonResourcesRef.current;
     const wordKey = result.normalized.replace(/[^a-z]/g, "");
-    const numberWord = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"][
-      result.number
-    ] ?? "nine";
+    let cancelled = false;
 
     if (!resources) {
       setJohnsonWordEntry(result.johnsonWord);
-      setJohnsonNumberEntry(result.johnsonNumber);
-      return;
+    } else {
+      setJohnsonWordEntry(null);
+      lookupJohnsonFull(wordKey, resources, lookupJohnsonInline).then((wordEntry) => {
+        if (cancelled) return;
+        setJohnsonWordEntry(wordEntry ?? result.johnsonWord);
+      });
     }
 
-    let cancelled = false;
-    setJohnsonWordEntry(null);
-    setJohnsonNumberEntry(null);
-
-    Promise.all([
-      lookupJohnsonFull(wordKey, resources, lookupJohnsonInline),
-      lookupJohnsonFull(numberWord, resources, lookupJohnsonInline),
-    ]).then(([wordEntry, numberEntry]) => {
-      if (cancelled) return;
-      setJohnsonWordEntry(wordEntry ?? result.johnsonWord);
-      setJohnsonNumberEntry(numberEntry ?? result.johnsonNumber);
-    });
+    setSecretLoading(true);
+    searchSecretDoctrine({
+      word: wordKey || result.normalized,
+      pathNumber: result.number,
+      limit: 5,
+    })
+      .then(({ passages, source }) => {
+        if (cancelled) return;
+        setSecretPassages(passages);
+        setSecretSource(source);
+        setSecretLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSecretPassages([]);
+        setSecretSource("");
+        setSecretLoading(false);
+      });
 
     return () => {
       cancelled = true;
@@ -2792,6 +2891,8 @@ function NumerologyPanel() {
     compute();
     downloadJson(`numerology-${result.normalized || "word"}.json`, {
       ...result,
+      johnsonWord: johnsonWordEntry ?? result.johnsonWord,
+      secretDoctrine: secretPassages,
       report: formatNumerologyReport(result),
     });
   }
@@ -2803,8 +2904,9 @@ function NumerologyPanel() {
         <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
             <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
-              Samuel Johnson&apos;s 1755 Dictionary (LEME XML, 37k headwords) appears for your typed word.
-              UCF facsimile scans from the OneDrive zip show when a page image was extracted.
+              Samuel Johnson&apos;s 1755 Dictionary defines your typed word when found. H. P.
+              Blavatsky&apos;s Secret Doctrine adds matching passages (same or close word), ranked
+              for occult / numerical relevance to your path number.
             </p>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan">
               BRUTE FORCE METHOD TO FIND DEFINITIONS!
@@ -2877,13 +2979,12 @@ function NumerologyPanel() {
               entry={johnsonWordEntry}
               loading={!johnsonReady}
             />
-            {johnsonNumberEntry && (
-              <JohnsonEntryPanel
-                title={`Number ${result.number} · ${["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE"][result.number]}`}
-                eyebrow="1755 · path digit"
-                entry={johnsonNumberEntry}
-              />
-            )}
+            <SecretDoctrinePanel
+              word={result.normalized}
+              passages={secretPassages}
+              source={secretSource}
+              loading={secretLoading}
+            />
           </>
         )}
       </div>
@@ -2894,7 +2995,8 @@ function NumerologyPanel() {
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
               Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Only the lore for{" "}
               <span className="text-cyan">your number</span> appears — path, tarot, sacred geometry,
-              Theosophy colour, seven traditions, and Johnson definitions for your word.
+              Theosophy colour, seven traditions, Johnson for your word, and Secret Doctrine
+              passages that use the same (or similar) word.
             </p>
           </Panel>
         ) : (
