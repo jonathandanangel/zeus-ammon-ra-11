@@ -22,6 +22,69 @@ type GateState = {
 
 const PAUSE_MS = 200;
 
+const VANITY_SOURCE_LINKS = [
+  {
+    label: "Hindawi 2021 (r≈0.7836)",
+    href: "https://doi.org/10.1155/2021/4423407",
+  },
+  {
+    label: "SCUT-FBP (CNN up to ~0.82)",
+    href: "https://arxiv.org/pdf/1511.02459",
+  },
+  {
+    label: "SCUT-FBP5500 (r≈0.78)",
+    href: "https://jov.arvojournals.org/article.aspx?articleid=2809824",
+  },
+  {
+    label: "0.08% NIST FRVT ID floor",
+    href: "https://lab.imedd.org/en/how-accurate-facial-recognition-systems/",
+  },
+] as const;
+
+function VanitySourcesBlurb({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-cyan/25 bg-black/25 px-3 py-2.5 font-mono text-[10px] leading-relaxed text-muted-foreground",
+        className,
+      )}
+    >
+      <p className="font-bold uppercase tracking-[0.12em] text-cyan">
+        Attractiveness prediction correlations (group-level)
+      </p>
+      <ul className="mt-1.5 space-y-1">
+        {VANITY_SOURCE_LINKS.slice(0, 3).map((item) => (
+          <li key={item.href}>
+            • {item.label}:{" "}
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="break-all text-amber underline decoration-amber/40 underline-offset-2 transition hover:text-moon hover:decoration-moon"
+            >
+              {item.href}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 font-bold uppercase tracking-[0.12em] text-cyan">
+        0.08% error (face IDENTIFICATION, NIST FRVT) used in error floor
+      </p>
+      <p className="mt-1">
+        •{" "}
+        <a
+          href={VANITY_SOURCE_LINKS[3]!.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="break-all text-amber underline decoration-amber/40 underline-offset-2 transition hover:text-moon hover:decoration-moon"
+        >
+          {VANITY_SOURCE_LINKS[3]!.href}
+        </a>
+      </p>
+    </div>
+  );
+}
+
 export function VanityApp({ onMenu }: VanityAppProps) {
   const [unlocked, setUnlocked] = React.useState(false);
   const [gate, setGate] = React.useState<GateState>({
@@ -222,6 +285,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <p className="mt-1 font-mono text-[10px] text-muted-foreground">
               Face++ Detect batch · Beauty → IQ-like / ATTR / CAC · keys never hardcoded
             </p>
+            <VanitySourcesBlurb className="mt-3 max-w-3xl" />
           </div>
           <div className="flex flex-wrap gap-2">
             {unlocked && (
@@ -256,6 +320,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <span className="text-cyan">API Secret</span>. Values stay in session memory only — never
             stored as <code className="text-amber">paste</code> placeholders.
           </p>
+          <VanitySourcesBlurb />
           <label className="block space-y-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-magenta">
               API Key

@@ -378,7 +378,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         detail:
           "Group-level prediction reliabilities used as CAC anchors: Hindawi 2021 r≈0.7836; SCUT-FBP CNN up to ~0.82; SCUT-FBP5500 r≈0.78. Fisher-z average → r̄, then r² reliabilities with CV dispersion penalties.",
         venue:
-          "https://www.hindawi.com/journals/cin/2021/5594303/ · https://arxiv.org/pdf/1511.02459 · https://jov.arvojournals.org/article.aspx?articleid=2809824",
+          "https://doi.org/10.1155/2021/4423407 · https://arxiv.org/pdf/1511.02459 · https://jov.arvojournals.org/article.aspx?articleid=2809824",
       },
       {
         title: "NIST FRVT face-identification error floor (0.08%)",

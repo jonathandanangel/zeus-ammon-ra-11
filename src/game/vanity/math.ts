@@ -543,7 +543,7 @@ function buildReport(r: BatchVanityResult): string {
   lines.push("  • https://console.faceplusplus.com/documents/7078059");
   lines.push("Attractiveness prediction correlations (group-level):");
   lines.push(
-    "  • Hindawi 2021 (r≈0.7836): https://www.hindawi.com/journals/cin/2021/5594303/",
+    "  • Hindawi 2021 (r≈0.7836): https://doi.org/10.1155/2021/4423407",
   );
   lines.push("  • SCUT-FBP (CNN up to ~0.82): https://arxiv.org/pdf/1511.02459");
   lines.push(
