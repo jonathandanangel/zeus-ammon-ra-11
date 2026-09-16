@@ -7,6 +7,7 @@ import {
   GhostButton,
   Metric,
   NumberInput,
+  BoundNumberInput,
   Panel,
   RunButton,
   Select,
@@ -395,44 +396,44 @@ export function HeatAerospacePanel() {
               {showPlate && (
                 <div className="grid grid-cols-2 gap-2">
                   <Field label={`Grid Nx${lab === "transient" ? " (≤17)" : " (≤31)"}`}>
-                    <NumberInput
+                    <BoundNumberInput
                       value={nx}
                       min={3}
                       max={lab === "transient" ? 17 : 31}
-                      onChange={(e) => setNx(Number(e.target.value))}
+                      onChange={setNx}
                     />
                   </Field>
                   <Field label={`Grid Ny${lab === "transient" ? " (≤17)" : " (≤31)"}`}>
-                    <NumberInput
+                    <BoundNumberInput
                       value={ny}
                       min={3}
                       max={lab === "transient" ? 17 : 31}
-                      onChange={(e) => setNy(Number(e.target.value))}
+                      onChange={setNy}
                     />
                   </Field>
                   <Field label="Length X (m)">
-                    <NumberInput value={Lx} step="any" onChange={(e) => setLx(Number(e.target.value))} />
+                    <BoundNumberInput value={Lx} onChange={setLx} />
                   </Field>
                   <Field label="Length Y (m)">
-                    <NumberInput value={Ly} step="any" onChange={(e) => setLy(Number(e.target.value))} />
+                    <BoundNumberInput value={Ly} onChange={setLy} />
                   </Field>
                   <Field label="Conductivity k">
-                    <NumberInput value={k} step="any" onChange={(e) => setK(Number(e.target.value))} />
+                    <BoundNumberInput value={k} onChange={setK} />
                   </Field>
                   <Field label="Left T">
-                    <NumberInput value={Tl} step="any" onChange={(e) => setTl(Number(e.target.value))} />
+                    <BoundNumberInput value={Tl} onChange={setTl} />
                   </Field>
                   <Field label="Right T">
-                    <NumberInput value={Tr} step="any" onChange={(e) => setTr(Number(e.target.value))} />
+                    <BoundNumberInput value={Tr} onChange={setTr} />
                   </Field>
                   <Field label="Bottom T">
-                    <NumberInput value={Tb} step="any" onChange={(e) => setTb(Number(e.target.value))} />
+                    <BoundNumberInput value={Tb} onChange={setTb} />
                   </Field>
                   <Field label="Top ambient T">
-                    <NumberInput value={Tinf} step="any" onChange={(e) => setTinf(Number(e.target.value))} />
+                    <BoundNumberInput value={Tinf} onChange={setTinf} />
                   </Field>
                   <Field label="Top convection h">
-                    <NumberInput value={hconv} step="any" onChange={(e) => setHconv(Number(e.target.value))} />
+                    <BoundNumberInput value={hconv} onChange={setHconv} />
                   </Field>
                 </div>
               )}
@@ -440,19 +441,19 @@ export function HeatAerospacePanel() {
               {showTransient && (
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="Density ρ">
-                    <NumberInput value={rho} step="any" onChange={(e) => setRho(Number(e.target.value))} />
+                    <BoundNumberInput value={rho} onChange={setRho} />
                   </Field>
                   <Field label="Heat capacity cp">
-                    <NumberInput value={cp} step="any" onChange={(e) => setCp(Number(e.target.value))} />
+                    <BoundNumberInput value={cp} onChange={setCp} />
                   </Field>
                   <Field label="Initial T">
-                    <NumberInput value={T0} step="any" onChange={(e) => setT0(Number(e.target.value))} />
+                    <BoundNumberInput value={T0} onChange={setT0} />
                   </Field>
                   <Field label="Time step (s)">
-                    <NumberInput value={dt} step="any" onChange={(e) => setDt(Number(e.target.value))} />
+                    <BoundNumberInput value={dt} onChange={setDt} />
                   </Field>
                   <Field label="Final time (s)">
-                    <NumberInput value={tf} step="any" onChange={(e) => setTf(Number(e.target.value))} />
+                    <BoundNumberInput value={tf} onChange={setTf} />
                   </Field>
                   <p className="col-span-2 font-mono text-[10px] text-amber/90">
                     Auto-caps ≤48 steps · LU factored once (browser-safe vs Octave sparse \).
@@ -463,52 +464,42 @@ export function HeatAerospacePanel() {
               {showFin && (
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="Fin length L (m)">
-                    <NumberInput value={Lx} step="any" onChange={(e) => setLx(Number(e.target.value))} />
+                    <BoundNumberInput value={Lx} onChange={setLx} />
                   </Field>
                   <Field label="Conductivity k">
-                    <NumberInput value={k} step="any" onChange={(e) => setK(Number(e.target.value))} />
+                    <BoundNumberInput value={k} onChange={setK} />
                   </Field>
                   <Field label="Base T">
-                    <NumberInput value={T0} step="any" onChange={(e) => setT0(Number(e.target.value))} />
+                    <BoundNumberInput value={T0} onChange={setT0} />
                   </Field>
                   <Field label="Ambient T">
-                    <NumberInput value={Tinf} step="any" onChange={(e) => setTinf(Number(e.target.value))} />
+                    <BoundNumberInput value={Tinf} onChange={setTinf} />
                   </Field>
                   <Field label="Convection h">
-                    <NumberInput value={hconv} step="any" onChange={(e) => setHconv(Number(e.target.value))} />
+                    <BoundNumberInput value={hconv} onChange={setHconv} />
                   </Field>
                   <Field label="Perimeter">
-                    <NumberInput value={finP} step="any" onChange={(e) => setFinP(Number(e.target.value))} />
+                    <BoundNumberInput value={finP} onChange={setFinP} />
                   </Field>
                   <Field label="Cross-section Ac">
-                    <NumberInput value={finAc} step="any" onChange={(e) => setFinAc(Number(e.target.value))} />
+                    <BoundNumberInput value={finAc} onChange={setFinAc} />
                   </Field>
                 </div>
               )}
 
               {showAtmo && (
                 <Field label="Altitude (m)">
-                  <NumberInput
-                    value={altitude}
-                    min={0}
-                    max={84852}
-                    step="any"
-                    onChange={(e) => setAltitude(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={altitude} min={0} max={84852} onChange={setAltitude} />
                 </Field>
               )}
 
               {showNozzle && (
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="Gamma">
-                    <NumberInput value={gamma} step="any" onChange={(e) => setGamma(Number(e.target.value))} />
+                    <BoundNumberInput value={gamma} onChange={setGamma} />
                   </Field>
                   <Field label="Area ratio A/A*">
-                    <NumberInput
-                      value={areaRatio}
-                      step="any"
-                      onChange={(e) => setAreaRatio(Number(e.target.value))}
-                    />
+                    <BoundNumberInput value={areaRatio} onChange={setAreaRatio} />
                   </Field>
                 </div>
               )}
@@ -517,23 +508,13 @@ export function HeatAerospacePanel() {
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <Field label="Matrix order ≈ n">
-                      <NumberInput
-                        value={matrixOrder}
-                        min={9}
-                        max={625}
-                        onChange={(e) => setMatrixOrder(Number(e.target.value))}
-                      />
+                      <BoundNumberInput value={matrixOrder} min={9} max={625} onChange={setMatrixOrder} />
                     </Field>
                     <Field label="Tolerance">
-                      <NumberInput value={tol} step="any" onChange={(e) => setTol(Number(e.target.value))} />
+                      <BoundNumberInput value={tol} onChange={setTol} />
                     </Field>
                     <Field label="Max iterations">
-                      <NumberInput
-                        value={maxit}
-                        min={1}
-                        max={2000}
-                        onChange={(e) => setMaxit(Number(e.target.value))}
-                      />
+                      <BoundNumberInput value={maxit} min={1} max={2000} onChange={setMaxit} />
                     </Field>
                   </div>
                   <Field label="Solver">

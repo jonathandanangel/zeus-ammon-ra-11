@@ -9,6 +9,7 @@ import {
   GhostButton,
   Metric,
   NumberInput,
+  BoundNumberInput,
   NumericalComputeContext,
   Panel,
   RunButton,
@@ -384,10 +385,10 @@ function MainPanel() {
           </p>
           <div className="grid grid-cols-2 gap-2">
             <Field label="a">
-              <NumberInput value={a} step="any" onChange={(e) => setA(Number(e.target.value))} />
+              <BoundNumberInput value={a} onChange={setA} />
             </Field>
             <Field label="b">
-              <NumberInput value={b} step="any" onChange={(e) => setB(Number(e.target.value))} />
+              <BoundNumberInput value={b} onChange={setB} />
             </Field>
           </div>
           <Field label="Plot click mode">
@@ -421,25 +422,15 @@ function MainPanel() {
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field label="TOL">
-              <NumberInput
-                value={tolerance}
-                step="any"
-                onChange={(e) => setTolerance(Number(e.target.value))}
-              />
+              <BoundNumberInput value={tolerance} onChange={setTolerance} />
             </Field>
             <Field label="MAXIT">
-              <NumberInput
-                value={maxIterations}
-                onChange={(e) => setMaxIterations(Number(e.target.value))}
-              />
+              <BoundNumberInput value={maxIterations} onChange={setMaxIterations} />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="GRIDN">
-              <NumberInput
-                value={gridPoints}
-                onChange={(e) => setGridPoints(Number(e.target.value))}
-              />
+              <BoundNumberInput value={gridPoints} onChange={setGridPoints} />
             </Field>
             <Field label="Taylor degs">
               <TextInput value={degrees} onChange={(e) => setDegrees(e.target.value)} />
@@ -482,11 +473,7 @@ function MainPanel() {
             ] as const
           ).map(([label, value, setter]) => (
             <Field key={label} label={label}>
-              <NumberInput
-                value={value}
-                step="any"
-                onChange={(e) => setter(Number(e.target.value))}
-              />
+              <BoundNumberInput value={value} onChange={setter} />
             </Field>
           ))}
         </div>
@@ -612,10 +599,10 @@ function VectorPanel() {
             </Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Lower x">
-                <NumberInput value={a} step="any" onChange={(e) => setA(Number(e.target.value))} />
+                <BoundNumberInput value={a} onChange={setA} />
               </Field>
               <Field label="Upper x">
-                <NumberInput value={b} step="any" onChange={(e) => setB(Number(e.target.value))} />
+                <BoundNumberInput value={b} onChange={setB} />
               </Field>
             </div>
             <RunButton>Vectorize & clean</RunButton>
@@ -814,30 +801,16 @@ function MethodPanel() {
             </Field>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Outer TOL">
-                <NumberInput
-                  value={outerTol}
-                  step="any"
-                  onChange={(e) => setOuterTol(Number(e.target.value))}
-                />
+                <BoundNumberInput value={outerTol} onChange={setOuterTol} />
               </Field>
               <Field label="Outer MAX">
-                <NumberInput
-                  value={outerMax}
-                  onChange={(e) => setOuterMax(Number(e.target.value))}
-                />
+                <BoundNumberInput value={outerMax} onChange={setOuterMax} />
               </Field>
               <Field label="Inner TOL">
-                <NumberInput
-                  value={innerTol}
-                  step="any"
-                  onChange={(e) => setInnerTol(Number(e.target.value))}
-                />
+                <BoundNumberInput value={innerTol} onChange={setInnerTol} />
               </Field>
               <Field label="Inner MAX">
-                <NumberInput
-                  value={innerMax}
-                  onChange={(e) => setInnerMax(Number(e.target.value))}
-                />
+                <BoundNumberInput value={innerMax} onChange={setInnerMax} />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -1027,18 +1000,14 @@ function CompositePanel() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Lower a">
-                <NumberInput value={a} step="any" onChange={(e) => setA(Number(e.target.value))} />
+                <BoundNumberInput value={a} onChange={setA} />
               </Field>
               <Field label="Upper b">
-                <NumberInput value={b} step="any" onChange={(e) => setB(Number(e.target.value))} />
+                <BoundNumberInput value={b} onChange={setB} />
               </Field>
             </div>
             <Field label="Subintervals n" hint="even for 1/3 · ÷3 for 3/8">
-              <NumberInput
-                value={subintervals}
-                min={1}
-                onChange={(e) => setSubintervals(Number(e.target.value))}
-              />
+              <BoundNumberInput value={subintervals} min={1} onChange={setSubintervals} />
             </Field>
             <EquationBox>{COMPOSITE_FORMULAS}</EquationBox>
             <RunButton>Compute area</RunButton>
@@ -1225,11 +1194,7 @@ function DiffPanel() {
               </GhostButton>
             </div>
             <Field label="Query x">
-              <NumberInput
-                value={query}
-                step="any"
-                onChange={(e) => setQuery(Number(e.target.value))}
-              />
+              <BoundNumberInput value={query} onChange={setQuery} />
             </Field>
             <RunButton>Interpolate</RunButton>
             {error && <ErrorBanner message={error} />}
@@ -1482,18 +1447,18 @@ function AlgorithmsPanel() {
           {algo === "cholesky" && (
             <div className="space-y-2">
               <Field label="Size">
-                <NumberInput value={size} min={1} max={40} onChange={(e) => setSize(Number(e.target.value))} />
+                <BoundNumberInput value={size} min={1} max={40} onChange={setSize} />
               </Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="λ low">
-                  <NumberInput value={low} step="any" onChange={(e) => setLow(Number(e.target.value))} />
+                  <BoundNumberInput value={low} onChange={setLow} />
                 </Field>
                 <Field label="λ high">
-                  <NumberInput value={high} step="any" onChange={(e) => setHigh(Number(e.target.value))} />
+                  <BoundNumberInput value={high} onChange={setHigh} />
                 </Field>
               </div>
               <Field label="Seed">
-                <NumberInput value={seed} onChange={(e) => setSeed(Number(e.target.value))} />
+                <BoundNumberInput value={seed} onChange={setSeed} />
               </Field>
             </div>
           )}
@@ -1508,10 +1473,10 @@ function AlgorithmsPanel() {
                 </Select>
               </Field>
               <Field label="Time t">
-                <NumberInput value={time} step="any" onChange={(e) => setTime(Number(e.target.value))} />
+                <BoundNumberInput value={time} onChange={setTime} />
               </Field>
               <Field label="Decimal digits">
-                <NumberInput value={digits} min={2} max={16} onChange={(e) => setDigits(Number(e.target.value))} />
+                <BoundNumberInput value={digits} min={2} max={16} onChange={setDigits} />
               </Field>
             </div>
           )}
@@ -1520,17 +1485,17 @@ function AlgorithmsPanel() {
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <Field label="x₀">
-                  <NumberInput value={initX} step="any" onChange={(e) => setInitX(Number(e.target.value))} />
+                  <BoundNumberInput value={initX} onChange={setInitX} />
                 </Field>
                 <Field label="α₀">
-                  <NumberInput value={initParam} step="any" onChange={(e) => setInitParam(Number(e.target.value))} />
+                  <BoundNumberInput value={initParam} onChange={setInitParam} />
                 </Field>
               </div>
               <Field label="Step">
-                <NumberInput value={step} step="any" onChange={(e) => setStep(Number(e.target.value))} />
+                <BoundNumberInput value={step} onChange={setStep} />
               </Field>
               <Field label="Max points">
-                <NumberInput value={maxPoints} min={5} onChange={(e) => setMaxPoints(Number(e.target.value))} />
+                <BoundNumberInput value={maxPoints} min={5} onChange={setMaxPoints} />
               </Field>
             </div>
           )}
@@ -1753,20 +1718,10 @@ function AcmLabPanel() {
           {tab === "618" && (
             <div className="space-y-2">
               <Field label="Problem size N" hint="divisible by 3">
-                <NumberInput
-                  value={n618}
-                  min={3}
-                  max={1200}
-                  step={3}
-                  onChange={(e) => setN618(Number(e.target.value))}
-                />
+                <BoundNumberInput value={n618} min={3} max={1200} onChange={setN618} />
               </Field>
               <Field label="Difference step h">
-                <NumberInput
-                  value={h618}
-                  step="any"
-                  onChange={(e) => setH618(Number(e.target.value))}
-                />
+                <BoundNumberInput value={h618} onChange={setH618} />
               </Field>
               <Field label="Ordering">
                 <Select
@@ -1811,35 +1766,18 @@ function AcmLabPanel() {
               </Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Abscissa c">
-                  <NumberInput
-                    value={c619}
-                    step="any"
-                    onChange={(e) => setC619(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={c619} onChange={setC619} />
                 </Field>
                 <Field label="Max blocks">
-                  <NumberInput
-                    value={mx619}
-                    min={3}
-                    max={2000}
-                    onChange={(e) => setMx619(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={mx619} min={3} max={2000} onChange={setMx619} />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Rel tol">
-                  <NumberInput
-                    value={er619}
-                    step="any"
-                    onChange={(e) => setEr619(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={er619} onChange={setEr619} />
                 </Field>
                 <Field label="Abs tol">
-                  <NumberInput
-                    value={ea619}
-                    step="any"
-                    onChange={(e) => setEa619(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={ea619} onChange={setEa619} />
                 </Field>
               </div>
               <RunButton type="button" onClick={run619}>
@@ -1866,19 +1804,10 @@ function AcmLabPanel() {
               </Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Order N / grid LN">
-                  <NumberInput
-                    value={n740}
-                    min={1}
-                    max={80}
-                    onChange={(e) => setN740(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={n740} min={1} max={80} onChange={setN740} />
                 </Field>
                 <Field label="Semi-bandwidth">
-                  <NumberInput
-                    value={band740}
-                    min={0}
-                    onChange={(e) => setBand740(Number(e.target.value))}
-                  />
+                  <BoundNumberInput value={band740} min={0} onChange={setBand740} />
                 </Field>
               </div>
               <RunButton type="button" onClick={run740}>
@@ -2244,18 +2173,10 @@ function SymbolicPanel() {
           {definite && (
             <div className="grid grid-cols-2 gap-2">
               <Field label="Lower">
-                <NumberInput
-                  value={lower}
-                  step="any"
-                  onChange={(e) => setLower(Number(e.target.value))}
-                />
+                <BoundNumberInput value={lower} onChange={setLower} />
               </Field>
               <Field label="Upper">
-                <NumberInput
-                  value={upper}
-                  step="any"
-                  onChange={(e) => setUpper(Number(e.target.value))}
-                />
+                <BoundNumberInput value={upper} onChange={setUpper} />
               </Field>
             </div>
           )}
@@ -2355,48 +2276,30 @@ function GeneticPanel() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="a">
-              <NumberInput value={a} step="any" onChange={(e) => setA(Number(e.target.value))} />
+              <BoundNumberInput value={a} onChange={setA} />
             </Field>
             <Field label="b">
-              <NumberInput value={b} step="any" onChange={(e) => setB(Number(e.target.value))} />
+              <BoundNumberInput value={b} onChange={setB} />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Population">
-              <NumberInput
-                value={popSize}
-                min={4}
-                max={500}
-                onChange={(e) => setPopSize(Number(e.target.value))}
-              />
+              <BoundNumberInput value={popSize} min={4} max={500} onChange={setPopSize} />
             </Field>
             <Field label="Generations">
-              <NumberInput
-                value={generations}
-                min={1}
-                max={2000}
-                onChange={(e) => setGenerations(Number(e.target.value))}
-              />
+              <BoundNumberInput value={generations} min={1} max={2000} onChange={setGenerations} />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Mut. rate">
-              <NumberInput
-                value={mutationRate}
-                step="any"
-                onChange={(e) => setMutationRate(Number(e.target.value))}
-              />
+              <BoundNumberInput value={mutationRate} onChange={setMutationRate} />
             </Field>
             <Field label="Mut. step">
-              <NumberInput
-                value={mutationStep}
-                step="any"
-                onChange={(e) => setMutationStep(Number(e.target.value))}
-              />
+              <BoundNumberInput value={mutationStep} onChange={setMutationStep} />
             </Field>
           </div>
           <Field label="Seed">
-            <NumberInput value={seed} onChange={(e) => setSeed(Number(e.target.value))} />
+            <BoundNumberInput value={seed} onChange={setSeed} />
           </Field>
           <RunButton type="button" onClick={run}>
             Run Genetic Algorithm

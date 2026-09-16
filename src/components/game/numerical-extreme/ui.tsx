@@ -117,6 +117,96 @@ export function NumberInput({
   );
 }
 
+function isAllowedNumericDraft(raw: string): boolean {
+  if (raw === "" || raw === "-" || raw === "+" || raw === "." || raw === "-." || raw === "+.") {
+    return true;
+  }
+  return /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(raw);
+}
+
+function isCompleteNumeric(raw: string): boolean {
+  if (raw === "" || raw === "-" || raw === "+" || raw === "." || raw === "-." || raw === "+.") {
+    return false;
+  }
+  return Number.isFinite(Number(raw));
+}
+
+function clampNumber(value: number, min?: number | string, max?: number | string): number {
+  let next = value;
+  const minN = min === undefined ? undefined : Number(min);
+  const maxN = max === undefined ? undefined : Number(max);
+  if (minN !== undefined && Number.isFinite(minN)) next = Math.max(minN, next);
+  if (maxN !== undefined && Number.isFinite(maxN)) next = Math.min(maxN, next);
+  return next;
+}
+
+/** Numeric field that keeps “-”, “.”, etc. visible while typing (no snap to 0). */
+export function BoundNumberInput({
+  value,
+  onChange,
+  className,
+  min,
+  max,
+  onBlur,
+  onFocus,
+  ...props
+}: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> & {
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = React.useState(() => String(value));
+  const focusedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (focusedRef.current) return;
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = React.useCallback(
+    (raw: string) => {
+      if (isCompleteNumeric(raw)) {
+        const next = clampNumber(Number(raw), min, max);
+        onChange(next);
+        setDraft(String(next));
+        return;
+      }
+      const fallback = clampNumber(value, min, max);
+      onChange(fallback);
+      setDraft(String(fallback));
+    },
+    [max, min, onChange, value],
+  );
+
+  return (
+    <input
+      {...props}
+      type="text"
+      inputMode="decimal"
+      min={min}
+      max={max}
+      className={cn(controlClass, "tabular-nums", className)}
+      value={draft}
+      onFocus={(event) => {
+        focusedRef.current = true;
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focusedRef.current = false;
+        commit(draft);
+        onBlur?.(event);
+      }}
+      onChange={(event) => {
+        const raw = event.target.value;
+        if (!isAllowedNumericDraft(raw)) return;
+        setDraft(raw);
+        if (isCompleteNumeric(raw)) {
+          onChange(clampNumber(Number(raw), min, max));
+        }
+      }}
+    />
+  );
+}
+
 export function TextArea({
   className,
   ...props
