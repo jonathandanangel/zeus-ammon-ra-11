@@ -483,33 +483,34 @@ export function startDoctrinePuzzleMusic(variationIndex: number) {
   startThemeLoop(theme.lead, theme.bass, theme.step, { loopForever: true, hitEvery: 4 });
 }
 
-/** Extreme Puzzle bed — looping Armageddon track under the Halloween seal UI. */
-let extremePuzzleBed: HTMLAudioElement | null = null;
-let extremePuzzleEnded: (() => void) | null = null;
+/**
+ * Extreme Puzzle bed — custom original 8-bit chiptune (Web Audio oscillators only).
+ * Not Greenvale, not doctrine motifs, and never an MP3 / title playlist file.
+ * Distinct induction feel: slower pulse, minor sixth leaps, sparse rests.
+ */
+const EXTREME_PUZZLE_BPM = 108;
+const EXTREME_PUZZLE_STEP = 60 / EXTREME_PUZZLE_BPM / 2;
+
+const EXTREME_PUZZLE_THEME: Theme = {
+  // Custom phrase — D minor–ish square lead with wide leaps (not shared with other themes)
+  lead: [
+    294, 0, 0, 349, 0, 0, 440, 0, 415, 0, 349, 0, 294, 0, 0, 0, 262, 0, 294, 0, 349, 0, 392, 0, 349, 294, 262, 0, 233, 0, 262, 0, 294, 0, 0, 349, 0, 0, 440, 415, 392, 0, 349, 0, 311, 0, 349, 0, 392, 0, 440, 0, 0, 0, 523, 0, 440, 0, 349, 0, 294, 0, 0, 0, 220, 0, 233, 0, 262, 0, 294, 0, 311, 0, 349, 0, 294, 0, 262, 0, 233, 220, 233, 0, 262, 0, 0, 0, 294, 349, 392, 0, 349, 0, 294, 0, 262, 0, 294, 0, 0, 0, 440, 0, 0, 0, 349, 0, 0, 0, 294, 0, 0, 0, 262, 0, 233, 0, 262, 294, 0, 0, 0, 0,
+  ],
+  bass: [
+    73, 0, 0, 0, 73, 0, 110, 0, 98, 0, 0, 0, 73, 0, 0, 0, 65, 0, 0, 0, 87, 0, 98, 0, 87, 0, 65, 0, 58, 0, 0, 0, 73, 0, 0, 0, 73, 0, 110, 0, 98, 0, 87, 0, 78, 0, 0, 0, 98, 0, 0, 0, 110, 0, 0, 0, 87, 0, 73, 0, 65, 0, 0, 0, 55, 0, 0, 0, 65, 0, 73, 0, 78, 0, 87, 0, 73, 0, 65, 0, 58, 55, 58, 0, 65, 0, 0, 0, 73, 87, 98, 0, 87, 0, 73, 0, 65, 0, 73, 0, 0, 0, 110, 0, 0, 0, 87, 0, 0, 0, 73, 0, 0, 0, 65, 0, 58, 0, 65, 73, 0, 0, 0, 0,
+  ],
+  step: EXTREME_PUZZLE_STEP,
+};
 
 export function startExtremePuzzleMusic() {
-  stopAmbient();
-  if (typeof window === "undefined") return;
-  if (!extremePuzzleBed) {
-    extremePuzzleBed = new Audio("/audio/title-armageddon.mp3");
-    extremePuzzleBed.preload = "auto";
-    extremePuzzleBed.volume = 0.48;
-    extremePuzzleEnded = () => {
-      if (!extremePuzzleBed) return;
-      extremePuzzleBed.currentTime = 0;
-      void extremePuzzleBed.play().catch(() => undefined);
-    };
-    extremePuzzleBed.addEventListener("ended", extremePuzzleEnded);
-  }
-  extremePuzzleBed.loop = true;
-  extremePuzzleBed.currentTime = 0;
-  void extremePuzzleBed.play().catch(() => undefined);
+  startThemeLoop(EXTREME_PUZZLE_THEME.lead, EXTREME_PUZZLE_THEME.bass, EXTREME_PUZZLE_THEME.step, {
+    loopForever: true,
+    hitEvery: 8,
+  });
 }
 
 export function stopExtremePuzzleMusic() {
-  if (!extremePuzzleBed) return;
-  extremePuzzleBed.pause();
-  extremePuzzleBed.currentTime = 0;
+  stopAmbient();
 }
 
 export function startAmbient() {

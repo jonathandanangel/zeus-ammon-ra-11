@@ -297,6 +297,19 @@ class AudioManager {
     this.stopBed();
   }
 
+  /** Kill every file bed + procedural loop (title / HT / extreme). */
+  silenceBackground() {
+    this.stopMusic();
+    this.stopWindEscalation();
+    this.stopThermalAmbience();
+    this.bedPlaylist = null;
+    this.bedPlaylistIndex = 0;
+    this.bedUrl = null;
+    this.stopBed();
+    this.extremeTrack = 0;
+    this.setTempoMultiplier(1);
+  }
+
   private ensureBedElement(url: string) {
     this.init();
     if (!this.ctx || !this.musicGain) return null;

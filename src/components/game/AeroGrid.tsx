@@ -727,10 +727,7 @@ export function AeroGrid() {
             // SFX only — stop main/title beds; Legend of Triangles owns its own music.
             audio.init();
             audio.resume();
-            audio.stopTitlePlaylist();
-            audio.stopMusic();
-            audio.setExtremeTrack(0);
-            audio.setTempoMultiplier(1);
+            audio.silenceBackground();
             setMode("spirit-bound");
             setReviewIds([]);
             setLocalIndex(0);
