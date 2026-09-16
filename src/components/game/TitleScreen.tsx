@@ -297,8 +297,7 @@ export function TitleScreen(p: TitleScreenProps) {
             The narrow golden path
           </h2>
           <p className="mt-4 max-w-lg font-mono text-sm leading-relaxed text-muted-foreground">
-            Scroll for neon-coded modes — trivia, labs, heat, story, and tools. Entering a mode keeps
-            the same deep arcade background you already know.
+            trivia, labs, heat, story, and tools
           </p>
           <p className="mt-3 max-w-lg font-mono text-[11px] leading-relaxed text-muted-foreground">
             Music: Iasos – Crystal Vista (1981) · Das Armageddon (2026) by キ aerzengel (@AERZENGEL)
