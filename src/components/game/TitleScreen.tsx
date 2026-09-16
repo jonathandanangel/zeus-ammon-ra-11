@@ -327,7 +327,7 @@ export function TitleScreen(p: TitleScreenProps) {
             className={cn(
               "zeus-mode-panel zeus-outline-box relative overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
               section.accentClass,
-              "bg-deepblue/50 backdrop-blur-sm",
+              "bg-deepblue/50 backdrop-blur-md",
             )}
           >
             <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">

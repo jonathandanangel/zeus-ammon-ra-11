@@ -93,8 +93,8 @@
   /* Thin boxy outlines — match title/intro mode panels everywhere */
   --outline-radius: 2px;
   --outline-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 80px rgba(0, 0, 0, 0.45);
-  --outline-glass: rgba(7, 18, 37, 0.5);
-  --outline-blur: 10px;
+  --outline-glass: rgba(7, 18, 37, 0.48);
+  --outline-blur: 16px;
 
   --background: var(--midnight);
   --foreground: var(--moon);
@@ -2238,12 +2238,13 @@
 
 .zeus-mode-panel,
 .zeus-outline-box,
-.nx-panel {
+.nx-panel,
+.panel {
   border-radius: var(--outline-radius);
   box-shadow: var(--outline-shadow);
   background: var(--outline-glass) !important;
-  backdrop-filter: blur(var(--outline-blur));
-  -webkit-backdrop-filter: blur(var(--outline-blur));
+  backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
 }
 
 /* Frosted glass main frames — every mode shell */
@@ -2273,8 +2274,8 @@
   border-radius: var(--outline-radius);
   box-shadow: var(--outline-shadow);
   background: var(--outline-glass) !important;
-  backdrop-filter: blur(var(--outline-blur));
-  -webkit-backdrop-filter: blur(var(--outline-blur));
+  backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
 }
 
 @keyframes zeus-intro-breathe {
