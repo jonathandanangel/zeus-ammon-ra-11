@@ -155,7 +155,7 @@ export function enrichJohnsonSense(
   return {
     ...sense,
     facsimilePage: page,
-    facsimileUrl: facsimileUrl ?? undefined,
+    ...(facsimileUrl ? { facsimileUrl } : {}),
     onlineUrl,
   };
 }
