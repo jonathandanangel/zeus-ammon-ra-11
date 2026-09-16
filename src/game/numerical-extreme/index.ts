@@ -141,7 +141,14 @@ export type {
   TarotCard,
   NumberPhilosophy,
   PhilosopherThought,
+  SacredGeometry,
 } from "./numerology";
+export {
+  THOUGHT_FORM_PLATES,
+  THEOSOPHY_RAYS,
+  type ThoughtFormPlate,
+  type TheosophyRay,
+} from "./thought-forms";
 
 /** Format a number for display (null-safe). */
 export function formatNumber(

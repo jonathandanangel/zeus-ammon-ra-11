@@ -51,6 +51,7 @@ import {
   vectorizeExpression,
   wordToNumerology,
   NUMBER_PHILOSOPHY,
+  THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
   type BezierSegment,
@@ -2319,6 +2320,256 @@ function GeneticPanel() {
   );
 }
 
+function polygonPoints(sides: number, cx: number, cy: number, r: number, rot = -Math.PI / 2): string {
+  return Array.from({ length: sides }, (_, i) => {
+    const a = rot + (i * 2 * Math.PI) / sides;
+    return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+  }).join(" ");
+}
+
+function starPoints(points: number, cx: number, cy: number, outer: number, inner: number): string {
+  const verts: string[] = [];
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + (i * Math.PI) / points;
+    verts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+  }
+  return verts.join(" ");
+}
+
+function SacredGeometryGlyph({
+  number,
+  hex,
+  size = 120,
+  fancy = true,
+}: {
+  number: number;
+  hex: string;
+  size?: number;
+  fancy?: boolean;
+}) {
+  const glow = fancy
+    ? `drop-shadow(0 0 6px ${hex}88) drop-shadow(0 0 18px ${hex}44)`
+    : undefined;
+  const stroke = hex;
+  const fill = `${hex}22`;
+  const common = {
+    fill: "none" as const,
+    stroke,
+    strokeWidth: 2.2,
+    strokeLinejoin: "round" as const,
+  };
+
+  let figure: React.ReactNode = null;
+  switch (number) {
+    case 1:
+      figure = (
+        <>
+          <circle cx="50" cy="50" r="28" {...common} strokeOpacity={0.45} />
+          <circle cx="50" cy="50" r="4.5" fill={stroke} stroke="none" />
+          <circle cx="50" cy="50" r="10" {...common} strokeDasharray="2 3" strokeOpacity={0.7} />
+        </>
+      );
+      break;
+    case 2:
+      figure = (
+        <>
+          <circle cx="28" cy="50" r="5" fill={stroke} stroke="none" />
+          <circle cx="72" cy="50" r="5" fill={stroke} stroke="none" />
+          <line x1="28" y1="50" x2="72" y2="50" {...common} />
+          <line x1="20" y1="30" x2="80" y2="70" {...common} strokeOpacity={0.25} />
+        </>
+      );
+      break;
+    case 3:
+      figure = <polygon points={polygonPoints(3, 50, 52, 32)} {...common} fill={fill} />;
+      break;
+    case 4:
+      figure = (
+        <>
+          <rect x="24" y="24" width="52" height="52" {...common} fill={fill} />
+          <polygon points="50,22 78,72 22,72" {...common} strokeOpacity={0.55} />
+        </>
+      );
+      break;
+    case 5:
+      figure = (
+        <>
+          <polygon points={polygonPoints(5, 50, 50, 34)} {...common} strokeOpacity={0.5} />
+          <polygon points={starPoints(5, 50, 50, 34, 13)} {...common} fill={fill} />
+        </>
+      );
+      break;
+    case 6:
+      figure = (
+        <>
+          <polygon points={polygonPoints(6, 50, 50, 34)} {...common} strokeOpacity={0.45} />
+          <polygon points={polygonPoints(3, 50, 50, 28)} {...common} fill={fill} />
+          <polygon points={polygonPoints(3, 50, 50, 28, Math.PI / 2)} {...common} />
+        </>
+      );
+      break;
+    case 7:
+      figure = (
+        <>
+          <polygon points={polygonPoints(7, 50, 50, 34)} {...common} fill={fill} />
+          <polygon
+            points={starPoints(7, 50, 50, 34, 16)}
+            {...common}
+            strokeOpacity={0.65}
+            strokeWidth={1.6}
+          />
+        </>
+      );
+      break;
+    case 8:
+      figure = (
+        <>
+          <polygon points={polygonPoints(8, 50, 50, 34)} {...common} fill={fill} />
+          <path
+            d="M35 62 L35 38 L50 28 L65 38 L65 62 Z"
+            {...common}
+            strokeOpacity={0.85}
+          />
+          <path d="M35 38 L65 38 M50 28 L50 20" {...common} strokeOpacity={0.55} />
+        </>
+      );
+      break;
+    default:
+      figure = (
+        <>
+          <polygon points={polygonPoints(9, 50, 50, 34)} {...common} fill={fill} />
+          <polygon points={polygonPoints(3, 50, 50, 18)} {...common} strokeOpacity={0.7} />
+          <polygon points={polygonPoints(3, 50, 50, 12, Math.PI / 2)} {...common} strokeOpacity={0.5} />
+        </>
+      );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      className="shrink-0"
+      style={{ filter: glow }}
+      aria-hidden
+    >
+      <defs>
+        <radialGradient id={`sg-glow-${number}`} cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor={hex} stopOpacity="0.35" />
+          <stop offset="70%" stopColor={hex} stopOpacity="0.06" />
+          <stop offset="100%" stopColor={hex} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {fancy && <circle cx="50" cy="50" r="46" fill={`url(#sg-glow-${number})`} stroke="none" />}
+      <circle cx="50" cy="50" r="44" fill="none" stroke={hex} strokeOpacity={0.2} strokeWidth={1} />
+      {figure}
+    </svg>
+  );
+}
+
+function GeometryColourCard({
+  philosophy,
+  compact = false,
+}: {
+  philosophy: NumberPhilosophy;
+  compact?: boolean;
+}) {
+  const g = philosophy.geometry;
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-xl border bg-black/50",
+        compact ? "p-3" : "p-4",
+      )}
+      style={{
+        borderColor: `${g.hex}66`,
+        boxShadow: `inset 0 0 40px ${g.hex}14, 0 0 24px ${g.hex}18`,
+      }}
+    >
+      <div
+        className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-30 blur-2xl"
+        style={{ background: g.hex }}
+      />
+      <div className={cn("relative flex gap-4", compact ? "items-center" : "items-start")}>
+        <SacredGeometryGlyph number={philosophy.number} hex={g.hex} size={compact ? 72 : 112} />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p
+            className="font-mono text-[9px] font-bold uppercase tracking-[0.2em]"
+            style={{ color: g.hex }}
+          >
+            Sacred geometry · Theosophy colour
+          </p>
+          <p className="font-display text-sm uppercase tracking-[0.1em] text-cyan">
+            {g.figure}
+          </p>
+          <p className="font-mono text-[11px] leading-relaxed text-moon">{g.form}</p>
+          {!compact && (
+            <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">{g.note}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]"
+              style={{
+                borderColor: `${g.hex}88`,
+                color: g.hex,
+                background: `${g.hex}18`,
+              }}
+            >
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ background: g.hex, boxShadow: `0 0 8px ${g.hex}` }}
+              />
+              {g.colorName} · {g.musicalNote}
+            </span>
+            <span className="font-mono text-[9px] text-muted-foreground">{g.hex}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ThoughtFormsGallery() {
+  return (
+    <Panel
+      title="Thought-Forms · official plates"
+      eyebrow="Besant & Leadbeater · Theosophical Publishing Society · Gutenberg #16269"
+    >
+      <p className="mb-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+        Official public-domain illustrations from{" "}
+        <span className="text-amber">Thought-Forms (1901)</span> — how vibration builds form, the
+        Meaning of the Colours key, pendulum & Chladni figures, sevenfold manifestation, and musical
+        thought-forms.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {THOUGHT_FORM_PLATES.map((plate) => (
+          <figure
+            key={plate.id}
+            className="overflow-hidden rounded-xl border border-cyan/25 bg-black/40 shadow-[0_0_20px_rgba(34,211,238,0.08)]"
+          >
+            <div className="relative aspect-[4/5] overflow-hidden bg-black/60">
+              <img
+                src={plate.src}
+                alt={plate.title}
+                className="h-full w-full object-contain"
+                loading="lazy"
+              />
+            </div>
+            <figcaption className="space-y-1 border-t border-cyan/15 px-3 py-2.5">
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
+                {plate.kind}
+              </p>
+              <p className="font-mono text-[11px] text-cyan">{plate.title}</p>
+              <p className="font-mono text-[10px] leading-relaxed text-moon/90">{plate.caption}</p>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 function PhilosophyThoughtsBlock({ philosophy }: { philosophy: NumberPhilosophy }) {
   const accent: Record<string, string> = {
     Pythagoras: "border-amber/45 bg-amber/10",
@@ -2326,18 +2577,30 @@ function PhilosophyThoughtsBlock({ philosophy }: { philosophy: NumberPhilosophy 
     Aristotle: "border-cyan/40 bg-cyan/10",
     "Thomas Aquinas": "border-yellow-400/35 bg-yellow-400/10",
     "Avicenna (Ibn Sina)": "border-mint/40 bg-mint/10",
+    Avicenna: "border-mint/40 bg-mint/10",
     "Dr. Peter S. Ruckman": "border-orange-400/40 bg-orange-400/10",
+    "Theosophical Society": "border-violet-400/45 bg-violet-400/10",
   };
 
   return (
     <div className="space-y-2.5">
+      <GeometryColourCard philosophy={philosophy} />
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-amber">
-        {philosophy.sacredName} · Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman
+        {philosophy.sacredName} · Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman ·
+        Theosophy
       </p>
       {philosophy.thoughts.map((t) => (
         <div
           key={t.philosopher}
           className={`rounded-lg border p-3 ${accent[t.philosopher] ?? "border-cyan/25 bg-black/30"}`}
+          style={
+            t.philosopher === "Theosophical Society"
+              ? {
+                  borderColor: `${philosophy.geometry.hex}66`,
+                  boxShadow: `inset 0 0 24px ${philosophy.geometry.hex}12`,
+                }
+              : undefined
+          }
         >
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-cyan">
             {t.philosopher}
@@ -2415,7 +2678,7 @@ function NumerologyPanel() {
             </div>
             {error && <ErrorBanner message={error} />}
             <p className="font-mono text-[10px] text-mint/80">
-              READY | Letter-sum path · tarot · six traditions · Johnson expands each word.
+              READY | Letter-sum path · tarot · seven traditions · sacred geometry · Johnson.
             </p>
           </div>
         </Panel>
@@ -2423,6 +2686,7 @@ function NumerologyPanel() {
         {result && (
           <Panel title={`Number ${result.number}`} eyebrow={result.title}>
             <div className="space-y-3">
+              <GeometryColourCard philosophy={result.philosophy} compact />
               <div className="flex flex-wrap gap-2">
                 <Metric label="Number" value={String(result.number)} />
                 <Metric label="Σ letters" value={String(result.sumPositions)} />
@@ -2459,10 +2723,11 @@ function NumerologyPanel() {
               Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Classic path meanings, a
               matching Major Arcana tarot card, and{" "}
               <span className="text-cyan">
-                six traditions together on every number 1–9
+                seven traditions together on every number 1–9
               </span>{" "}
               (Pythagoras, Manly P. Hall, Aristotle, Thomas Aquinas, Avicenna, Dr. Peter S.
-              Ruckman) appear below. Then{" "}
+              Ruckman, Theosophical Society) appear below — with Pythagorean geometry coloured by
+              the Theosophical prismatic scale. Then{" "}
               <span className="text-cyan">BRUTE FORCE METHOD TO FIND DEFINITIONS!</span> expands
               every explanation word with{" "}
               <span className="text-amber">Samuel Johnson Dictionary 1777 federally validated</span>.
@@ -2532,22 +2797,55 @@ function NumerologyPanel() {
       {result && (
         <Panel
           title={`Number ${result.number} · ${result.philosophy.sacredName}`}
-          eyebrow="Six traditions · all thoughts together"
+          eyebrow="Seven traditions · geometry · Theosophy colour"
         >
           <PhilosophyThoughtsBlock philosophy={result.philosophy} />
         </Panel>
       )}
 
+      <ThoughtFormsGallery />
+
       <Panel
-        title="Numbers 1–9 · complete philosophical lore"
-        eyebrow="Pythagoras · Hall · Aristotle · Aquinas · Avicenna · Ruckman"
+        title="Numbers 1–9 · geometry · colour · lore"
+        eyebrow="Pythagoras forms · Theosophy Red→Violet · seven voices"
       >
         <p className="mb-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Every digit carries the same six voices in one place — sacred name, then each thinker’s
-          thought on that number, grouped together. Ruckman’s entries follow his{" "}
-          <span className="text-orange-300">Bible Numerics (1981)</span> survey of the Authorized
-          King James Version.
+          Each digit shows its Pythagorean figure tinted with the Theosophical prismatic colour
+          (Blavatsky: colours–sounds–numbers from 1→7; 8 rose octave, 9 white-gold synthesis), then
+          seven traditions together. Official{" "}
+          <span className="text-amber">Thought-Forms</span> plates above illustrate vibration → form.
         </p>
+        <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+          {Array.from({ length: 9 }, (_, i) => {
+            const philosophy = NUMBER_PHILOSOPHY[i + 1]!;
+            const active = result?.number === philosophy.number;
+            return (
+              <div
+                key={philosophy.number}
+                className={cn(
+                  "flex flex-col items-center rounded-lg border bg-black/40 px-1 py-2",
+                  active
+                    ? "border-amber/60 shadow-[0_0_16px_rgba(251,191,36,0.2)]"
+                    : "border-cyan/20",
+                )}
+                style={{ boxShadow: active ? `0 0 18px ${philosophy.geometry.hex}44` : undefined }}
+                title={`${philosophy.number} · ${philosophy.geometry.figure} · ${philosophy.geometry.colorName}`}
+              >
+                <SacredGeometryGlyph
+                  number={philosophy.number}
+                  hex={philosophy.geometry.hex}
+                  size={56}
+                />
+                <span
+                  className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em]"
+                  style={{ color: philosophy.geometry.hex }}
+                >
+                  {philosophy.number} · {philosophy.geometry.colorName}
+                </span>
+              </div>
+            );
+          })}
+        </div>
         <div className="space-y-6">
           {Array.from({ length: 9 }, (_, i) => {
             const philosophy = NUMBER_PHILOSOPHY[i + 1]!;
@@ -2560,9 +2858,17 @@ function NumerologyPanel() {
                     ? "border-amber/50 bg-amber/5 shadow-[0_0_24px_rgba(251,191,36,0.12)]"
                     : "border-cyan/20 bg-black/20"
                 }`}
+                style={
+                  active
+                    ? { boxShadow: `0 0 28px ${philosophy.geometry.hex}33` }
+                    : { borderColor: `${philosophy.geometry.hex}33` }
+                }
               >
-                <p className="mb-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-cyan">
-                  {philosophy.number} · {philosophy.sacredName}
+                <p
+                  className="mb-3 font-mono text-[12px] font-bold uppercase tracking-[0.14em]"
+                  style={{ color: philosophy.geometry.hex }}
+                >
+                  {philosophy.number} · {philosophy.sacredName} · {philosophy.geometry.colorName}
                   {active ? " · your word" : ""}
                 </p>
                 <PhilosophyThoughtsBlock philosophy={philosophy} />

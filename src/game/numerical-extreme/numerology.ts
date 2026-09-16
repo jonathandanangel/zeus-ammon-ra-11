@@ -6,7 +6,7 @@ import {
   type NumberPhilosophy,
 } from "./philosopher-numbers";
 
-export type { NumberPhilosophy, PhilosopherThought } from "./philosopher-numbers";
+export type { NumberPhilosophy, PhilosopherThought, SacredGeometry } from "./philosopher-numbers";
 export {
   NUMBER_PHILOSOPHY,
   PHILOSOPHER_ORDER,

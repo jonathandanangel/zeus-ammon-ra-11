@@ -1,4 +1,4 @@
-/** Sacred-number lore for digits 1–9 across six philosophical/theological lineages. */
+/** Sacred-number lore for digits 1–9 across seven lineages (incl. Theosophical colour–form–vibration). */
 
 export type PhilosopherThought = {
   philosopher: string;
@@ -6,9 +6,20 @@ export type PhilosopherThought = {
   thought: string;
 };
 
+export type SacredGeometry = {
+  figure: string;
+  form: string;
+  note: string;
+  /** Theosophical prismatic colour name (Blavatsky 1→7 scale; 8–9 octave/synthesis). */
+  colorName: string;
+  hex: string;
+  musicalNote: string;
+};
+
 export type NumberPhilosophy = {
   number: number;
   sacredName: string;
+  geometry: SacredGeometry;
   thoughts: PhilosopherThought[];
 };
 
@@ -27,11 +38,19 @@ const RUCKMAN = (
     thought,
   );
 
-/** Digits 1–9 — Pythagoras, Hall, Aristotle, Aquinas, Avicenna, Ruckman. */
+/** Digits 1–9 — Pythagoras, Hall, Aristotle, Aquinas, Avicenna, Ruckman, Theosophical Society. */
 export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
   1: {
     number: 1,
     sacredName: "Monad",
+    geometry: {
+      figure: "Point · Circle",
+      form: "The undivided seed — a center without magnitude, or the circle as pure unity.",
+      note: "Pythagorean first principle: all figures begin from the monad.",
+      colorName: "Red",
+      hex: "#E53935",
+      musicalNote: "Do",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -61,11 +80,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "One means unity — stability, fixed, absolute. Everywhere in Scripture it is tied to united strength: “Hear, O Israel: The Lord our God is one Lord” (Deut. 6:4) is a plurality united, not a lone unit. From Genesis 1:9 (“one place”) through marriage (“one flesh”) and Paul’s “one body, one Lord, one faith,” One plainly stands for unity.",
       ),
+      P(
+        "Theosophical Society",
+        "Besant & Leadbeater, Thought-Forms (1901) · Blavatsky colour–sound–number",
+        "One is the first rate of vibration — prismatic Red (Do). Thought and will strike the mental and astral matter; each vibration builds a form. The monad is the single centre from which every later colour and figure radiates.",
+      ),
     ],
   },
   2: {
     number: 2,
     sacredName: "Dyad",
+    geometry: {
+      figure: "Line · Diameter",
+      form: "Two points joined — the first extension; length without breadth.",
+      note: "From the dyad the line is born; opposition and measure appear.",
+      colorName: "Orange",
+      hex: "#FB8C00",
+      musicalNote: "Re",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -95,11 +127,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Two implies division. Amos 3:3 — “Can two walk together, except they be agreed?” Adam is divided in Genesis 2; the sun and moon are made “to divide the day from the night” (Gen. 1:16). Israel splits under Rehoboam; the Old Testament is chiefly “the law and the prophets.” One is unity; Two is division.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · How the Vibration Acts",
+        "Two is Orange (Re) — the dyad of poles through which life-current (prāṇa) oscillates. Vibration acting between two centres draws the first line; Chladni plates show sand dividing into opposed regions under a single tone.",
+      ),
     ],
   },
   3: {
     number: 3,
     sacredName: "Triad",
+    geometry: {
+      figure: "Equilateral Triangle",
+      form: "The first surface — beginning, middle, and end closed in one figure.",
+      note: "First plane figure; harmony of the triad made visible.",
+      colorName: "Yellow",
+      hex: "#FDD835",
+      musicalNote: "Mi",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -129,11 +174,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Two and One is Three — a division brought back into unity. Three is the Godhead in three Persons, man’s body/soul/spirit, and time’s past/present/future. The two Testaments in print need Christ the incarnate Word as the third Testament to complete the Book. No problem is solved until the third side is found; Three represents the Trinity manifested throughout the universe.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · The Form and Its Effect",
+        "Three is Yellow (Mi) — the first closed plane of mind-light. A thought-form needs quality (colour), nature (vibration rate), and definition (shape). The triad is the minimum complete form on the mental plane.",
+      ),
     ],
   },
   4: {
     number: 4,
     sacredName: "Tetrad",
+    geometry: {
+      figure: "Square · Tetrahedron",
+      form: "Four equal sides (plane) or four triangular faces (solid) — foundation and justice.",
+      note: "Tetraktys completion in geometry: the stable four.",
+      colorName: "Green",
+      hex: "#43A047",
+      musicalNote: "Fa",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -163,11 +221,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Four is far more elusive than Three. Christian numerologists call it the “earth number” (four corners, four winds, four seasons — though Genesis 8 lists six seasons). Ezekiel 1 repeats “four” more than any chapter: four living creatures with faces of man, ox, eagle, and lion — kings of creation. Ruckman calls Four still a mystery: possibly earth or creation, but the evidence is not conclusive.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · Meaning of the Colours",
+        "Four is Green (Fa) — adaptability and sympathy in the colour key. Square and tetrahedron mark stable earth-form; green thought-forms seek to fit their vibration to surrounding lives.",
+      ),
     ],
   },
   5: {
     number: 5,
     sacredName: "Pentad",
+    geometry: {
+      figure: "Pentagram · Pentagon",
+      form: "Five-pointed star inscribed in the pentagon — health, the microcosm, golden proportion.",
+      note: "The Pythagorean recognition seal; living man as measure.",
+      colorName: "Blue",
+      hex: "#1E88E5",
+      musicalNote: "Sol",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -197,11 +268,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Five is death — not grace. Scholars tie five to grace because of Christ’s five wounds, but Ruckman argues five means death everywhere else: the brazen altar was five cubits by five (a type of hell), the first man to die appears in Genesis 5:5, victims are smitten in the fifth rib, life first appears on the fifth day (4,000 years before Christ’s death), and Christ’s five wounds are the death of a man. Five is death.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · Devotion plates",
+        "Five is Blue (Sol). Clear blue marks devotion; the five-pointed star is man’s measure. Higher vibration lifts the form upward — as in the ‘Upward Rush of Devotion’ plate — geometry sharpened by purity of tone.",
+      ),
     ],
   },
   6: {
     number: 6,
     sacredName: "Hexad",
+    geometry: {
+      figure: "Hexagram · Hexagon",
+      form: "Two interlaced triangles (seal) or six-sided regular polygon — marriage of opposites.",
+      note: "Perfect number made as interlocking fire and water triangles.",
+      colorName: "Indigo",
+      hex: "#3949AB",
+      musicalNote: "La",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -231,11 +315,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Six is the number of man and of this present age. Adam is made on the sixth day; Noah enters the ark at 600; 666 marks the Antichrist superman (Rev. 13:18). “Six hundred men” recurs throughout Scripture. This age is characterized by six before the seventh-day Sabbath rest of the Millennium — look for 777, not 666.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · Music forms / Blavatsky septenary",
+        "Six is Indigo (La) — deep spiritual intellect. Hexagram marries two triangles; musical thought-forms (Mendelssohn, Gounod) show how complex vibration weaves interlaced colour-geometry in living matter.",
+      ),
     ],
   },
   7: {
     number: 7,
     sacredName: "Heptad",
+    geometry: {
+      figure: "Heptagon · Heptagram",
+      form: "Seven equal sides — virgin number among the decad; completion without generation.",
+      note: "Cannot tile the plane alone; stands apart like Athena’s heptad.",
+      colorName: "Violet",
+      hex: "#8E24AA",
+      musicalNote: "Si",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -265,11 +362,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Seven is plainly the number of completeness — no number is more complete. God finishes creation on the seventh day; Leviticus 23 and 25 “seven” everything (weeks, years, jubilee). Revelation closes with seven churches, seals, trumpets, and vials. Nature works by sevens: seven body members, seven colors, seven musical notes — “seven winds it up.” God counts by sevens.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · Sevenfold manifestation · Blavatsky 1→7 spectrum",
+        "Seven is Violet (Si) — highest prismatic ray. Theosophy counts by sevens: principles, planes, and colours–sounds–numbers from Red/Do to Violet/Si. Seven completes the vibrational octave of form before a new cycle.",
+      ),
     ],
   },
   8: {
     number: 8,
     sacredName: "Ogdoad",
+    geometry: {
+      figure: "Cube · Octagon",
+      form: "The first cube (2³) or eight-sided cut of the square — solid harmony and regeneration.",
+      note: "Octave of geometry: new beginning after the sevenfold cycle.",
+      colorName: "Rose",
+      hex: "#EC407A",
+      musicalNote: "Do′",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -299,11 +409,24 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Once Seven completes a series, Eight begins something new. Noah was the eighth person — eight souls in the ark repopulating a new earth (1 Pet. 3:20). Circumcision on the eighth day typifies the new creature; David was Jesse’s eighth son, a new type of Christ. Eight and its multiples mark a fresh beginning after completion.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · octave beyond the spectrum",
+        "Eight is Rose (Do′) — the octave return after violet. A new series of vibration begins; rose in the colour key marks pure affection. The cube/octagon is regenerated solid form — a fresh geometry after the sevenfold close.",
+      ),
     ],
   },
   9: {
     number: 9,
     sacredName: "Ennead",
+    geometry: {
+      figure: "Enneagon · Triple Triangle",
+      form: "Nine-sided polygon or three nested triangles — the square of three before the decad.",
+      note: "Horizon of the single-digit cycle; fruitfulness of triadic perfection.",
+      colorName: "White-Gold",
+      hex: "#FFD54F",
+      musicalNote: "Chord",
+    },
     thoughts: [
       P(
         "Pythagoras",
@@ -333,6 +456,11 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       RUCKMAN(
         "Nine is harder to pin down but seems tied to fruitfulness and covenants: nine fruits of the Spirit (Gal. 5:22–23), nine gifts (1 Cor. 12), Abraham at ninety-nine when God’s covenant makes him fruitful though “dead” (Rom. 4), and nine months’ gestation. It is three times three and one short of Gentile ten; Ruckman’s primary reading is spiritual fruit-bearing, though he notes the evidence is not fully settled.",
       ),
+      P(
+        "Theosophical Society",
+        "Thought-Forms · colour chart · auric synthesis",
+        "Nine is White-Gold (chord) — synthesis of the spectrum before ten. All vibration rates coexist in the auric egg; nine folds fruitfulness of form when every colour has sounded. The enneagon is the last single-digit figure.",
+      ),
     ],
   },
 };
@@ -344,6 +472,7 @@ export const PHILOSOPHER_ORDER = [
   "Thomas Aquinas",
   "Avicenna (Ibn Sina)",
   "Dr. Peter S. Ruckman",
+  "Theosophical Society",
 ] as const;
 
 export function philosophyForNumber(n: number): NumberPhilosophy {
@@ -354,13 +483,22 @@ export function philosophyForNumber(n: number): NumberPhilosophy {
 export function formatPhilosophyBlock(entry: NumberPhilosophy): string {
   const header = `NUMBER ${entry.number} · ${entry.sacredName.toUpperCase()}`;
   const divider = "─".repeat(48);
+  const geo = entry.geometry
+    ? [
+        `GEOMETRY · ${entry.geometry.figure}`,
+        entry.geometry.form,
+        entry.geometry.note,
+        `THEOSOPHY COLOUR · ${entry.geometry.colorName} (${entry.geometry.hex}) · note ${entry.geometry.musicalNote}`,
+        "",
+      ].join("\n")
+    : "";
   const body = entry.thoughts
     .map(
       (thought) =>
         `${thought.philosopher.toUpperCase()} · ${thought.work}\n${thought.thought}`,
     )
     .join("\n\n");
-  return `${header}\n${divider}\n\n${body}`.trimEnd();
+  return `${header}\n${divider}\n\n${geo}${body}`.trimEnd();
 }
 
 export function formatAllNumbersPhilosophy(): string {
