@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Chart } from "@/components/game/numerical-extreme/Chart";
+import { HeatAerospacePanel } from "@/components/game/numerical-extreme/HeatAerospacePanel";
 import { BrainOverload } from "@/components/game/BrainOverload";
 import {
   EquationBox,
@@ -73,6 +74,7 @@ type Mode =
   | "bezier"
   | "symbolic"
   | "genetic"
+  | "heat"
   | "numerology"
   | "references";
 
@@ -87,6 +89,7 @@ const MODES: Array<{ id: Mode; label: string }> = [
   { id: "bezier", label: "BEZIER" },
   { id: "symbolic", label: "SYMBOLIC" },
   { id: "genetic", label: "GENETIC" },
+  { id: "heat", label: "HEAT" },
   { id: "numerology", label: "NUMEROLOGY" },
   { id: "references", label: "REFS" },
 ];
@@ -2719,6 +2722,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           {mode === "bezier" && <BezierPanel />}
           {mode === "symbolic" && <SymbolicPanel />}
           {mode === "genetic" && <GeneticPanel />}
+          {mode === "heat" && <HeatAerospacePanel />}
           {mode === "numerology" && <NumerologyPanel />}
           {mode === "references" && <ReferencesPanel />}
         </main>
