@@ -9,17 +9,21 @@ import { scorePuzzle } from "@/game/spirit-bound/shrine/scoring";
 import type { AccessMode, Difficulty, PegIndex, Pegs } from "@/game/spirit-bound/shrine/types";
 import { recordArcadeRun } from "@/storage/spirit-bound/shrine";
 
-export type ArcadeKind = "sprint" | "endless";
+export type ArcadeKind = "sprint" | "endless" | "extreme";
 
 export const SPRINT_SECONDS = 90;
+/** Extreme seal gauntlet — short session of hardest murals. */
+export const EXTREME_SESSION_SECONDS = 120;
 
 export function useArcadeTree(kind: ArcadeKind) {
   const [seed, setSeed] = useState(randomSeed);
-  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [difficulty, setDifficulty] = useState<Difficulty>(kind === "extreme" ? "extreme" : "easy");
   const [puzzleNumber, setPuzzleNumber] = useState(1);
   const [score, setScore] = useState(0);
   const [cleared, setCleared] = useState(0);
-  const [sessionLeft, setSessionLeft] = useState(kind === "sprint" ? SPRINT_SECONDS : 0);
+  const [sessionLeft, setSessionLeft] = useState(
+    kind === "sprint" ? SPRINT_SECONDS : kind === "extreme" ? EXTREME_SESSION_SECONDS : 0,
+  );
   const [elapsed, setElapsed] = useState(0);
   const [over, setOver] = useState(false);
   const [selected, setSelected] = useState<PegIndex | null>(null);
@@ -38,7 +42,9 @@ export function useArcadeTree(kind: ArcadeKind) {
   const finished = useRef(false);
   const elapsedRef = useRef(0);
   const movesRef = useRef(0);
-  const sessionRef = useRef(kind === "sprint" ? SPRINT_SECONDS : 0);
+  const sessionRef = useRef(
+    kind === "sprint" ? SPRINT_SECONDS : kind === "extreme" ? EXTREME_SESSION_SECONDS : 0,
+  );
   const scoreRef = useRef(0);
 
   useEffect(() => {
@@ -56,7 +62,7 @@ export function useArcadeTree(kind: ArcadeKind) {
     const id = window.setInterval(() => {
       elapsedRef.current += 1;
       setElapsed(elapsedRef.current);
-      if (kind !== "sprint") return;
+      if (kind !== "sprint" && kind !== "extreme") return;
       sessionRef.current -= 1;
       const left = sessionRef.current;
       setSessionLeft(left);
@@ -65,7 +71,7 @@ export function useArcadeTree(kind: ArcadeKind) {
         finished.current = true;
         setOver(true);
         playSfx("fail");
-        recordArcadeRun("sprint", scoreRef.current);
+        recordArcadeRun(kind === "extreme" ? "extreme" : "sprint", scoreRef.current);
       }
     }, 1000);
     return () => window.clearInterval(id);
@@ -126,16 +132,27 @@ export function useArcadeTree(kind: ArcadeKind) {
         secondsLeft: Math.max(0, band.timeLimit - spent),
         timeLimit: band.timeLimit,
       });
-      const bonus = difficulty === "expert" ? 120 : difficulty === "hard" ? 80 : difficulty === "medium" ? 50 : 30;
+      const bonus =
+        difficulty === "extreme"
+          ? 200
+          : difficulty === "expert"
+            ? 120
+            : difficulty === "hard"
+              ? 80
+              : difficulty === "medium"
+                ? 50
+                : 30;
       const bump = gained.total + bonus;
       scoreRef.current += bump;
       setScore(scoreRef.current);
       setCleared((c) => c + 1);
       playSfx("success");
       const nextDiff =
-        kind === "sprint"
-          ? nextDifficulty(difficulty, 1)
-          : adaptDifficulty(difficulty, spent, band.timeLimit);
+        kind === "extreme"
+          ? ("extreme" as Difficulty)
+          : kind === "sprint"
+            ? nextDifficulty(difficulty, 1)
+            : adaptDifficulty(difficulty, spent, band.timeLimit);
       window.setTimeout(() => dealNext(nextDiff), 350);
     },
     [over, selected, pegs, puzzle, difficulty, kind, dealNext],
@@ -145,7 +162,7 @@ export function useArcadeTree(kind: ArcadeKind) {
     finished.current = true;
     setOver(true);
     playSfx("success");
-    recordArcadeRun(kind, scoreRef.current);
+    recordArcadeRun(kind === "extreme" ? "extreme" : kind, scoreRef.current);
   }, [kind]);
 
   const correctMask = useMemo(() => placementMask(pegs, puzzle.target), [pegs, puzzle.target]);

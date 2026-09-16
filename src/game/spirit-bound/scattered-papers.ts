@@ -19,6 +19,16 @@ export type ScatteredPaper = {
 
 export const JEHOVAH_BOOK_TITLE = "THE SECRET OF JEHOVAH";
 
+/** Seal from the final bound chapter — paste on the Legend of Triangles title to open Extreme Puzzle. */
+export const EXTREME_PUZZLE_ACCESS_CODE = "FCBqJcQV";
+
+export const EXTREME_PUZZLE_SEAL_LINES = `═══════════════════════════════
+ACCESS TO EXTREME PUZZLE
+${EXTREME_PUZZLE_ACCESS_CODE}
+═══════════════════════════════
+Copy this seal. On the Legend of Triangles title screen, paste it to unlock Extreme Puzzle — Executive Accumen murals on the hardest band (20s / 25s).`;
+
+
 /** Rainbow scrap colors — never pure white. */
 const PAPER_COLORS: { color: string; ink: string }[] = [
   { color: "#e84848", ink: "#601010" }, // red
@@ -172,7 +182,9 @@ Those pillars were built by Seth — not the Patriarch, nor Teth, Set, Thoth, Ta
     tab: "XI · PHTAH",
     text: `Ammon-Ra, the generator, is the secondary aspect of the concealed deity. Khnoum was adored at Elephanta and Philoe, Ammon at Thebes. But it is Emepht, the One, Supreme Planetary principle, who blows the egg out of his mouth, and who is, therefore, Brahma.
 
-The shadow of the deity, Kosmic and universal, of that which broods over and permeates the egg with its vivifying Spirit until the germ contained in it is ripe, was the mystery god whose name was unpronounceable. It is Phtah, however, "he who opens," the opener of life and Death, who proceeds from the egg of the world to begin his dual work. (Book of Numbers.)`,
+The shadow of the deity, Kosmic and universal, of that which broods over and permeates the egg with its vivifying Spirit until the germ contained in it is ripe, was the mystery god whose name was unpronounceable. It is Phtah, however, "he who opens," the opener of life and Death, who proceeds from the egg of the world to begin his dual work. (Book of Numbers.)
+
+${EXTREME_PUZZLE_SEAL_LINES}`,
   },
 ];
 

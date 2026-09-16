@@ -30,3 +30,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local TRI-52 / Extreme Puzzle private assets (copyrighted — never commit)
+public/extreme-puzzle/items/
+public/extreme-puzzle/answers.json
+public/extreme-puzzle/manifest.json
+tmp-tri52/

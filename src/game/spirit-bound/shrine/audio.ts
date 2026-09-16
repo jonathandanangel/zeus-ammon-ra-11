@@ -1,4 +1,5 @@
-type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic";
+type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic" | "arcade";
+
 
 let ctx: AudioContext | null = null;
 let music: { gain: GainNode; timer: number; stop: () => void } | null = null;
@@ -46,6 +47,13 @@ export function playSfx(kind: Sfx) {
     beep(523, 0.12, "square", 0.05, 0.1);
     beep(659, 0.18, "triangle", 0.06, 0.2);
     beep(784, 0.28, "square", 0.05, 0.32);
+  }
+  if (kind === "arcade") {
+    // Coin / cabinet unlock jingle after ACCESS code paste
+    beep(880, 0.07, "square", 0.055);
+    beep(1175, 0.09, "square", 0.05, 0.08);
+    beep(1568, 0.16, "triangle", 0.06, 0.18);
+    beep(2093, 0.22, "square", 0.045, 0.32);
   }
   if (kind === "fail") {
     beep(220, 0.18, "triangle", 0.05);

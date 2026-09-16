@@ -10,6 +10,7 @@ import { SplashIntro } from "@/components/game/spirit-bound/SplashIntro";
 import { ArcadeTree } from "@/components/game/spirit-bound/shrine/ArcadeTree";
 import { ReasonTrial } from "@/components/game/spirit-bound/reason/ReasonTrial";
 import { ShrineTrial } from "@/components/game/spirit-bound/shrine/ShrineTrial";
+import { ExtremePuzzle } from "@/components/game/spirit-bound/ExtremePuzzle";
 import { LondonDoctrineGate } from "@/components/game/spirit-bound/shrine/LondonDoctrineGate";
 import {
   startMusic,
@@ -21,10 +22,12 @@ import {
   stopAmbient,
   startBurnLoop,
   stopBurnLoop,
+  playSfx,
 } from "@/game/spirit-bound/shrine/audio";
 import { ENEMIES, TILE, type Npc } from "@/game/spirit-bound/data";
 import { GRASS_TILE, VINE_MIN_LEVEL, generateRandomBushKeys, type GrassNpc } from "@/game/spirit-bound/grasslands-data";
-import { allPapersCollected, type ScatteredPaper } from "@/game/spirit-bound/scattered-papers";
+import { allPapersCollected, EXTREME_PUZZLE_ACCESS_CODE, type ScatteredPaper } from "@/game/spirit-bound/scattered-papers";
+import { loadShrineSave, unlockExtremePuzzle } from "@/storage/spirit-bound/shrine";
 import { cn } from "@/lib/utils";
 
 type Mode =
@@ -36,6 +39,7 @@ type Mode =
   | "shrine"
   | "sprint"
   | "endless"
+  | "extreme"
   | "reason"
   | "reasonEndless"
   | "reasonCampaign"
@@ -84,6 +88,11 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
   const [bookTabId, setBookTabId] = React.useState<string | null>(null);
   const [shrineCleared, setShrineCleared] = React.useState(false);
   const [pendingPaper, setPendingPaper] = React.useState<ScatteredPaper | null>(null);
+  const [extremeUnlocked, setExtremeUnlocked] = React.useState(
+    () => loadShrineSave().extremeUnlocked,
+  );
+  const [accessCode, setAccessCode] = React.useState("");
+  const [accessError, setAccessError] = React.useState("");
   const demonicLaughPlayedRef = React.useRef(false);
 
   const maxHp = MAX_HP_BY_LEVEL(level);
@@ -114,6 +123,8 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
   React.useEffect(() => {
     if (mode !== "title") return;
     const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (["Enter", "z", "Z", " "].includes(e.key)) {
         e.preventDefault();
         startGreenvaleQuest();
@@ -143,10 +154,31 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         startMusic();
         setMode("reasonCampaign");
       }
+      if ((e.key === "e" || e.key === "E") && extremeUnlocked) {
+        e.preventDefault();
+        playSfx("arcade");
+        setMode("extreme");
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, startGreenvaleQuest]);
+  }, [mode, startGreenvaleQuest, extremeUnlocked]);
+
+  function submitAccessCode(event: React.FormEvent) {
+    event.preventDefault();
+    const typed = accessCode.trim();
+    if (typed === EXTREME_PUZZLE_ACCESS_CODE) {
+      unlockExtremePuzzle();
+      setExtremeUnlocked(true);
+      setAccessError("");
+      setAccessCode("");
+      playSfx("arcade");
+      setMode("extreme");
+      return;
+    }
+    playSfx("invalid");
+    setAccessError("Invalid seal. Copy the code from THE SECRET OF JEHOVAH · XI · PHTAH.");
+  }
 
   React.useEffect(() => {
     if (!goldenEggOpen && !hawkEggOpen && !bookOpen) return;
@@ -557,6 +589,51 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
                 C · SEVEN BRIEFINGS
                 <span className="mt-1 block text-[8px]">Campaign · sealed verses and recovered relics</span>
               </button>
+
+              {extremeUnlocked ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSfx("arcade");
+                    setMode("extreme");
+                  }}
+                  className="w-full border-2 border-[#ff4d6d] px-3 py-2 font-pixel text-[10px] leading-relaxed text-[#ff4d6d] hover:bg-[#ff4d6d] hover:text-game-bg"
+                >
+                  E · EXTREME PUZZLE
+                  <span className="mt-1 block text-[8px]">
+                    Warning → age → 52 items · dated score log · rocket + sources
+                  </span>
+                </button>
+              ) : (
+                <form
+                  onSubmit={submitAccessCode}
+                  className="space-y-2 border-2 border-[#ff4d6d]/50 bg-[#180808] px-3 py-3"
+                >
+                  <p className="font-pixel text-[8px] tracking-[0.14em] text-[#ff4d6d]">
+                    ACCESS TO EXTREME PUZZLE
+                  </p>
+                  <p className="font-pixel text-[7px] leading-relaxed text-[#a88828]">
+                    Paste the seal from the final book chapter (XI · PHTAH).
+                  </p>
+                  <input
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    spellCheck={false}
+                    autoComplete="off"
+                    placeholder="Paste code"
+                    className="w-full border border-[#ff4d6d]/60 bg-[#100808] px-2 py-2 font-pixel text-[10px] tracking-[0.12em] text-[#f8f0c8] outline-none focus:border-[#ff4d6d]"
+                  />
+                  {accessError && (
+                    <p className="font-pixel text-[7px] leading-relaxed text-game-hp">{accessError}</p>
+                  )}
+                  <button
+                    type="submit"
+                    className="w-full border border-[#ff4d6d] px-2 py-2 font-pixel text-[9px] text-[#ff4d6d] hover:bg-[#ff4d6d] hover:text-game-bg"
+                  >
+                    UNLOCK
+                  </button>
+                </form>
+              )}
             </div>
           </section>
         )}
@@ -651,6 +728,8 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         {mode === "sprint" && <ArcadeTree kind="sprint" onExit={() => setMode("title")} />}
 
         {mode === "endless" && <ArcadeTree kind="endless" onExit={() => setMode("title")} />}
+
+        {mode === "extreme" && <ExtremePuzzle onExit={() => setMode("title")} />}
 
         {mode === "reason" && <ReasonTrial kind="sprint" onExit={() => setMode("title")} />}
 

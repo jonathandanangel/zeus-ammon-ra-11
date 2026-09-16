@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  EXTREME_PUZZLE_ACCESS_CODE,
   JEHOVAH_BOOK_TITLE,
   SCATTERED_PAPERS,
   type ScatteredPaper,
@@ -44,12 +45,24 @@ export function JehovahBook({ collectedIds, onClose, initialTabId = null }: Prop
   const collected = SCATTERED_PAPERS.filter((p) => collectedIds.has(p.id));
   const firstId = initialTabId && collectedIds.has(initialTabId) ? initialTabId : collected[0]?.id ?? null;
   const [activeId, setActiveId] = React.useState<string | null>(firstId);
+  const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (initialTabId && collectedIds.has(initialTabId)) setActiveId(initialTabId);
   }, [initialTabId, collectedIds]);
 
   const active: ScatteredPaper | undefined = collected.find((p) => p.id === activeId) ?? collected[0];
+  const showExtremeSeal = active?.id === "p11";
+
+  async function copyExtremeCode() {
+    try {
+      await navigator.clipboard.writeText(EXTREME_PUZZLE_ACCESS_CODE);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-black/60 p-2">
@@ -100,6 +113,26 @@ export function JehovahBook({ collectedIds, onClose, initialTabId = null }: Prop
               <>
                 <p className="mb-2 font-pixel text-[9px] tracking-[0.18em] text-[#f8d030]">{active.tab}</p>
                 <BookPageBody paper={active} />
+                {showExtremeSeal && (
+                  <div className="mt-4 border-2 border-[#f8d030]/60 bg-[#201808] p-3">
+                    <p className="font-pixel text-[8px] tracking-[0.16em] text-[#f8d030]">
+                      ACCESS TO EXTREME PUZZLE
+                    </p>
+                    <p className="mt-2 select-all font-pixel text-[14px] tracking-[0.2em] text-[#38c060]">
+                      {EXTREME_PUZZLE_ACCESS_CODE}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void copyExtremeCode()}
+                      className="mt-3 w-full border-2 border-[#38c060] px-3 py-2 font-pixel text-[9px] text-[#38c060] transition-colors hover:bg-[#38c060] hover:text-[#201808]"
+                    >
+                      {copied ? "COPIED" : "COPY CODE"}
+                    </button>
+                    <p className="mt-2 font-pixel text-[7px] leading-relaxed text-[#a88828]">
+                      Paste on the Legend of Triangles title · Extreme Puzzle unlock
+                    </p>
+                  </div>
+                )}
               </>
             ) : (
               <p className="font-pixel text-[9px] leading-relaxed text-[#a88828]">

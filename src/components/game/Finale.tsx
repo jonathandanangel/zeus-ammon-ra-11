@@ -48,7 +48,7 @@ export function Finale({
   const clearedTotal = extremeMission?.total ?? total;
   const heading = extremeMission ? "MISSION SUCCESS" : "MISSION SUCCESS";
   const subtitle = extremeMission
-    ? `${extremeMission.title} · All ${clearedTotal} questions cleared`
+    ? `${extremeMission.title} · ${extremeMission.correct} / ${extremeMission.total} correct`
     : `All ${clearedTotal} questions cleared`;
 
   const exportSummary = () => {

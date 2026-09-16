@@ -609,6 +609,141 @@
   }
 }
 
+/* Extreme Puzzle — big red scary gate */
+.extreme-warning-shell {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 6px solid #ff1a1a;
+  box-shadow:
+    0 0 0 4px #180000,
+    0 0 48px rgba(255, 0, 0, 0.55),
+    inset 0 0 80px rgba(120, 0, 0, 0.65);
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(180, 0, 0, 0.55), transparent 55%),
+    linear-gradient(180deg, #2a0000 0%, #0a0000 55%, #1a0000 100%);
+  animation: extreme-warning-pulse 1.8s ease-in-out infinite;
+}
+
+.extreme-warning-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 28px,
+    rgba(255, 20, 20, 0.06) 28px,
+    rgba(255, 20, 20, 0.06) 30px
+  );
+}
+
+.extreme-warning-content {
+  position: relative;
+  z-index: 1;
+}
+
+.extreme-warning-title {
+  font-size: clamp(2.4rem, 9vw, 4.5rem);
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: #ff1010;
+  text-shadow:
+    0 0 8px #ff0000,
+    0 0 28px #ff0000,
+    0 0 60px #990000,
+    2px 2px 0 #300000;
+  animation: extreme-warning-flicker 2.4s steps(2, end) infinite;
+}
+
+.extreme-warning-caution {
+  font-size: clamp(0.85rem, 2.8vw, 1.15rem);
+  letter-spacing: 0.28em;
+  color: #ffd0d0;
+  text-shadow: 0 0 12px #ff3030;
+}
+
+.extreme-warning-glyph {
+  color: #ff2020;
+  filter: drop-shadow(0 0 10px #ff0000);
+  animation: extreme-glyph-spin 12s linear infinite;
+}
+
+.extreme-warning-glyph-rev {
+  animation-direction: reverse;
+  animation-duration: 16s;
+}
+
+.extreme-warning-starfield {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.extreme-warning-float {
+  position: absolute;
+  opacity: 0.35;
+  color: #ff1a1a;
+  animation: extreme-star-drift 5.5s ease-in-out infinite alternate;
+}
+
+@keyframes extreme-warning-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px #180000,
+      0 0 40px rgba(255, 0, 0, 0.45),
+      inset 0 0 70px rgba(100, 0, 0, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px #300000,
+      0 0 72px rgba(255, 0, 0, 0.85),
+      inset 0 0 110px rgba(160, 0, 0, 0.75);
+  }
+}
+
+@keyframes extreme-warning-flicker {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.55;
+  }
+  95% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes extreme-glyph-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes extreme-star-drift {
+  from {
+    transform: translateY(0) rotate(180deg) scale(1);
+    opacity: 0.22;
+  }
+  to {
+    transform: translateY(-10px) rotate(180deg) scale(1.08);
+    opacity: 0.5;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

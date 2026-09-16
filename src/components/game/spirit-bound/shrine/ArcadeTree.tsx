@@ -14,7 +14,8 @@ type Props = {
 export function ArcadeTree({ kind, onExit }: Props) {
   const arcade = useArcadeTree(kind);
   const save = loadShrineSave();
-  const best = kind === "sprint" ? save.bestSprint : save.bestEndless;
+  const best =
+    kind === "sprint" ? save.bestSprint : kind === "extreme" ? save.bestExtreme : save.bestEndless;
 
   useEffect(() => {
     startMusic();
@@ -40,7 +41,7 @@ export function ArcadeTree({ kind, onExit }: Props) {
   }, [arcade]);
 
   const clock =
-    kind === "sprint"
+    kind === "sprint" || kind === "extreme"
       ? `${Math.floor(arcade.sessionLeft / 60)}:${String(arcade.sessionLeft % 60).padStart(2, "0")}`
       : `${Math.floor(arcade.elapsed / 60)}:${String(arcade.elapsed % 60).padStart(2, "0")}`;
 
@@ -48,7 +49,7 @@ export function ArcadeTree({ kind, onExit }: Props) {
     return (
       <section className="flex min-h-[420px] flex-col items-center justify-center gap-4 border-4 border-game-yellow bg-game-bg p-6 text-center text-[#f8f0c8] shadow-[0_0_0_4px_#181010]">
         <p className="text-[12px] text-game-yellow">
-          {kind === "sprint" ? "TIME" : "LONG GAME"}
+          {kind === "sprint" ? "TIME" : kind === "extreme" ? "EXTREME" : "LONG GAME"}
         </p>
         <p className="text-[18px] text-game-yellow">{arcade.score} PTS</p>
         <p className="text-[10px] leading-relaxed">
@@ -71,10 +72,20 @@ export function ArcadeTree({ kind, onExit }: Props) {
     <section className="relative overflow-hidden border-4 border-game-yellow bg-game-bg p-3 text-[#f8f0c8] shadow-[0_0_0_4px_#181010] sm:p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[9px]">
         <span className="text-game-yellow">
-          {kind === "sprint" ? "EXECUTIVE ACUMEN" : "LONG GAME"}
+          {kind === "sprint"
+            ? "EXECUTIVE ACUMEN"
+            : kind === "extreme"
+              ? "EXTREME PUZZLE"
+              : "LONG GAME"}
         </span>
-        <span className={kind === "sprint" && arcade.sessionLeft <= 15 ? "text-game-hp" : "text-game-yellow"}>
-          {kind === "sprint" ? "1:30  " : "LIVE  "}
+        <span
+          className={
+            (kind === "sprint" || kind === "extreme") && arcade.sessionLeft <= 15
+              ? "text-game-hp"
+              : "text-game-yellow"
+          }
+        >
+          {kind === "sprint" || kind === "extreme" ? "CLOCK  " : "LIVE  "}
           {clock}
         </span>
         <span>SCORE {arcade.score}</span>

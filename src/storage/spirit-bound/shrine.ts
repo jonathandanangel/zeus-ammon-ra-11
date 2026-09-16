@@ -10,6 +10,8 @@ export type ShrineSave = {
   lastStars: number;
   bestSprint: number;
   bestEndless: number;
+  bestExtreme: number;
+  extremeUnlocked: boolean;
 };
 
 const EMPTY: ShrineSave = {
@@ -20,6 +22,8 @@ const EMPTY: ShrineSave = {
   lastStars: 0,
   bestSprint: 0,
   bestEndless: 0,
+  bestExtreme: 0,
+  extremeUnlocked: false,
 };
 
 export function loadShrineSave(): ShrineSave {
@@ -36,6 +40,8 @@ export function loadShrineSave(): ShrineSave {
       lastStars: typeof parsed.lastStars === "number" ? parsed.lastStars : 0,
       bestSprint: typeof parsed.bestSprint === "number" ? parsed.bestSprint : 0,
       bestEndless: typeof parsed.bestEndless === "number" ? parsed.bestEndless : 0,
+      bestExtreme: typeof parsed.bestExtreme === "number" ? parsed.bestExtreme : 0,
+      extremeUnlocked: parsed.extremeUnlocked === true,
     };
   } catch {
     return { ...EMPTY, achievements: [] };
@@ -57,6 +63,8 @@ export function recordShrineResult(input: {
     lastStars: input.stars,
     bestSprint: prev.bestSprint,
     bestEndless: prev.bestEndless,
+    bestExtreme: prev.bestExtreme,
+    extremeUnlocked: prev.extremeUnlocked,
   };
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
@@ -66,13 +74,25 @@ export function recordShrineResult(input: {
   return next;
 }
 
-export function recordArcadeRun(kind: "sprint" | "endless", score: number): ShrineSave {
+export function recordArcadeRun(kind: "sprint" | "endless" | "extreme", score: number): ShrineSave {
   const prev = loadShrineSave();
   const next: ShrineSave = {
     ...prev,
     bestSprint: kind === "sprint" ? Math.max(prev.bestSprint, score) : prev.bestSprint,
     bestEndless: kind === "endless" ? Math.max(prev.bestEndless, score) : prev.bestEndless,
+    bestExtreme: kind === "extreme" ? Math.max(prev.bestExtreme, score) : prev.bestExtreme,
   };
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+  return next;
+}
+
+export function unlockExtremePuzzle(): ShrineSave {
+  const prev = loadShrineSave();
+  const next: ShrineSave = { ...prev, extremeUnlocked: true };
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
