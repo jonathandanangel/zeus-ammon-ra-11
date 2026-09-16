@@ -2136,6 +2136,17 @@
   transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
+.zeus-title-electric {
+  color: #7af7ff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 14px #5ef0ff,
+    0 0 28px #00e5ff,
+    0 0 48px #00b8ff,
+    0 0 72px rgba(0, 200, 255, 0.75),
+    0 0 110px rgba(0, 160, 255, 0.45);
+}
+
 .zeus-intro--leaving {
   opacity: 0;
   transform: scale(1.04);

@@ -95,11 +95,12 @@ export function TitleScreen(p: TitleScreenProps) {
   }, [p, reduced]);
 
   React.useEffect(() => {
-    if (phase !== "intro") return;
-    const ms = reduced ? 2200 : 5000;
-    const id = window.setTimeout(enterLanding, ms);
-    return () => window.clearTimeout(id);
-  }, [phase, enterLanding, reduced]);
+    if (phase !== "intro" || reduced) return;
+    const id = window.setInterval(() => {
+      setBrain((prev) => pickBrainLook(prev.name));
+    }, 2200);
+    return () => window.clearInterval(id);
+  }, [phase, reduced]);
 
   React.useEffect(() => {
     if (phase !== "landing" || reduced) return;
@@ -222,7 +223,7 @@ export function TitleScreen(p: TitleScreenProps) {
     return (
       <button
         type="button"
-        aria-label="Begin ZEUS AMMON-RA 11. Click or wait five seconds."
+        aria-label="Tap to begin ZEUS AMMON-RA 11"
         onClick={enterLanding}
         className={cn(
           "zeus-intro fixed inset-0 z-[80] flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden border-0 bg-black p-0 text-center",
@@ -230,6 +231,7 @@ export function TitleScreen(p: TitleScreenProps) {
         )}
       >
         <img
+          key={brain.name}
           src={brainSrc}
           alt=""
           className={cn("zeus-intro-brain")}
@@ -241,11 +243,11 @@ export function TitleScreen(p: TitleScreenProps) {
           <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-magenta sm:text-xs">
             Flight Dynamics Trivia
           </p>
-          <h1 className="mt-3 font-display text-4xl leading-tight text-cyan text-glow sm:text-6xl md:text-7xl">
+          <h1 className="zeus-title-electric mt-3 font-display text-4xl leading-tight sm:text-6xl md:text-7xl">
             ZEUS AMMON-RA 11
           </h1>
           <p className="mt-4 font-mono text-xs tracking-[0.35em] text-moon/80 sm:text-sm">
-            Tap to begin · or wait
+            Tap to begin
           </p>
         </div>
       </button>
@@ -270,7 +272,7 @@ export function TitleScreen(p: TitleScreenProps) {
         />
         <div className="relative z-10 flex max-w-3xl flex-col items-center">
           <p className="font-mono text-xs uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
-          <h2 className="mt-3 font-display text-3xl text-cyan text-glow sm:text-5xl">
+          <h2 className="zeus-title-electric mt-3 font-display text-3xl sm:text-5xl">
             Choose your path
           </h2>
           <p className="mt-4 max-w-lg font-mono text-sm leading-relaxed text-muted-foreground">
