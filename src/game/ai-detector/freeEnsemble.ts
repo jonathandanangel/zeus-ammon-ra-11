@@ -21,6 +21,7 @@ import {
 
 export type FreeDetectorId =
   | "gptzero-twin"
+  | "human-noise"
   | "openai-roberta"
   | "hc3-roberta"
   | "modernbert"
@@ -36,6 +37,11 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
     id: "gptzero-twin",
     name: "GPTZero-style twin",
     blurb: "Free perplexity + burstiness composite (same strategy family as GPTZero)",
+  },
+  {
+    id: "human-noise",
+    name: "Human noise",
+    blurb: "Typos, doubled words, informal voice — strong human authenticity signal",
   },
   {
     id: "openai-roberta",
@@ -84,18 +90,22 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
   },
 ];
 
-/** Neural + GPTZero-twin dominate; stylometrics support. */
+/**
+ * Prefer low false positives on human student writing (GPTZero philosophy).
+ * human-noise can veto soft AI leans from older neural detectors.
+ */
 const WEIGHT: Partial<Record<FreeDetectorId, number>> = {
-  "gptzero-twin": 3.5,
-  "openai-roberta": 3.2,
-  "hc3-roberta": 2.6,
-  modernbert: 3.0,
-  burstiness: 1.2,
-  "perplexity-proxy": 1.2,
-  lexical: 0.9,
-  ngram: 1.0,
-  discourse: 1.4,
-  "sentence-mix": 1.5,
+  "human-noise": 4.0,
+  "gptzero-twin": 2.8,
+  "openai-roberta": 2.4,
+  "hc3-roberta": 2.0,
+  modernbert: 2.6,
+  burstiness: 1.3,
+  "perplexity-proxy": 1.0,
+  lexical: 0.8,
+  ngram: 0.9,
+  discourse: 1.6,
+  "sentence-mix": 1.3,
 };
 
 function clamp(n: number, lo = 0, hi = 100) {
@@ -208,6 +218,7 @@ function sentenceSurprisals(text: string): number[] {
 /**
  * Classic GPTZero pairing: low average “perplexity” + low burstiness → AI.
  * High / irregular surprisal → human.
+ * Calibrated softer on short student essays to cut false AI flags.
  */
 function scanGptZeroTwin(text: string): DetectorScanResult {
   const surps = sentenceSurprisals(text);
@@ -215,17 +226,90 @@ function scanGptZeroTwin(text: string): DetectorScanResult {
     return fail("gptzero-twin", "GPTZero-style twin", "Need 4+ sentences for perplexity+burstiness.");
   }
   const avgPpl = mean(surps);
-  const burst = stdev(surps) / Math.max(0.35, avgPpl); // relative burstiness of surprisal
-  // Low avgPpl + low burst → AI; map into 0–100
-  const fromPpl = clamp(100 - (avgPpl - 2.0) * 24);
-  const fromBurst = clamp(100 - burst * 95);
-  const aiScore = sharpen(0.58 * fromPpl + 0.42 * fromBurst, 1.3);
+  const burst = stdev(surps) / Math.max(0.35, avgPpl);
+  const fromPpl = clamp(88 - (avgPpl - 2.4) * 18);
+  const fromBurst = clamp(88 - burst * 85);
+  // Softer sharpen — avoid shoving informal human prose into “AI”
+  const aiScore = sharpen(0.55 * fromPpl + 0.45 * fromBurst, 1.15);
   return ok(
     "gptzero-twin",
     "GPTZero-style twin",
     aiScore,
-    `sent-ppl≈${avgPpl.toFixed(2)} · burst=${burst.toFixed(3)} · n=${surps.length} (perplexity+burstiness)`,
+    `sent-ppl≈${avgPpl.toFixed(2)} · burst=${burst.toFixed(3)} · n=${surps.length}`,
     `ppl=${avgPpl.toFixed(2)},burst=${burst.toFixed(3)}`,
+  );
+}
+
+/**
+ * Human authenticity / noise — typos & informal voice that LLMs rarely leave in.
+ * Low AI score = looks human. Catches cases like "is is", "where" for "were", "I'm trying".
+ */
+function scanHumanNoise(text: string): DetectorScanResult {
+  const words = wordsOf(text);
+  if (words.length < 25) return fail("human-noise", "Human noise", "Need more text.");
+
+  let hits = 0;
+  const notes: string[] = [];
+
+  // Doubled words: "is is", "the the"
+  for (let i = 0; i < words.length - 1; i++) {
+    if (words[i] === words[i + 1] && (words[i]?.length ?? 0) >= 2) {
+      hits += 3;
+      notes.push(`double:${words[i]}`);
+    }
+  }
+
+  // Common ESL / rushed substitutions
+  const lower = text.toLowerCase();
+  if (/\bwhere simply\b/.test(lower) || /\bwhere\b.*\binnovations\b/.test(lower)) {
+    hits += 2;
+    notes.push("where/were-slip");
+  }
+  if (/\bthis time are\b/.test(lower)) {
+    hits += 1;
+    notes.push("tense-mix");
+  }
+
+  // First-person student voice
+  const firstPerson = (lower.match(/\b(i|i'm|im|my|our|me)\b/g) ?? []).length;
+  if (firstPerson >= 2) {
+    hits += 2;
+    notes.push(`1st-person:${firstPerson}`);
+  }
+
+  // Informal hedges / filler humans use
+  const informal = (lower.match(/\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|therefore the main)\b/g) ?? [])
+    .length;
+  if (informal >= 1) {
+    hits += 1;
+    notes.push(`informal:${informal}`);
+  }
+
+  // Uneven spacing / missing space after period
+  if (/[a-z]\.[A-Z]/.test(text) || /  +/.test(text)) {
+    hits += 1;
+    notes.push("spacing");
+  }
+
+  // Run-on / comma splice density vs polished AI
+  const sentences = sentencesOf(text);
+  const longRuns = sentences.filter((s) => wordsOf(s).length > 28).length;
+  if (longRuns >= 1 && sentences.length <= 8) {
+    hits += 1;
+    notes.push("run-on");
+  }
+
+  // Very polished zero-noise → slightly AI-leaning; lots of noise → strongly human
+  // hits 0 → ~55, hits 3 → ~28, hits 6+ → ~12
+  const aiScore = sharpen(clamp(58 - hits * 8), 1.1);
+  return ok(
+    "human-noise",
+    "Human noise",
+    aiScore,
+    hits
+      ? `authenticity hits=${hits} (${notes.slice(0, 5).join(", ")}) → human-leaning`
+      : "Little surface noise — neutral/soft",
+    `hits=${hits}`,
   );
 }
 
@@ -526,17 +610,19 @@ async function runNeural(
       scores.push(ai);
       lastLabel = label;
     }
-    const avg = mean(scores);
-    const med = median(scores);
-    // Blend mean/median; sharpen so we don't sit at 50 forever
-    const aiScore = sharpen(0.65 * avg + 0.35 * med, 1.25);
-    return ok(
-      id,
-      name,
-      aiScore,
-      `${name} · chunks=${scores.length} · raw≈${avg.toFixed(0)} · label=${lastLabel}`,
-      lastLabel,
-    );
+  const avg = mean(scores);
+  const med = median(scores);
+  // Milder sharpen — older detectors over-call Fake on student prose
+  let aiScore = sharpen(0.6 * avg + 0.4 * med, 1.1);
+  // Conservative: pull extreme Fake claims toward uncertain unless very confident
+  if (aiScore > 70 && aiScore < 92) aiScore = 55 + (aiScore - 70) * 0.85;
+  return ok(
+    id,
+    name,
+    aiScore,
+    `${name} · chunks=${scores.length} · raw≈${avg.toFixed(0)} · label=${lastLabel}`,
+    lastLabel,
+  );
   } catch (e) {
     clfCache.delete(modelId);
     return fail(
@@ -564,6 +650,9 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     };
   }
 
+  const noise = okRows.find((r) => r.id === "human-noise");
+  const humanVeto = noise && noise.aiScore <= 32; // strong authenticity / typos
+
   let wSum = 0;
   let sSum = 0;
   const weightedScores: number[] = [];
@@ -572,31 +661,50 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   let uncertainVotes = 0;
 
   for (const r of okRows) {
-    const w = WEIGHT[r.id as FreeDetectorId] ?? 1;
+    let w = WEIGHT[r.id as FreeDetectorId] ?? 1;
+    let score = r.aiScore;
+    // If human-noise fires, dampen soft AI leans from older neural models
+    if (humanVeto && (r.id === "openai-roberta" || r.id === "hc3-roberta" || r.id === "modernbert")) {
+      if (score > 45 && score < 88) {
+        score = 35 + (score - 45) * 0.35;
+        w *= 0.65;
+      }
+    }
     wSum += w;
-    sSum += r.aiScore * w;
-    for (let i = 0; i < Math.round(w * 2); i++) weightedScores.push(r.aiScore);
-    if (r.band === "human") humanVotes += 1;
-    else if (r.band === "uncertain") uncertainVotes += 1;
+    sSum += score * w;
+    for (let i = 0; i < Math.round(w * 2); i++) weightedScores.push(score);
+    const band = bandFromAiScore(score);
+    if (band === "human") humanVotes += 1;
+    else if (band === "uncertain") uncertainVotes += 1;
     else aiVotes += 1;
   }
 
-  const avg = sSum / wSum;
+  let avg = sSum / wSum;
   const med = median(weightedScores);
-  // Final document score: neural-weighted average with slight sharpening
-  const docScore = sharpen(0.7 * avg + 0.3 * med, 1.2);
+  let docScore = sharpen(0.65 * avg + 0.35 * med, 1.08);
+
+  // GPTZero-like low FPR: authenticity veto pulls document toward human
+  if (humanVeto) {
+    docScore = Math.min(docScore, 0.4 * docScore + 0.6 * (noise?.aiScore ?? 25));
+  }
+  // Prefer human on soft leans
+  if (docScore >= 48 && docScore < 58 && humanVotes + uncertainVotes >= aiVotes) {
+    docScore -= 8;
+  }
+  docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (docScore < 38 && humanVotes >= aiVotes) agreement = "strong_human";
-  else if (docScore < 48 && humanVotes > aiVotes) agreement = "lean_human";
-  else if (docScore >= 72 && aiVotes >= humanVotes) agreement = "strong_ai";
-  else if (docScore >= 55 && aiVotes > humanVotes) agreement = "lean_ai";
+  if (docScore < 40) agreement = humanVotes >= aiVotes ? "strong_human" : "lean_human";
+  else if (docScore < 50) agreement = "lean_human";
+  else if (docScore >= 75 && aiVotes > humanVotes) agreement = "strong_ai";
+  else if (docScore >= 60 && aiVotes >= humanVotes) agreement = "lean_ai";
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
+  const vetoNote = humanVeto ? " Human-noise veto applied (typos/informal voice)." : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
-    lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). GPTZero-style: prefer human unless neural stack flips.`,
+    lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
     split: `Uncertain / mixed (weighted AI ${docScore.toFixed(0)}%). Route to a human reviewer.`,
     lean_ai: `Lean AI (weighted AI ${docScore.toFixed(0)}%).`,
     strong_ai: `Strong AI signal (weighted AI ${docScore.toFixed(0)}%).`,
@@ -612,7 +720,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     aiVotes,
     uncertainVotes,
     agreement,
-    summary: `${summaryMap[agreement]} Free GPTZero-style strategy: perplexity+burstiness twin + neural stack (no API key).`,
+    summary: `${summaryMap[agreement]}${vetoNote} Free GPTZero-style + authenticity checks.`,
   };
 }
 
@@ -621,11 +729,15 @@ export async function runFreeEnsemble(
   onProgress?: (msg: string) => void,
 ): Promise<{ results: DetectorScanResult[]; consensus: EnsembleConsensus }> {
   const text = content.trim();
+  onProgress?.("Human-noise / authenticity check…");
+  const noise = scanHumanNoise(text);
+
   onProgress?.("GPTZero-style twin (perplexity + burstiness)…");
   const twin = scanGptZeroTwin(text);
 
   onProgress?.("Supporting stylometric checks…");
   const statistical = [
+    noise,
     twin,
     scanBurstiness(text),
     scanPerplexityProxy(text),
@@ -659,7 +771,7 @@ export async function runFreeEnsemble(
     text,
   );
 
-  const results = [twin, openai, hc3, modern, ...statistical.slice(1)];
+  const results = [noise, twin, openai, hc3, modern, ...statistical.slice(2)];
   const consensus = weightedConsensus(results);
   return { results, consensus };
 }

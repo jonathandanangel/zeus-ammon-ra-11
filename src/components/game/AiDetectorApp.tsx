@@ -236,7 +236,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
           {busy
             ? "Scanning…"
             : mode === "free"
-              ? "Free multi-scan (10 · GPTZero-style)"
+              ? "Free multi-scan (11 · GPTZero-style)"
               : `API multi-scan (${readyIds.length})`}
         </button>
       </section>
