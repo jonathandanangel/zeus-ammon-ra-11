@@ -313,8 +313,11 @@ export function TitleScreen(p: TitleScreenProps) {
           <p className="mt-10 max-w-md font-mono text-[11px] leading-relaxed text-muted-foreground">
             Very bright and vibrant be warned.
           </p>
-          <div className="mt-4 flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mt-4 flex w-full max-w-lg items-end justify-between gap-4 px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <span>WOZKAF</span>
+            <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
+              Music: Das Armageddon (2026) by キ aerzengel
+            </span>
             <span>Jonathan Angel</span>
           </div>
         </div>
@@ -368,8 +371,11 @@ export function TitleScreen(p: TitleScreenProps) {
         <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
           Very bright and vibrant be warned.
         </p>
-        <div className="flex w-full max-w-sm justify-between self-center px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="flex w-full max-w-lg items-end justify-between gap-4 self-center px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <span>WOZKAF</span>
+          <span className="max-w-[16rem] text-center normal-case tracking-normal leading-relaxed">
+            Music: Das Armageddon (2026) by キ aerzengel
+          </span>
           <span>Jonathan Angel</span>
         </div>
       </div>
