@@ -1,8 +1,8 @@
-/** The Secret Doctrine (Blavatsky) — anagram / scramble / similar-letter passage search. */
+/** Robert Graves, The Greek Myths — anagram / scramble / similar-letter passage search. */
 
 import { collectLetterMatchCandidates, normalizeWord } from "./letter-match";
 
-export type SecretDoctrinePassage = {
+export type GreekMythPassage = {
   id: number;
   page: number;
   text: string;
@@ -23,18 +23,6 @@ type Manifest = {
   chunkCount: number;
 };
 
-const NUMBER_RELATED: Record<number, string[]> = {
-  1: ["one", "unity", "monad", "point", "logos", "beginning", "first"],
-  2: ["two", "duality", "duad", "pair", "polarity", "binary"],
-  3: ["three", "triad", "trinity", "triangle", "triune", "fohat"],
-  4: ["four", "quaternary", "square", "cross", "tetrad", "cube"],
-  5: ["five", "pentad", "microcosm", "man", "human"],
-  6: ["six", "hexad", "hexagon", "nature", "double"],
-  7: ["seven", "septenary", "septenate", "hebdomad", "hierarchy", "planes", "rounds"],
-  8: ["eight", "ogdoad", "cube", "matter", "infinity"],
-  9: ["nine", "ennead", "completion", "circle", "cycle", "manvantara"],
-};
-
 let manifestPromise: Promise<Manifest | null> | null = null;
 const indexBuckets = new Map<string, Record<string, number[]>>();
 const signatureBuckets = new Map<string, Record<string, string[]>>();
@@ -47,19 +35,19 @@ async function fetchJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function loadSecretDoctrineManifest(): Promise<Manifest | null> {
+export async function loadGreekMythsManifest(): Promise<Manifest | null> {
   if (!manifestPromise) {
-    manifestPromise = fetchJson<Manifest>("/secret-doctrine/manifest.json").catch(() => null);
+    manifestPromise = fetchJson<Manifest>("/greek-myths/manifest.json").catch(() => null);
   }
   return manifestPromise;
 }
 
-async function loadIndexBucket(letter: string): Promise<Record<string, number[]>> {
+async function loadWordIndex(letter: string): Promise<Record<string, number[]>> {
   const key = (letter[0] ?? "_").toLowerCase();
   const cached = indexBuckets.get(key);
   if (cached) return cached;
   try {
-    const data = await fetchJson<IndexBucket>(`/secret-doctrine/index/${encodeURIComponent(key)}.json`);
+    const data = await fetchJson<IndexBucket>(`/greek-myths/index/${encodeURIComponent(key)}.json`);
     indexBuckets.set(key, data.entries);
     return data.entries;
   } catch {
@@ -74,7 +62,7 @@ async function loadSignatures(letter: string): Promise<Record<string, string[]>>
   if (cached) return cached;
   try {
     const data = await fetchJson<SignatureBucket>(
-      `/secret-doctrine/signatures/${encodeURIComponent(key)}.json`,
+      `/greek-myths/signatures/${encodeURIComponent(key)}.json`,
     );
     signatureBuckets.set(key, data.entries);
     return data.entries;
@@ -88,7 +76,7 @@ async function loadLength(len: number): Promise<string[]> {
   const cached = lengthBuckets.get(len);
   if (cached) return cached;
   try {
-    const data = await fetchJson<LengthBucket>(`/secret-doctrine/lengths/${len}.json`);
+    const data = await fetchJson<LengthBucket>(`/greek-myths/lengths/${len}.json`);
     lengthBuckets.set(len, data.words);
     return data.words;
   } catch {
@@ -103,7 +91,7 @@ async function loadPassage(id: number, chunkSize: number): Promise<PassageRaw | 
   if (!chunk) {
     try {
       const rows = await fetchJson<PassageRaw[]>(
-        `/secret-doctrine/passages-${String(chunkIndex).padStart(3, "0")}.json`,
+        `/greek-myths/passages-${String(chunkIndex).padStart(3, "0")}.json`,
       );
       chunk = new Map(rows.map((row) => [row.id, row]));
       passageChunks.set(chunkIndex, chunk);
@@ -114,48 +102,11 @@ async function loadPassage(id: number, chunkSize: number): Promise<PassageRaw | 
   return chunk.get(id) ?? null;
 }
 
-function occultBoost(text: string, pathNumber: number | null): number {
-  const lower = text.toLowerCase();
-  let score = 0;
-  if (pathNumber) {
-    for (const related of NUMBER_RELATED[pathNumber] ?? []) {
-      if (lower.includes(related)) score += 2;
-    }
-  }
-  for (const boost of [
-    "number",
-    "numbers",
-    "septenary",
-    "occult",
-    "esoteric",
-    "pythagoras",
-    "kabala",
-    "kabbalah",
-    "fohat",
-    "dzyan",
-    "monad",
-    "logos",
-  ]) {
-    if (lower.includes(boost)) score += 1;
-  }
-  return score;
-}
-
-export type SecretDoctrineQuery = {
+export async function searchGreekMyths(query: {
   word: string;
-  pathNumber?: number | null;
   limit?: number;
-};
-
-/**
- * Find Secret Doctrine passages via exact / stem / anagram / similar-letter matches,
- * with a light boost for occult and path-number co-occurrence.
- */
-export async function searchSecretDoctrine(query: SecretDoctrineQuery): Promise<{
-  passages: SecretDoctrinePassage[];
-  source: string;
-}> {
-  const manifest = await loadSecretDoctrineManifest();
+}): Promise<{ passages: GreekMythPassage[]; source: string }> {
+  const manifest = await loadGreekMythsManifest();
   if (!manifest) return { passages: [], source: "" };
 
   const word = normalizeWord(query.word);
@@ -170,7 +121,7 @@ export async function searchSecretDoctrine(query: SecretDoctrineQuery): Promise<
   const idMeta = new Map<number, { matched: Set<string>; reasons: Set<string>; score: number }>();
 
   for (const candidate of candidates) {
-    const bucket = await loadIndexBucket(candidate.word);
+    const bucket = await loadWordIndex(candidate.word);
     for (const id of bucket[candidate.word] ?? []) {
       const meta = idMeta.get(id) ?? { matched: new Set(), reasons: new Set(), score: 0 };
       meta.matched.add(candidate.word);
@@ -180,7 +131,7 @@ export async function searchSecretDoctrine(query: SecretDoctrineQuery): Promise<
     }
   }
 
-  const scored: SecretDoctrinePassage[] = [];
+  const scored: GreekMythPassage[] = [];
   for (const [id, meta] of idMeta) {
     const raw = await loadPassage(id, manifest.chunkSize);
     if (!raw) continue;
@@ -190,13 +141,13 @@ export async function searchSecretDoctrine(query: SecretDoctrineQuery): Promise<
       text: raw.t,
       matched: [...meta.matched],
       reasons: [...meta.reasons],
-      score: meta.score + occultBoost(raw.t, query.pathNumber ?? null),
+      score: meta.score,
     });
   }
 
   scored.sort((a, b) => b.score - a.score || a.page - b.page);
   const seenPages = new Set<number>();
-  const picked: SecretDoctrinePassage[] = [];
+  const picked: GreekMythPassage[] = [];
   const limit = query.limit ?? 5;
   for (const row of scored) {
     if (seenPages.has(row.page) && picked.length >= 2) continue;

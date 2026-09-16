@@ -5,5 +5,12 @@
   "passageCount": 7967,
   "chunkSize": 500,
   "chunkCount": 16,
-  "wordCount": 25311
+  "wordCount": 25311,
+  "signatureCount": 23232,
+  "matchModes": [
+    "exact",
+    "stem",
+    "anagram/scramble",
+    "similar-length shared letters"
+  ]
 }

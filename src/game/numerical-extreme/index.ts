@@ -154,6 +154,8 @@ export {
 } from "./thought-forms";
 export { searchSecretDoctrine, loadSecretDoctrineManifest } from "./secret-doctrine";
 export type { SecretDoctrinePassage, SecretDoctrineQuery } from "./secret-doctrine";
+export { searchGreekMyths, loadGreekMythsManifest } from "./greek-myths";
+export type { GreekMythPassage } from "./greek-myths";
 export { getRuckmanVersesForNumber } from "./ruckman-kjv";
 export type { RuckmanVerse } from "./ruckman-kjv";
 

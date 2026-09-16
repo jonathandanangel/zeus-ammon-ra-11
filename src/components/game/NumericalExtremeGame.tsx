@@ -54,6 +54,7 @@ import {
   loadJohnsonResources,
   lookupJohnsonEditions,
   searchSecretDoctrine,
+  searchGreekMyths,
   getRuckmanVersesForNumber,
   THOUGHT_FORM_PLATES,
   type Acm618OrderingMode,
@@ -66,6 +67,7 @@ import {
   type NumerologyResult,
   type JohnsonSense,
   type SecretDoctrinePassage,
+  type GreekMythPassage,
   type RuckmanVerse,
   type NumberPhilosophy,
   type Point2,
@@ -2682,46 +2684,55 @@ function highlightPassage(text: string, matched: string[]): React.ReactNode {
   );
 }
 
-function SecretDoctrinePanel({
+function SourcePassagePanel({
+  title,
+  eyebrow,
   word,
   passages,
   source,
   loading,
+  emptyHint,
+  matchHint,
 }: {
+  title: string;
+  eyebrow: string;
   word: string;
-  passages: SecretDoctrinePassage[];
+  passages: Array<{
+    id: number;
+    page: number;
+    text: string;
+    matched: string[];
+    reasons?: string[];
+  }>;
   source: string;
   loading?: boolean;
+  emptyHint: string;
+  matchHint: string;
 }) {
   if (loading) {
     return (
-      <Panel title="Secret Doctrine" eyebrow="BLAVATSKY · passages">
+      <Panel title={title} eyebrow={eyebrow}>
         <p className="font-mono text-[10px] text-muted-foreground">
-          Searching The Secret Doctrine for “{word}”…
+          Searching for “{word}”…
         </p>
       </Panel>
     );
   }
   if (!passages.length) {
     return (
-      <Panel title="Secret Doctrine" eyebrow="BLAVATSKY · passages">
-        <p className="font-mono text-[10px] text-muted-foreground">
-          No close passages found for “{word}” in The Secret Doctrine.
-        </p>
+      <Panel title={title} eyebrow={eyebrow}>
+        <p className="font-mono text-[10px] text-muted-foreground">{emptyHint}</p>
       </Panel>
     );
   }
 
   return (
     <Panel
-      title="Secret Doctrine"
-      eyebrow={`BLAVATSKY · ${passages.length} passage${passages.length === 1 ? "" : "s"}`}
+      title={title}
+      eyebrow={`${eyebrow} · ${passages.length} passage${passages.length === 1 ? "" : "s"}`}
     >
       <div className="space-y-3">
-        <p className="font-mono text-[9px] leading-relaxed text-amber">
-          Passages using “{word}” (or close forms), ranked for occult / numerical relevance to your
-          path number.
-        </p>
+        <p className="font-mono text-[9px] leading-relaxed text-amber">{matchHint}</p>
         <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
           {passages.map((passage) => (
             <article
@@ -2737,6 +2748,11 @@ function SecretDoctrinePanel({
                   </span>
                 )}
               </p>
+              {passage.reasons && passage.reasons.length > 0 && (
+                <p className="mb-1.5 font-mono text-[8px] text-cyan/80">
+                  {passage.reasons.join(" · ")}
+                </p>
+              )}
               <p className="font-mono text-[11px] leading-relaxed text-moon">
                 {highlightPassage(passage.text, passage.matched)}
               </p>
@@ -2746,6 +2762,56 @@ function SecretDoctrinePanel({
         {source && <p className="font-mono text-[9px] text-muted-foreground">{source}</p>}
       </div>
     </Panel>
+  );
+}
+
+function SecretDoctrinePanel({
+  word,
+  passages,
+  source,
+  loading,
+}: {
+  word: string;
+  passages: SecretDoctrinePassage[];
+  source: string;
+  loading?: boolean;
+}) {
+  return (
+    <SourcePassagePanel
+      title="Secret Doctrine"
+      eyebrow="BLAVATSKY"
+      word={word}
+      passages={passages}
+      source={source}
+      loading={loading}
+      emptyHint={`No close passages found for “${word}” in The Secret Doctrine.`}
+      matchHint={`Passages for “${word}” via exact / stem / anagram / scramble / similar letter-count, ranked with occult & path-number relevance.`}
+    />
+  );
+}
+
+function GreekMythsPanel({
+  word,
+  passages,
+  source,
+  loading,
+}: {
+  word: string;
+  passages: GreekMythPassage[];
+  source: string;
+  loading?: boolean;
+}) {
+  return (
+    <SourcePassagePanel
+      title="The Greek Myths"
+      eyebrow="GRAVES"
+      word={word}
+      passages={passages}
+      source={source}
+      loading={loading}
+      emptyHint={`No close passages found for “${word}” in The Greek Myths.`}
+      matchHint={`Passages for “${word}” via exact / stem / anagram / scramble / similar letter-count with shared letters — PDF page cited.`}
+    />
   );
 }
 
@@ -2827,6 +2893,9 @@ function NumerologyPanel() {
   const [secretPassages, setSecretPassages] = React.useState<SecretDoctrinePassage[]>([]);
   const [secretSource, setSecretSource] = React.useState("");
   const [secretLoading, setSecretLoading] = React.useState(false);
+  const [mythPassages, setMythPassages] = React.useState<GreekMythPassage[]>([]);
+  const [mythSource, setMythSource] = React.useState("");
+  const [mythLoading, setMythLoading] = React.useState(false);
   const [ruckmanVerses, setRuckmanVerses] = React.useState<RuckmanVerse[]>([]);
   const [ruckmanSource, setRuckmanSource] = React.useState("");
   const johnsonResourcesRef = React.useRef<Awaited<ReturnType<typeof loadJohnsonResources>> | null>(null);
@@ -2870,6 +2939,9 @@ function NumerologyPanel() {
       setSecretPassages([]);
       setSecretSource("");
       setSecretLoading(false);
+      setMythPassages([]);
+      setMythSource("");
+      setMythLoading(false);
       setRuckmanVerses([]);
       setRuckmanSource("");
       return;
@@ -2893,6 +2965,7 @@ function NumerologyPanel() {
     }
 
     setSecretLoading(true);
+    setMythLoading(true);
     searchSecretDoctrine({
       word: wordKey || result.normalized,
       pathNumber: result.number,
@@ -2909,6 +2982,23 @@ function NumerologyPanel() {
         setSecretPassages([]);
         setSecretSource("");
         setSecretLoading(false);
+      });
+
+    searchGreekMyths({
+      word: wordKey || result.normalized,
+      limit: 5,
+    })
+      .then(({ passages, source }) => {
+        if (cancelled) return;
+        setMythPassages(passages);
+        setMythSource(source);
+        setMythLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMythPassages([]);
+        setMythSource("");
+        setMythLoading(false);
       });
 
     getRuckmanVersesForNumber(result.number).then(({ verses, source }) => {
@@ -2930,6 +3020,7 @@ function NumerologyPanel() {
       johnsonWord: johnsonWordEntry ?? result.johnsonWord,
       johnsonWord1773,
       secretDoctrine: secretPassages,
+      greekMyths: mythPassages,
       ruckmanKjv: ruckmanVerses,
       report: formatNumerologyReport(result),
     });
@@ -2942,9 +3033,9 @@ function NumerologyPanel() {
         <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
             <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
-              Samuel Johnson 1755 and 1773 (4th ed.) define your typed word when found. H. P.
-              Blavatsky&apos;s Secret Doctrine adds matching passages (same or close word), ranked
-              for occult / numerical relevance to your path number.
+              Samuel Johnson 1755 and 1773 (4th ed.) define your typed word when found. Secret
+              Doctrine and Greek Myths add passages via exact / anagram / scramble / similar
+              letter-count matches. Ruckman cites 1611 KJV verses for your path number.
             </p>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan">
               BRUTE FORCE METHOD TO FIND DEFINITIONS!
@@ -3041,6 +3132,12 @@ function NumerologyPanel() {
               source={secretSource}
               loading={secretLoading}
             />
+            <GreekMythsPanel
+              word={result.normalized}
+              passages={mythPassages}
+              source={mythSource}
+              loading={mythLoading}
+            />
           </>
         )}
       </div>
@@ -3051,8 +3148,8 @@ function NumerologyPanel() {
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
               Type a word. Letters sum A=1…Z=26, then mod 9 (0→9). Only the lore for{" "}
               <span className="text-cyan">your number</span> appears — path, tarot, sacred geometry,
-              Theosophy colour, seven traditions, Johnson for your word, and Secret Doctrine
-              passages that use the same (or similar) word.
+              Theosophy colour, seven traditions, Johnson 1755/1773, Secret Doctrine & Greek Myths
+              (anagram / scramble / similar letters), and Ruckman×1611 KJV for your path number.
             </p>
           </Panel>
         ) : (
@@ -3146,7 +3243,9 @@ function ReferencesPanel() {
         <p className="font-mono text-xs leading-relaxed text-muted-foreground">
           Numerical Extreme carries forward NumericalAnalysisToolbox_V15 / V11 Neon: ACM Collected
           Algorithms (including SPARS 618 / 619 / 740), Sauer-style root finding, classical
-          quadrature & interpolation, and SDOF vibration analysis — presented in the ZEUS neon shell.
+          quadrature & interpolation, and SDOF vibration analysis — plus the NUMEROLOGY tab’s
+          people, dictionaries, Secret Doctrine, Greek Myths, Ruckman×KJV, and Thought-Forms
+          sources listed below.
         </p>
       </Panel>
 

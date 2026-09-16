@@ -397,6 +397,111 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
     ],
   },
   {
+    heading: "NUMEROLOGY tab · people, books & source texts",
+    blurb:
+      "Word → digital-root lore (A=1…Z=26, mod 9) cross-reads classical, theosophical, biblical, lexicographic, and mythographic sources. Only the lore for the typed word’s path number is shown, plus dictionary / doctrine / verse / myth passages matched to that word.",
+    entries: [
+      {
+        title: "Pythagoras · Nicomachus of Gerasa (trad.)",
+        authors: "Pythagoras; Nicomachus, Introduction to Arithmetic; Theon of Smyrna / Iamblichus (trad.)",
+        detail:
+          "Monad–ennead sacred geometry for digits 1–9 (point/circle, line, triangle, square, pentagram, hexagon, heptagon, cube/ogdoad, enneagon). Forms the geometric and colour–note spine of each path number.",
+        venue: "NUMEROLOGY · seven traditions panel",
+      },
+      {
+        title: "The Secret Teachings of All Ages (1928)",
+        authors: "Manly P. Hall",
+        detail:
+          "Symbolic readings of 1–9 (Absolute, duad corridor, triad of manifestation, quaternary of the world, etc.) paraphrased beside Pythagorean geometry for each path number.",
+        venue: "NUMEROLOGY · Manly P. Hall card",
+      },
+      {
+        title: "Metaphysics (Γ & I) · Categories",
+        authors: "Aristotle",
+        detail:
+          "Being/unity, contraries, and formal structure of number as philosophical commentary on each digit’s path meaning.",
+        venue: "NUMEROLOGY · Aristotle card",
+      },
+      {
+        title: "Summa Theologica (I, qq. on unity, creation, distinction)",
+        authors: "Thomas Aquinas",
+        detail:
+          "Scholastic readings of divine oneness, creator/creature duality, and ordered creation mapped to path digits 1–9.",
+        venue: "NUMEROLOGY · Thomas Aquinas card",
+      },
+      {
+        title: "The Book of Healing — Metaphysics",
+        authors: "Avicenna (Ibn Sina)",
+        detail:
+          "Necessary Existent, essence/existence duality, and emanation notes used as Islamic-philosophical parallels for each number.",
+        venue: "NUMEROLOGY · Avicenna card",
+      },
+      {
+        title: "Bible Numerics (1981)",
+        authors: "Dr. Peter S. Ruckman",
+        detail:
+          "KJV-centred number meanings (unity, division, Trinity, earth/four, death/five, man/six, completeness/seven, new beginning/eight, fruitfulness/nine). Cited Scripture is cross-referenced to exact 1611 text.",
+        venue: "NUMEROLOGY · Ruckman card · public/kjv/ruckman-cited.json",
+      },
+      {
+        title: "King James Version with Apocrypha (1611 text)",
+        authors: "Church of England translators (1611); davince.com/bible PDF extract",
+        detail:
+          "Exact verse text for passages Ruckman cites on the active path number only (e.g. Deut 6:4, Amos 3:3, Gen 5:5, Rev 13:18, Gal 5:22–23).",
+        venue: "NUMEROLOGY · 1611 KJV verse blocks · npm run build:kjv-ruckman",
+      },
+      {
+        title: "Thought-Forms (1901) · Theosophical colour–sound–number",
+        authors: "Annie Besant & C. W. Leadbeater; Theosophical Society; H. P. Blavatsky (colour–ray scale)",
+        detail:
+          "Prismatic colour / musical note per digit, sacred-geometry glyphs, and Thought-Forms plate imagery (Gutenberg #16269) filtered to the typed word’s number.",
+        venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/",
+      },
+      {
+        title: "The Secret Doctrine (Cosmogenesis / Anthropogenesis)",
+        authors: "H. P. Blavatsky",
+        detail:
+          "Indexed public-domain PDF passages matched to the typed word (and close stems), ranked for occult / numerical co-occurrence with the path digit (septenary, Fohat, Dzyan, etc.).",
+        venue: "NUMEROLOGY · Secret Doctrine panel · public/secret-doctrine/ · npm run build:secret-doctrine",
+      },
+      {
+        title: "A Dictionary of the English Language (1755)",
+        authors: "Samuel Johnson; Lexicons of Early Modern English (LEME), University of Toronto (CC BY 4.0)",
+        detail:
+          "First-edition headword senses for the typed word (letter-bucket lexicon). Optional UCF high-res facsimile scans when a page could be extracted from the local OneDrive zip.",
+        venue: "NUMEROLOGY · Johnson 1755 panel · public/johnson/lexicon/ · npm run build:johnson",
+      },
+      {
+        title: "A Dictionary of the English Language, 4th ed. (1773)",
+        authors: "Samuel Johnson; johnsonsdictionaryonline.com / LEME CC BY 4.0; StarDict DSL (Alex Laemmle / Internet Archive johnson_1773)",
+        detail:
+          "Fourth-edition senses shown beside 1755 for the same typed word (~34k headwords). Rebuild from DSL with npm run build:johnson-1773.",
+        venue: "NUMEROLOGY · Johnson 1773 panel · public/johnson/lexicon-1773/",
+      },
+      {
+        title: "Johnson’s Dictionary Online (UCF / UF scans)",
+        authors: "Beth Rapp Young, Jack Lynch, et al.; University of Central Florida; University of Florida Smathers Libraries",
+        detail:
+          "Permalink search for facsimile browsing; partial UCF TIFF zip used only for on-page facsimile images when extractable.",
+        venue: "https://johnsonsdictionaryonline.com",
+      },
+      {
+        title: "The Greek Myths (1955, revised 1960)",
+        authors: "Robert Graves",
+        detail:
+          "Indexed passages matched to the typed word via exact forms, anagrams/scrambles (same letter signature), and similar letter-count words that share letters — with PDF page citations.",
+        venue: "NUMEROLOGY · Greek Myths panel · public/greek-myths/",
+      },
+      {
+        title: "Major Arcana path cards (I–IX)",
+        authors: "Tarot tradition (Rider–Waite lineage glosses in-app)",
+        detail:
+          "Each path number 1–9 maps to a Major Arcana card with a short explanation expanded via Johnson gloss look-ups.",
+        venue: "NUMEROLOGY · tarot block",
+      },
+    ],
+  },
+  {
     heading: "Project lineage",
     blurb: "Ports and presentation layers that carried the toolbox into ZEUS AMMON-RA 11.",
     entries: [
@@ -416,7 +521,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NUMERICAL EXTREME (ZEUS AMMON-RA 11)",
         authors: "Jonathan Angel · WOZKAF presentation layer",
         detail:
-          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), GENETIC (V11 GA roots), HEAT (HTANT V2), and THE VANITY APP Face++ batch.",
+          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY (seven traditions · Johnson 1755/1773 · Secret Doctrine · Ruckman×1611 KJV · Greek Myths · Thought-Forms), REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), GENETIC (V11 GA roots), HEAT (HTANT V2), and THE VANITY APP Face++ batch.",
       },
     ],
   },
