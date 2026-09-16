@@ -31,8 +31,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local TRI-52 / Extreme Puzzle private assets (copyrighted — never commit)
-public/extreme-puzzle/items/
+# Local TRI-52 extract scratch + optional answer dump (item PNGs are committed for deploy)
 public/extreme-puzzle/answers.json
 public/extreme-puzzle/manifest.json
 tmp-tri52/

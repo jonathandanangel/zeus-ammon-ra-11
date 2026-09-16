@@ -321,6 +321,9 @@ function ExtremeHalloweenBackdrop() {
           <img src={moonPortraitUrl} alt="" />
         </div>
       </div>
+      <div className="extreme-theta-watermark" aria-hidden>
+        Θ
+      </div>
     </div>
   );
 }
@@ -404,6 +407,23 @@ function NumberRibbon({ className }: { className?: string }) {
   );
 }
 
+function ThetaLogo({ className, size = "hero" }: { className?: string; size?: "hero" | "flash" | "mark" }) {
+  return (
+    <div
+      className={cn(
+        "extreme-theta-logo select-none text-center leading-none",
+        size === "hero" && "extreme-theta-logo--hero",
+        size === "flash" && "extreme-theta-logo--flash",
+        size === "mark" && "extreme-theta-logo--mark",
+        className,
+      )}
+      aria-hidden
+    >
+      Θ
+    </div>
+  );
+}
+
 export function ExtremePuzzle({ onExit }: Props) {
   const { settings, progress } = useGame();
   const [phase, setPhase] = React.useState<Phase>("hebrew");
@@ -479,6 +499,10 @@ export function ExtremePuzzle({ onExit }: Props) {
 
   const itemNumber = index + 1;
   const band = AGE_BANDS[ageBandIndex(years, months)]!;
+
+  React.useEffect(() => {
+    setImgOk(true);
+  }, [index]);
 
   function leave() {
     stopExtremePuzzleMusic();
@@ -566,7 +590,8 @@ export function ExtremePuzzle({ onExit }: Props) {
         <ExtremeHalloweenBackdrop />
         {phase === "hebrew" && (
           <div className="extreme-hebrew-flash" aria-live="polite">
-            <div>
+            <div className="flex flex-col items-center gap-4">
+              <ThetaLogo size="flash" />
               <p className="extreme-hebrew-flash__text" lang="he" dir="rtl">
                 {HEBREW_INDUCTION_LINES[hebrewLine] ?? HEBREW_INDUCTION_LINES[0]}
               </p>
@@ -588,6 +613,7 @@ export function ExtremePuzzle({ onExit }: Props) {
       <section className="extreme-warning-shell mx-auto flex min-h-[min(88vh,760px)] w-full max-w-3xl flex-col justify-center gap-5 p-5 sm:p-8">
         <div className="extreme-warning-content flex flex-col gap-4">
           <NumberRibbon />
+          <ThetaLogo size="hero" />
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <InvertedPentagram className="extreme-warning-glyph h-16 w-16 sm:h-24 sm:w-24" />
             <UpsideDownStar className="h-10 w-10 text-[#ff2020] sm:h-14 sm:w-14" style={{ transform: "rotate(180deg)" }} />
@@ -735,6 +761,7 @@ export function ExtremePuzzle({ onExit }: Props) {
     return shell(
       <section className="mx-auto flex min-h-[420px] w-full max-w-md flex-col justify-center gap-4 rounded-lg border-4 border-[#ff3030] bg-[#100404]/95 p-6 text-[#f8f0c8] shadow-[0_0_0_4px_#181010,0_0_36px_rgba(255,0,0,0.3)]">
         <NumberRibbon />
+        <ThetaLogo size="mark" />
         <p className="text-center font-pixel text-[12px] tracking-[0.22em] text-[#ff4040]">
           EXTREME PUZZLE · 666
         </p>
@@ -825,15 +852,17 @@ export function ExtremePuzzle({ onExit }: Props) {
       <div className="bg-[#ebebeb] px-2 py-3 sm:px-4">
         {imgOk ? (
           <img
+            key={itemNumber}
             src={itemImageUrl(itemNumber)}
             alt={`Extreme Puzzle item ${itemNumber}`}
             className="mx-auto max-h-[min(68vh,820px)] w-auto max-w-full object-contain shadow-[0_8px_28px_rgba(0,0,0,0.18)]"
+            onLoad={() => setImgOk(true)}
             onError={() => setImgOk(false)}
             draggable={false}
           />
         ) : (
           <p className="py-16 text-center font-pixel text-[10px] text-[#8a3030]">
-            Missing item image q{String(itemNumber).padStart(2, "0")}.png — extract from your PDF locally.
+            Missing item image q{String(itemNumber).padStart(2, "0")}.png — check public/extreme-puzzle/items.
           </p>
         )}
       </div>

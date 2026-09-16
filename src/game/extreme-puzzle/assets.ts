@@ -13,8 +13,7 @@ export type ExtremePuzzleResult = {
 
 function isValidAnswers(data: unknown): data is ExtremePuzzleAnswers {
   if (!data || typeof data !== "object") return false;
-  const keys = Object.keys(data as object);
-  return keys.length >= 40;
+  return Object.keys(data as object).length >= 40;
 }
 
 /** Prefer local answers.json when present; always fall back to bundled key. */
@@ -31,6 +30,11 @@ export async function loadExtremePuzzleAnswers(): Promise<ExtremePuzzleAnswers> 
   return { ...BUNDLED_ANSWER_KEY };
 }
 
+/**
+ * Bundled item plates (committed under public/extreme-puzzle/items).
+ * Absolute public URL — works in Vite / TanStack / Lovable deploy.
+ */
 export function itemImageUrl(n: number): string {
-  return `/extreme-puzzle/items/q${String(n).padStart(2, "0")}.png`;
+  const pad = String(n).padStart(2, "0");
+  return `/extreme-puzzle/items/q${pad}.png`;
 }

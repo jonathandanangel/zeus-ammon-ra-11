@@ -858,6 +858,56 @@
   pointer-events: auto;
 }
 
+.extreme-theta-logo {
+  font-family: "Times New Roman", "Noto Serif", Georgia, serif;
+  font-weight: 700;
+  color: #ff1010;
+  text-shadow:
+    0 0 12px #ff0000,
+    0 0 36px #ff2020,
+    0 0 72px #990000,
+    0 0 120px #660000,
+    3px 3px 0 #200000;
+  animation: extreme-warning-flicker 2.8s steps(2, end) infinite;
+}
+
+.extreme-theta-logo--hero {
+  font-size: clamp(7rem, 28vw, 14rem);
+  line-height: 0.85;
+  margin: 0.1em 0;
+}
+
+.extreme-theta-logo--flash {
+  font-size: clamp(8rem, 32vw, 16rem);
+  line-height: 0.85;
+  color: #ffb000;
+  text-shadow:
+    0 0 16px #ff8800,
+    0 0 48px #ff4400,
+    0 0 90px #ff2200;
+}
+
+.extreme-theta-logo--mark {
+  font-size: clamp(3.5rem, 14vw, 6rem);
+  line-height: 0.9;
+}
+
+.extreme-theta-watermark {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  font-family: "Times New Roman", "Noto Serif", Georgia, serif;
+  font-size: clamp(18rem, 55vw, 42rem);
+  font-weight: 700;
+  color: #ff1010;
+  opacity: 0.08;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 0 80px #ff0000;
+}
+
 /* Apocalypse backdrop */
 .extreme-nuke {
   position: absolute;
