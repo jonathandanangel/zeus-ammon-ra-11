@@ -861,13 +861,12 @@
 .extreme-theta-logo {
   font-family: "Times New Roman", "Noto Serif", Georgia, serif;
   font-weight: 700;
-  color: #ff1010;
+  color: var(--color-cyan, #38bdf8);
   text-shadow:
-    0 0 12px #ff0000,
-    0 0 36px #ff2020,
-    0 0 72px #990000,
-    0 0 120px #660000,
-    3px 3px 0 #200000;
+    0 0 12px color-mix(in srgb, var(--color-cyan, #38bdf8) 80%, transparent),
+    0 0 36px color-mix(in srgb, var(--color-magenta, #e879f9) 55%, transparent),
+    0 0 72px color-mix(in srgb, var(--color-cyan, #38bdf8) 35%, transparent),
+    2px 2px 0 #041018;
   animation: extreme-warning-flicker 2.8s steps(2, end) infinite;
 }
 

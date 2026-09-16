@@ -336,18 +336,18 @@ function SourceList({
   items: readonly ExtremePuzzleSourceLink[];
 }) {
   return (
-    <div className="rounded border border-[#a88828]/50 bg-[#100808] px-3 py-3 text-left">
-      <p className="font-pixel text-[9px] tracking-[0.16em] text-game-yellow">{title}</p>
+    <div className="rounded-lg border border-cyan/25 bg-black/25 px-3 py-3 text-left">
+      <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">{title}</p>
       <ul className="mt-2 space-y-2">
         {items.map((item) => (
-          <li key={item.href + item.label} className="font-pixel text-[7px] leading-relaxed text-[#c8a048]">
-            <span className="text-[#f8f0c8]">{item.label}</span>
-            <span className="mt-0.5 block text-[#a88828]">{item.detail}</span>
+          <li key={item.href + item.label} className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+            <span className="text-moon">{item.label}</span>
+            <span className="mt-0.5 block text-muted-foreground">{item.detail}</span>
             <a
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-0.5 block break-all text-[#48a0f8] underline decoration-[#48a0f8]/40 underline-offset-2 hover:text-cyan"
+              className="mt-0.5 block break-all text-amber underline decoration-amber/40 underline-offset-2 hover:text-moon"
             >
               {item.href}
             </a>
@@ -361,15 +361,15 @@ function SourceList({
 function ScoreHistory({ attempts }: { attempts: ExtremePuzzleAttempt[] }) {
   if (attempts.length === 0) {
     return (
-      <p className="font-pixel text-[8px] text-[#a88828]">
+      <p className="font-mono text-[10px] text-muted-foreground">
         No prior attempts yet — each finish here is dated and stored on this device.
       </p>
     );
   }
   return (
-    <div className="max-h-48 overflow-y-auto rounded border border-[#a88828]/40 bg-[#100808]">
-      <table className="w-full text-left font-pixel text-[7px]">
-        <thead className="sticky top-0 bg-[#181008] text-[#f8d030]">
+    <div className="max-h-48 overflow-y-auto rounded-lg border border-cyan/20 bg-black/30">
+      <table className="w-full text-left font-mono text-[10px]">
+        <thead className="sticky top-0 bg-deepblue text-cyan">
           <tr>
             <th className="px-2 py-1.5 font-normal tracking-[0.12em]">DATE</th>
             <th className="px-2 py-1.5 font-normal tracking-[0.12em]">RAW</th>
@@ -379,12 +379,12 @@ function ScoreHistory({ attempts }: { attempts: ExtremePuzzleAttempt[] }) {
         </thead>
         <tbody>
           {attempts.map((a) => (
-            <tr key={a.at} className="border-t border-[#a88828]/25 text-[#c8a048]">
-              <td className="px-2 py-1.5 text-[#f8f0c8]">{formatAttemptDate(a.at)}</td>
+            <tr key={a.at} className="border-t border-cyan/10 text-muted-foreground">
+              <td className="px-2 py-1.5 text-moon">{formatAttemptDate(a.at)}</td>
               <td className="px-2 py-1.5">
                 {a.rawScore}/{a.total}
               </td>
-              <td className="px-2 py-1.5 text-game-yellow">
+              <td className="px-2 py-1.5 text-amber">
                 {a.ageReferencedScore === null ? "—" : a.ageReferencedScore}
               </td>
               <td className="px-2 py-1.5">{a.ageBandLabel}</td>
@@ -399,7 +399,10 @@ function ScoreHistory({ attempts }: { attempts: ExtremePuzzleAttempt[] }) {
 function NumberRibbon({ className }: { className?: string }) {
   return (
     <p
-      className={cn("text-center font-pixel text-[9px] tracking-[0.28em] text-[#ff4040]", className)}
+      className={cn(
+        "text-center font-mono text-[10px] uppercase tracking-[0.28em] text-magenta/80",
+        className,
+      )}
       aria-hidden
     >
       666 · 676 · 69 · 13 · 666 · 676 · 69 · 13 · 666
@@ -423,6 +426,15 @@ function ThetaLogo({ className, size = "hero" }: { className?: string; size?: "h
     </div>
   );
 }
+
+const neonBtn =
+  "rounded-lg border border-cyan/50 bg-deepblue/70 px-5 py-3 font-display text-sm uppercase tracking-[0.22em] text-cyan transition-colors hover:bg-cyan/20 hover:text-moon";
+const neonBtnGhost =
+  "rounded-lg border border-border bg-transparent px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-cyan/40 hover:text-cyan";
+const neonField =
+  "w-full rounded-lg border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-sm text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+const neonPanel =
+  "panel relative z-[1] mx-auto w-full max-w-2xl space-y-4 border border-cyan/40 bg-deepblue/85 p-6 text-center shadow-[0_0_40px_rgba(56,189,248,0.12)] backdrop-blur-sm";
 
 export function ExtremePuzzle({ onExit }: Props) {
   const { settings, progress } = useGame();
@@ -574,6 +586,8 @@ export function ExtremePuzzle({ onExit }: Props) {
       setCorrectCount(nextCorrect);
       setResult(finished);
       setHistory(recordExtremePuzzleAttempt(finished).attempts);
+      stopExtremePuzzleMusic();
+      startMusic();
       setPhase("rocket");
       return;
     }
@@ -584,10 +598,11 @@ export function ExtremePuzzle({ onExit }: Props) {
     playSfx("move");
   }
 
-  function shell(children: React.ReactNode) {
+  function shell(children: React.ReactNode, opts?: { apocalypse?: boolean }) {
+    const apocalypse = opts?.apocalypse ?? true;
     return (
       <div className="relative min-h-[min(92vh,900px)]">
-        <ExtremeHalloweenBackdrop />
+        {apocalypse && <ExtremeHalloweenBackdrop />}
         {phase === "hebrew" && (
           <div className="extreme-hebrew-flash" aria-live="polite">
             <div className="flex flex-col items-center gap-4">
@@ -610,87 +625,39 @@ export function ExtremePuzzle({ onExit }: Props) {
 
   if (phase === "warning") {
     return shell(
-      <section className="extreme-warning-shell mx-auto flex min-h-[min(88vh,760px)] w-full max-w-3xl flex-col justify-center gap-5 p-5 sm:p-8">
-        <div className="extreme-warning-content flex flex-col gap-4">
-          <NumberRibbon />
-          <ThetaLogo size="hero" />
-          <div className="flex items-center justify-center gap-3 sm:gap-6">
-            <InvertedPentagram className="extreme-warning-glyph h-16 w-16 sm:h-24 sm:w-24" />
-            <UpsideDownStar className="h-10 w-10 text-[#ff2020] sm:h-14 sm:w-14" style={{ transform: "rotate(180deg)" }} />
-            <InvertedPentagram className="extreme-warning-glyph extreme-warning-glyph-rev h-16 w-16 sm:h-24 sm:w-24" />
+      <section className={neonPanel}>
+        <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
+        <ThetaLogo size="hero" />
+        <h1 className="font-display text-3xl text-cyan text-glow sm:text-5xl">{EXTREME_PUZZLE_WARNING.title}</h1>
+        <p className="font-display text-sm uppercase tracking-[0.28em] text-amber">{EXTREME_PUZZLE_WARNING.subtitle}</p>
+        <NumberRibbon />
+        <p className="font-mono text-xs text-muted-foreground">
+          Extreme Puzzle · read before you continue
+        </p>
+        <ul className="space-y-2 text-left">
+          {EXTREME_PUZZLE_WARNING.lines.map((line) => (
+            <li
+              key={line.slice(0, 48)}
+              className="rounded-lg border border-magenta/30 bg-black/30 px-3 py-2 font-mono text-[11px] leading-relaxed text-moon/90"
+            >
+              {line}
+            </li>
+          ))}
+        </ul>
+        {history.length > 0 && (
+          <div className="space-y-2 text-left">
+            <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">
+              Prior attempts ({history.length})
+            </p>
+            <ScoreHistory attempts={history.slice(0, 5)} />
           </div>
-
-          <h1 className="extreme-warning-title text-center font-pixel uppercase">
-            {EXTREME_PUZZLE_WARNING.title}
-          </h1>
-          <p className="extreme-warning-caution text-center font-pixel uppercase">
-            {EXTREME_PUZZLE_WARNING.subtitle}
-          </p>
-          <NumberRibbon className="text-[11px] text-[#ff6060]" />
-
-          <div className="flex justify-center gap-4 text-[#ff3030]" aria-hidden>
-            {Array.from({ length: 9 }).map((_, i) => (
-              <UpsideDownStar key={i} className="h-5 w-5 sm:h-6 sm:w-6" style={{ transform: "rotate(180deg)" }} />
-            ))}
-          </div>
-
-          <p className="text-center font-pixel text-[10px] tracking-[0.22em] text-[#ff6666] sm:text-[12px]">
-            EXTREME PUZZLE · 666 / 676 / 69 / 13 · READ BEFORE YOU DARE CONTINUE
-          </p>
-
-          <ul className="space-y-3">
-            {EXTREME_PUZZLE_WARNING.lines.map((line) => (
-              <li
-                key={line.slice(0, 48)}
-                className="flex gap-3 border-2 border-[#ff2020]/70 bg-[#3a0000]/80 px-3 py-3 font-pixel text-[9px] leading-relaxed text-[#ffc8c8] shadow-[inset_0_0_24px_rgba(255,0,0,0.15)] sm:text-[10px]"
-              >
-                <UpsideDownStar
-                  className="mt-0.5 h-4 w-4 shrink-0 text-[#ff2020]"
-                  style={{ transform: "rotate(180deg)" }}
-                />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-
-          {history.length > 0 && (
-            <div className="space-y-2 border-2 border-[#ff4040]/40 bg-black/40 px-3 py-3">
-              <p className="font-pixel text-[9px] tracking-[0.16em] text-[#ff6060]">
-                ★ PRIOR ATTEMPTS · MARKED 666 ({history.length}) ★
-              </p>
-              <ScoreHistory attempts={history.slice(0, 5)} />
-            </div>
-          )}
-
-          <div
-            className="flex items-center justify-center gap-4 font-pixel text-[16px] tracking-[0.2em] text-[#ff2020]"
-            aria-hidden
-          >
-            <span>13</span>
-            <InvertedPentagram className="h-10 w-10" />
-            <span>69</span>
-            <InvertedPentagram className="h-14 w-14" />
-            <span>676</span>
-            <InvertedPentagram className="h-10 w-10" />
-            <span>666</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={acceptWarning}
-            className="border-4 border-[#ff1010] bg-[#4a0000] px-3 py-4 font-pixel text-[13px] tracking-[0.2em] text-[#ff3030] shadow-[0_0_28px_rgba(255,0,0,0.45)] transition hover:bg-[#ff1010] hover:text-black sm:text-[15px]"
-          >
-            I ACCEPT THE CURSE · 666 CONTINUE
-          </button>
-          <button
-            type="button"
-            onClick={leave}
-            className="border-2 border-[#662222] px-3 py-2 font-pixel text-[10px] tracking-[0.14em] text-[#aa5555] hover:border-[#ff4040] hover:text-[#ff8080]"
-          >
-            FLEE · CANCEL
-          </button>
-          <NumberRibbon />
-        </div>
+        )}
+        <button type="button" onClick={acceptWarning} className={neonBtn}>
+          I understand · continue
+        </button>
+        <button type="button" onClick={leave} className={neonBtnGhost}>
+          Cancel · main screen
+        </button>
       </section>,
     );
   }
@@ -698,7 +665,6 @@ export function ExtremePuzzle({ onExit }: Props) {
   if (phase === "rocket" && result) {
     return shell(
       <>
-        <NumberRibbon />
         <Finale
           progress={progress}
           total={EXTREME_PUZZLE_ITEM_COUNT}
@@ -707,147 +673,119 @@ export function ExtremePuzzle({ onExit }: Props) {
           onMastery={leave}
           onMenu={leave}
           extremeMission={{
-            title: "EXTREME PUZZLE · 666",
+            title: "EXTREME PUZZLE",
             score: result.ageReferencedScore ?? result.rawScore,
             correct: result.rawScore,
             total: result.total,
-            continueLabel: "Back to title",
+            continueLabel: "Back to main screen",
             onContinue: leave,
           }}
         />
-        <section className="mx-auto max-w-lg space-y-4 rounded-lg border-4 border-[#ff3030] bg-[#100404]/95 p-5 text-[#f8f0c8] shadow-[0_0_0_4px_#181010,0_0_40px_rgba(255,0,0,0.35)]">
-          <NumberRibbon className="text-[#ff6060]" />
-          <div className="text-center">
-            <p className="font-pixel text-[11px] tracking-[0.2em] text-[#ff4040]">YOUR SCORE · 666 SEAL</p>
-            <p className="mt-3 font-pixel text-[22px] text-[#38c060]">
-              Raw {result.rawScore} / {result.total}
-            </p>
-            <p className="mt-2 font-pixel text-[12px] text-[#f8f0c8]">
-              Age-referenced ({result.ageBandLabel}):{" "}
-              <span className="text-game-yellow">
-                {result.ageReferencedScore === null ? "—" : result.ageReferencedScore}
-              </span>
-            </p>
-            <p className="mt-1 font-pixel text-[8px] text-[#a88828]">
-              Age entered {result.ageYears}:{String(result.ageMonths).padStart(2, "0")} · saved{" "}
-              {formatAttemptDate(history[0]?.at ?? new Date().toISOString())}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <p className="font-pixel text-[9px] tracking-[0.16em] text-[#ff6060]">
-              SCORE HISTORY · 676 LOG
-            </p>
+        <section className={neonPanel}>
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-magenta">ZEUS AMMON-RA 11</p>
+          <p className="font-display text-lg text-cyan text-glow">Your score</p>
+          <p className="font-mono text-2xl text-mint">
+            Raw {result.rawScore} / {result.total}
+          </p>
+          <p className="font-mono text-sm text-moon">
+            Age-referenced ({result.ageBandLabel}):{" "}
+            <span className="text-amber">
+              {result.ageReferencedScore === null ? "—" : result.ageReferencedScore}
+            </span>
+          </p>
+          <p className="font-mono text-[10px] text-muted-foreground">
+            Age {result.ageYears}:{String(result.ageMonths).padStart(2, "0")} · saved{" "}
+            {formatAttemptDate(history[0]?.at ?? new Date().toISOString())}
+          </p>
+          <div className="space-y-2 text-left">
+            <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">Score history</p>
             <ScoreHistory attempts={history} />
           </div>
-
-          <SourceList title="CORRELATIONS (GROUP-LEVEL) · 69" items={EXTREME_PUZZLE_CORRELATIONS} />
-          <SourceList title="SOURCES · 13" items={EXTREME_PUZZLE_SOURCES} />
-
-          <button
-            type="button"
-            onClick={leave}
-            className="w-full border-2 border-[#ff3030] px-3 py-3 font-pixel text-[10px] text-[#ff4040] hover:bg-[#ff3030] hover:text-black"
-          >
-            BACK TO TITLE · 666
+          <SourceList title="Correlations (group-level)" items={EXTREME_PUZZLE_CORRELATIONS} />
+          <SourceList title="Sources" items={EXTREME_PUZZLE_SOURCES} />
+          <button type="button" onClick={leave} className={neonBtn}>
+            Back to main screen
           </button>
-          <NumberRibbon />
         </section>
       </>,
+      { apocalypse: false },
     );
   }
 
   if (phase === "age") {
     return shell(
-      <section className="mx-auto flex min-h-[420px] w-full max-w-md flex-col justify-center gap-4 rounded-lg border-4 border-[#ff3030] bg-[#100404]/95 p-6 text-[#f8f0c8] shadow-[0_0_0_4px_#181010,0_0_36px_rgba(255,0,0,0.3)]">
-        <NumberRibbon />
+      <section className={cn(neonPanel, "max-w-md")}>
+        <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
         <ThetaLogo size="mark" />
-        <p className="text-center font-pixel text-[12px] tracking-[0.22em] text-[#ff4040]">
-          EXTREME PUZZLE · 666
-        </p>
-        <p className="text-center font-pixel text-[9px] leading-relaxed text-[#c8a048]">
-          Untimed · 52 seals · enter age for the dark score
+        <h2 className="font-display text-2xl text-cyan text-glow">Extreme Puzzle</h2>
+        <p className="font-mono text-xs text-muted-foreground">
+          Untimed · 52 items · enter age for age-referenced scoring
         </p>
         {loadError && (
-          <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
+          <p className="rounded-lg border border-magenta/40 bg-magenta/10 px-3 py-2 font-mono text-[10px] text-amber">
             {loadError}
           </p>
         )}
-        <label className="block space-y-1">
-          <span className="font-pixel text-[8px] tracking-[0.14em] text-[#f8d030]">AGE · YEARS</span>
+        <label className="block space-y-1 text-left">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan">Age · years</span>
           <input
             type="number"
             min={6}
             max={120}
             value={years}
             onChange={(e) => setYears(Number(e.target.value))}
-            className="w-full border-2 border-[#ff4040]/60 bg-[#181008] px-3 py-2 font-pixel text-[12px] text-[#f8f0c8] outline-none focus:border-[#ff3030]"
+            className={neonField}
           />
         </label>
-        <label className="block space-y-1">
-          <span className="font-pixel text-[8px] tracking-[0.14em] text-[#f8d030]">AGE · MONTHS (0–11)</span>
+        <label className="block space-y-1 text-left">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan">Age · months (0–11)</span>
           <input
             type="number"
             min={0}
             max={11}
             value={months}
             onChange={(e) => setMonths(Math.max(0, Math.min(11, Number(e.target.value))))}
-            className="w-full border-2 border-[#ff4040]/60 bg-[#181008] px-3 py-2 font-pixel text-[12px] text-[#f8f0c8] outline-none focus:border-[#ff3030]"
+            className={neonField}
           />
         </label>
-        <p className="font-pixel text-[8px] text-[#a88828]">
-          Band: {band.label} · seals 666 / 676 / 69 / 13
-        </p>
+        <p className="font-mono text-[10px] text-muted-foreground">Band: {band.label}</p>
         {ageError && (
-          <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
+          <p className="rounded-lg border border-magenta/40 bg-magenta/10 px-3 py-2 font-mono text-[10px] text-amber">
             {ageError}
           </p>
         )}
         {history.length > 0 && (
-          <p className="font-pixel text-[7px] text-[#c8a048]">
+          <p className="font-mono text-[10px] text-muted-foreground">
             {history.length} prior attempt{history.length === 1 ? "" : "s"} · latest{" "}
             {formatAttemptDate(history[0]!.at)} · raw {history[0]!.rawScore}/{history[0]!.total}
           </p>
         )}
-        <button
-          type="button"
-          onClick={startPlay}
-          className="relative z-10 border-2 border-[#ff3030] bg-[#3a0000] px-3 py-3 font-pixel text-[11px] text-[#ff4040] transition hover:bg-[#ff3030] hover:text-black"
-        >
-          BEGIN · 52 ITEMS · 666
+        <button type="button" onClick={startPlay} className={neonBtn}>
+          Begin · 52 items
         </button>
-        <button
-          type="button"
-          onClick={leave}
-          className="border border-[#662222] px-3 py-2 font-pixel text-[9px] text-[#aa5555] hover:border-[#ff4040] hover:text-[#ff8080]"
-        >
-          CANCEL · 13
+        <button type="button" onClick={leave} className={neonBtnGhost}>
+          Cancel · main screen
         </button>
-        <NumberRibbon />
       </section>,
     );
   }
 
   return shell(
-    <section className="mx-auto w-full max-w-3xl overflow-hidden rounded-lg border-4 border-[#ff3030] bg-[#ebebeb] text-[#201808] shadow-[0_0_0_4px_#181010,0_0_40px_rgba(255,0,0,0.35)]">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-[#ff3030]/50 bg-[#2a0808] px-3 py-2 text-[#ffc8c8]">
+    <section className="panel relative z-[1] mx-auto w-full max-w-3xl overflow-hidden border border-cyan/40 bg-deepblue/90 shadow-[0_0_40px_rgba(56,189,248,0.12)] backdrop-blur-sm">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan/30 bg-black/30 px-3 py-2">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-40 overflow-hidden rounded-sm bg-[#4a1010]">
+          <div className="h-2 w-40 overflow-hidden rounded-sm bg-cyan/20">
             <div
-              className="h-full bg-[#ff3030] transition-all"
+              className="h-full bg-cyan transition-all"
               style={{ width: `${((index + 1) / EXTREME_PUZZLE_ITEM_COUNT) * 100}%` }}
             />
           </div>
-          <span className="font-pixel text-[11px] tracking-wide text-[#ff6060]">
-            Q{itemNumber} · 666
-          </span>
+          <span className="font-mono text-xs tracking-wide text-cyan">Q{itemNumber}</span>
         </div>
-        <span className="font-pixel text-[8px] tracking-[0.16em] text-[#ff8080]">
-          {index + 1} / {EXTREME_PUZZLE_ITEM_COUNT} · 676 · 69 · 13
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          {index + 1} / {EXTREME_PUZZLE_ITEM_COUNT}
         </span>
       </header>
-
-      <NumberRibbon className="bg-[#1a0505] py-1 text-[#ff5050]" />
 
       <div className="bg-[#ebebeb] px-2 py-3 sm:px-4">
         {imgOk ? (
@@ -857,19 +795,27 @@ export function ExtremePuzzle({ onExit }: Props) {
             alt={`Extreme Puzzle item ${itemNumber}`}
             className="mx-auto max-h-[min(68vh,820px)] w-auto max-w-full object-contain shadow-[0_8px_28px_rgba(0,0,0,0.18)]"
             onLoad={() => setImgOk(true)}
-            onError={() => setImgOk(false)}
+            onError={(e) => {
+              const el = e.currentTarget;
+              const fallback = `/extreme-puzzle/items/q${String(itemNumber).padStart(2, "0")}.png`;
+              if (!el.src.endsWith(fallback)) {
+                el.src = fallback;
+                return;
+              }
+              setImgOk(false);
+            }}
             draggable={false}
           />
         ) : (
-          <p className="py-16 text-center font-pixel text-[10px] text-[#8a3030]">
-            Missing item image q{String(itemNumber).padStart(2, "0")}.png — check public/extreme-puzzle/items.
+          <p className="py-16 text-center font-mono text-xs text-magenta">
+            Missing item image q{String(itemNumber).padStart(2, "0")}.png
           </p>
         )}
       </div>
 
-      <div className="space-y-3 border-t-2 border-[#ff3030]/40 bg-[#2a0808] px-3 py-3 text-[#ffc8c8]">
-        <p className="font-pixel text-[8px] tracking-[0.12em] text-[#ff8080]">
-          SELECT OPTION(S) 1–6 · some items need more than one · 666
+      <div className="space-y-3 border-t border-cyan/30 bg-black/25 px-3 py-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          Select option(s) 1–6 · some items need more than one
         </p>
         <div className="grid grid-cols-6 gap-2">
           {[1, 2, 3, 4, 5, 6].map((n) => {
@@ -880,10 +826,10 @@ export function ExtremePuzzle({ onExit }: Props) {
                 type="button"
                 onClick={() => toggleOption(n)}
                 className={cn(
-                  "border-2 px-2 py-3 font-pixel text-[14px] transition",
+                  "rounded-lg border px-2 py-3 font-display text-lg transition",
                   on
-                    ? "border-[#ff1010] bg-[#ff3030] text-[#100000]"
-                    : "border-[#ff6060]/50 bg-[#180808] text-[#ffc8c8] hover:border-[#ff3030]",
+                    ? "border-cyan bg-cyan/30 text-moon"
+                    : "border-cyan/40 bg-deepblue/70 text-cyan hover:bg-cyan/15",
                 )}
               >
                 {n}
@@ -892,22 +838,13 @@ export function ExtremePuzzle({ onExit }: Props) {
           })}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={submitItem}
-            className="flex-1 border-2 border-[#ff1010] bg-[#ff3030] px-3 py-3 font-pixel text-[11px] text-[#100000] hover:brightness-110"
-          >
-            {index >= EXTREME_PUZZLE_ITEM_COUNT - 1 ? "FINISH · 666" : "NEXT · 666"}
+          <button type="button" onClick={submitItem} className={cn(neonBtn, "flex-1")}>
+            {index >= EXTREME_PUZZLE_ITEM_COUNT - 1 ? "Finish" : "Next"}
           </button>
-          <button
-            type="button"
-            onClick={leave}
-            className="border-2 border-[#662222] px-3 py-3 font-pixel text-[9px] text-[#aa5555] hover:border-[#ff4040]"
-          >
-            ABORT · 13
+          <button type="button" onClick={leave} className={neonBtnGhost}>
+            Abort
           </button>
         </div>
-        <NumberRibbon />
       </div>
     </section>,
   );

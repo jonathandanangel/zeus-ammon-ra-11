@@ -7,7 +7,7 @@ export const EXTREME_PUZZLE_WARNING = {
     "THIS IS NOT A TOY. Fifty-two untimed seals. Most will fail. Many will quit. The mark did not lie.",
     "The inverted star watches. The horned moon judges. Turn back if you value mercy.",
     "What follows is a trial of endurance and pattern — not a blessing, not a diagnosis, not salvation.",
-    "Practice effects and fatigue will haunt you. The abyss does not grade on a curve.",
+    "Highest score is most accurate. No cheating.",
     "By continuing you accept the curse inside ZEUS AMMON RA only. Flee while you still can.",
   ],
 } as const;

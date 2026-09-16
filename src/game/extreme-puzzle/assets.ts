@@ -31,10 +31,15 @@ export async function loadExtremePuzzleAnswers(): Promise<ExtremePuzzleAnswers> 
 }
 
 /**
- * Bundled item plates (committed under public/extreme-puzzle/items).
- * Absolute public URL — works in Vite / TanStack / Lovable deploy.
+ * Neon exact-geometry remasters (same layout as originals, bright cyan ink).
+ * Fallback to originals if neon pack is absent.
  */
 export function itemImageUrl(n: number): string {
+  const pad = String(n).padStart(2, "0");
+  return `/extreme-puzzle/items-neon/q${pad}.png`;
+}
+
+export function itemImageUrlOriginal(n: number): string {
   const pad = String(n).padStart(2, "0");
   return `/extreme-puzzle/items/q${pad}.png`;
 }
