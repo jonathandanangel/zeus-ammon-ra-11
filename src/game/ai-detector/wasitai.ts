@@ -234,9 +234,6 @@ export const wasitaiDetectText = createServerFn({ method: "POST" })
     }
   });
 
-/** Image detection kept for later; text multi-scan is the primary path. */
-export type { ImageDetectInput, ImageDetectResult };
-
 /** UI helper — band labels matching calibrated score thresholds. */
 export function verdictLabel(verdict: string, score: number): string {
   if (verdict === "human" || score < 40) return "Human";
