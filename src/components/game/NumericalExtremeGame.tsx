@@ -3529,6 +3529,10 @@ function ReferencesPanel() {
           toolbox — including development and verification work in MATLAB and Octave alongside the
           TypeScript Neon Composite Lab port.
         </p>
+        <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Design priority: main functionality and mechanistic usefulness are maximized — runnable
+          methods, inspectable intermediates, and lab-style controls over decorative chrome.
+        </p>
       </Panel>
     </div>
   );
