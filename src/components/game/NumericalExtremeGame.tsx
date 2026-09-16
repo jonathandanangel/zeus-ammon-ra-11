@@ -21,10 +21,12 @@ import {
   buildFunctionReport,
   buildMethodFormulation,
   buildVibrationReport,
+  buildBezierSegment,
   compileScalar,
   compositeIntegration,
   COMPOSITE_FORMULAS,
   downloadJson,
+  formatBezierLog,
   formatNumber,
   formatNumerologyReport,
   FUNCTION_PRESETS,
@@ -36,19 +38,24 @@ import {
   runAcm740,
   runAcm740Suite,
   runDerpar,
+  runGeneticRootFinder,
   runModifiedCholesky,
   runTalbot,
   solveNonlinearSystem,
+  SYMBOLIC_PRESETS,
+  symbolicIntegrate,
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
+  type BezierSegment,
   type FunctionAnalysisResult,
   type IntegrationResult,
   type InterpolationResult,
   type NonlinearSystemResult,
   type NumerologyResult,
+  type Point2,
   type VibrationResult,
 } from "@/game/numerical-extreme";
 import { audio } from "@/game/audio";
@@ -63,6 +70,9 @@ type Mode =
   | "diff"
   | "algorithms"
   | "acm"
+  | "bezier"
+  | "symbolic"
+  | "genetic"
   | "numerology"
   | "references";
 
@@ -74,6 +84,9 @@ const MODES: Array<{ id: Mode; label: string }> = [
   { id: "diff", label: "DIFF" },
   { id: "algorithms", label: "ALGORITHMS" },
   { id: "acm", label: "ACM SPARS" },
+  { id: "bezier", label: "BEZIER" },
+  { id: "symbolic", label: "SYMBOLIC" },
+  { id: "genetic", label: "GENETIC" },
   { id: "numerology", label: "NUMEROLOGY" },
   { id: "references", label: "REFS" },
 ];
@@ -1896,6 +1909,519 @@ function AcmLabPanel() {
   );
 }
 
+function BezierPanel() {
+  const [anchor, setAnchor] = React.useState<Point2 | null>(null);
+  const [pending, setPending] = React.useState<Point2[]>([]);
+  const [segments, setSegments] = React.useState<BezierSegment[]>([]);
+  const [done, setDone] = React.useState(false);
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
+  const compute = React.useContext(NumericalComputeContext);
+
+  const width = 720;
+  const height = 420;
+  const pad = 28;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const domain = 1; // axes [-1,1]² like Program 3.7
+
+  const mapX = (x: number) => pad + ((x + domain) / (2 * domain)) * innerW;
+  const mapY = (y: number) => pad + ((domain - y) / (2 * domain)) * innerH;
+
+  function unmap(clientX: number, clientY: number): Point2 | null {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    const px = ((clientX - rect.left) / rect.width) * width;
+    const py = ((clientY - rect.top) / rect.height) * height;
+    const x = ((px - pad) / innerW) * 2 * domain - domain;
+    const y = domain - ((py - pad) / innerH) * 2 * domain;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return {
+      x: Math.max(-domain, Math.min(domain, x)),
+      y: Math.max(-domain, Math.min(domain, y)),
+    };
+  }
+
+  function prompt(): string {
+    if (done) return "Drawing finished — Clear to start again.";
+    if (!anchor) return "Click to locate the first spline point P0.";
+    if (pending.length === 0) return "Click control point P1.";
+    if (pending.length === 1) return "Click control point P2.";
+    return "Click next spline point P3 (then chain continues).";
+  }
+
+  function handleClick(event: React.MouseEvent<SVGSVGElement>) {
+    if (done) return;
+    const pt = unmap(event.clientX, event.clientY);
+    if (!pt) return;
+    audio.play("hover");
+
+    if (!anchor) {
+      setAnchor(pt);
+      setPending([]);
+      return;
+    }
+
+    const nextPending = [...pending, pt];
+    if (nextPending.length < 3) {
+      setPending(nextPending);
+      return;
+    }
+
+    const [p1, p2, p3] = nextPending as [Point2, Point2, Point2];
+    const segment = buildBezierSegment(anchor, p1, p2, p3);
+    setSegments((prev) => [...prev, segment]);
+    setAnchor(p3);
+    setPending([]);
+    compute();
+  }
+
+  function finish() {
+    setDone(true);
+    setPending([]);
+  }
+
+  function clearAll() {
+    setAnchor(null);
+    setPending([]);
+    setSegments([]);
+    setDone(false);
+  }
+
+  function undoLast() {
+    if (pending.length) {
+      setPending((p) => p.slice(0, -1));
+      return;
+    }
+    if (!segments.length) {
+      setAnchor(null);
+      return;
+    }
+    const next = segments.slice(0, -1);
+    setSegments(next);
+    setAnchor(next.length ? next[next.length - 1]!.points[3] : null);
+    setPending([]);
+    setDone(false);
+  }
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        finish();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        clearAll();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const polyline = (pts: Point2[]) =>
+    pts.map((p) => `${mapX(p.x)},${mapY(p.y)}`).join(" ");
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(220px,300px)_minmax(0,1fr)]">
+      <Panel title="Freehand Bézier splines" eyebrow="Program 3.7">
+        <div className="space-y-3">
+          <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Click in the figure for the first point, then click three more times for two
+            control points and the next spline knot. Repeat in groups of three. Press Enter
+            (or Done) to terminate — same flow as Sauer&apos;s <code>bezierdraw</code>.
+          </p>
+          <Metric label="Status" value={prompt()} accent="cyan" />
+          <div className="grid grid-cols-2 gap-2">
+            <Metric label="Segments" value={segments.length} />
+            <Metric
+              label="Pending clicks"
+              value={anchor ? `${pending.length} / 3` : "—"}
+              accent="amber"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <GhostButton type="button" onClick={undoLast}>
+              Undo
+            </GhostButton>
+            <GhostButton type="button" onClick={finish} disabled={done}>
+              Done (Enter)
+            </GhostButton>
+            <GhostButton type="button" onClick={clearAll}>
+              Clear
+            </GhostButton>
+          </div>
+          <EquationBox label="Horner coefficients / points">{formatBezierLog(segments)}</EquationBox>
+        </div>
+      </Panel>
+
+      <Panel title="Figure window" eyebrow="Domain [−1, 1]²">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          width="100%"
+          height={height}
+          role="img"
+          aria-label="Bézier freehand canvas"
+          className={cn(
+            "block rounded-lg border border-cyan/30 bg-deepblue/60",
+            done ? "cursor-default" : "cursor-crosshair",
+          )}
+          onClick={handleClick}
+        >
+          {/* Axes */}
+          <line
+            x1={mapX(-1)}
+            x2={mapX(1)}
+            y1={mapY(0)}
+            y2={mapY(0)}
+            stroke="rgba(248,240,200,0.55)"
+            strokeWidth={1.2}
+          />
+          <line
+            x1={mapX(0)}
+            x2={mapX(0)}
+            y1={mapY(-1)}
+            y2={mapY(1)}
+            stroke="rgba(248,240,200,0.55)"
+            strokeWidth={1.2}
+          />
+          <rect
+            x={pad}
+            y={pad}
+            width={innerW}
+            height={innerH}
+            fill="none"
+            stroke="rgba(34,211,238,0.25)"
+          />
+
+          {segments.map((seg, i) => {
+            const [p0, p1, p2, p3] = seg.points;
+            return (
+              <g key={`seg-${i}`}>
+                <line
+                  x1={mapX(p0.x)}
+                  y1={mapY(p0.y)}
+                  x2={mapX(p1.x)}
+                  y2={mapY(p1.y)}
+                  stroke="#f472b6"
+                  strokeDasharray="3 4"
+                  strokeWidth={1.2}
+                />
+                <line
+                  x1={mapX(p2.x)}
+                  y1={mapY(p2.y)}
+                  x2={mapX(p3.x)}
+                  y2={mapY(p3.y)}
+                  stroke="#f472b6"
+                  strokeDasharray="3 4"
+                  strokeWidth={1.2}
+                />
+                <circle cx={mapX(p1.x)} cy={mapY(p1.y)} r={4} fill="#f472b6" />
+                <circle cx={mapX(p2.x)} cy={mapY(p2.y)} r={4} fill="#f472b6" />
+                <circle
+                  cx={mapX(p0.x)}
+                  cy={mapY(p0.y)}
+                  r={5}
+                  fill="none"
+                  stroke="#22d3ee"
+                  strokeWidth={2}
+                />
+                <circle
+                  cx={mapX(p3.x)}
+                  cy={mapY(p3.y)}
+                  r={5}
+                  fill="none"
+                  stroke="#22d3ee"
+                  strokeWidth={2}
+                />
+                <polyline
+                  fill="none"
+                  stroke="#22d3ee"
+                  strokeWidth={2.2}
+                  points={polyline(seg.curve)}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              </g>
+            );
+          })}
+
+          {anchor && (
+            <circle
+              cx={mapX(anchor.x)}
+              cy={mapY(anchor.y)}
+              r={5}
+              fill="#22d3ee"
+              stroke="#0b1220"
+              strokeWidth={1}
+            />
+          )}
+          {pending.map((p, i) => (
+            <circle
+              key={`pend-${i}`}
+              cx={mapX(p.x)}
+              cy={mapY(p.y)}
+              r={4}
+              fill="#f59e0b"
+              stroke="#0b1220"
+              strokeWidth={1}
+            />
+          ))}
+        </svg>
+      </Panel>
+    </div>
+  );
+}
+
+function SymbolicPanel() {
+  const [expression, setExpression] = React.useState("x*cos(x)");
+  const [variable, setVariable] = React.useState("x");
+  const [definite, setDefinite] = React.useState(false);
+  const [lower, setLower] = React.useState(0);
+  const [upper, setUpper] = React.useState(Math.PI / 2);
+  const [log, setLog] = React.useState("(run int(f, x) — Octave-style session appears on the right)");
+  const [octave, setOctave] = React.useState(
+    "pkg load symbolic\nsyms x\nf = x*cos(x);\nintegral_f = int(f, x);",
+  );
+  const [anti, setAnti] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  function run() {
+    setError("");
+    try {
+      const result = symbolicIntegrate(
+        expression,
+        variable.trim() || "x",
+        definite ? lower : null,
+        definite ? upper : null,
+      );
+      setAnti(
+        result.definite
+          ? result.definite.display
+          : `${result.antiderivativePretty} + C`,
+      );
+      setLog(result.sessionLog);
+      setOctave(result.octaveEcho);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Symbolic integration failed.");
+    }
+  }
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
+      <Panel title="Symbolic integration" eyebrow="pkg load symbolic">
+        <div className="space-y-3">
+          <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Browser elementary CAS mirroring Octave&apos;s <code>syms</code> / <code>int(f,x)</code>.
+            Side panel shows the equivalent script.
+          </p>
+          <Field label="Variable">
+            <TextInput value={variable} onChange={(e) => setVariable(e.target.value)} />
+          </Field>
+          <Field label={`f(${variable || "x"})`}>
+            <TextInput value={expression} onChange={(e) => setExpression(e.target.value)} />
+          </Field>
+          <div className="flex flex-wrap gap-1">
+            {SYMBOLIC_PRESETS.map((p) => (
+              <GhostButton key={p.expr} type="button" onClick={() => setExpression(p.expr)}>
+                {p.label}
+              </GhostButton>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 font-mono text-[10px] text-moon">
+            <input
+              type="checkbox"
+              checked={definite}
+              onChange={(e) => setDefinite(e.target.checked)}
+              className="accent-cyan"
+            />
+            Definite integral int(f, x, a, b)
+          </label>
+          {definite && (
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Lower">
+                <NumberInput
+                  value={lower}
+                  step="any"
+                  onChange={(e) => setLower(Number(e.target.value))}
+                />
+              </Field>
+              <Field label="Upper">
+                <NumberInput
+                  value={upper}
+                  step="any"
+                  onChange={(e) => setUpper(Number(e.target.value))}
+                />
+              </Field>
+            </div>
+          )}
+          <RunButton type="button" onClick={run}>
+            Run int(f, {variable || "x"})
+          </RunButton>
+          {anti && <Metric label="Result" value={anti} accent="amber" />}
+          {error && <ErrorBanner message={error} />}
+        </div>
+      </Panel>
+
+      <div className="space-y-3">
+        <Panel title="Octave session echo" eyebrow="Off to the side">
+          <pre className="max-h-64 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+            {octave}
+          </pre>
+        </Panel>
+        <Panel title="Engine log" eyebrow="SYMBOLIC">
+          <pre className="max-h-56 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+            {log}
+          </pre>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function GeneticPanel() {
+  const [expression, setExpression] = React.useState("x - cos(x)");
+  const [a, setA] = React.useState(0);
+  const [b, setB] = React.useState(1);
+  const [popSize, setPopSize] = React.useState(50);
+  const [generations, setGenerations] = React.useState(100);
+  const [mutationRate, setMutationRate] = React.useState(0.1);
+  const [mutationStep, setMutationStep] = React.useState(0.05);
+  const [seed, setSeed] = React.useState(1234);
+  const [log, setLog] = React.useState("(run GA root approximation — V11 defaults)");
+  const [error, setError] = React.useState("");
+  const [chartX, setChartX] = React.useState<number[]>([]);
+  const [chartSeries, setChartSeries] = React.useState<
+    Array<{ key: string; label: string; values: Array<number | null>; color: string }>
+  >([]);
+  const [best, setBest] = React.useState<{ x: number; f: number } | null>(null);
+
+  function run() {
+    setError("");
+    try {
+      const result = runGeneticRootFinder({
+        expression,
+        a,
+        b,
+        populationSize: popSize,
+        generations,
+        mutationRate,
+        mutationStep,
+        seed,
+      });
+      setLog(result.log.join("\n"));
+      setBest({ x: result.x, f: result.f });
+      setChartX(result.history.map((h) => h.generation));
+      setChartSeries([
+        {
+          key: "absf",
+          label: "|f| best",
+          values: result.history.map((h) => h.bestAbsF),
+          color: "#22d3ee",
+        },
+      ]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Genetic algorithm failed.");
+    }
+  }
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
+      <Panel title="Genetic Algorithm root finder" eyebrow="V11 GUI block">
+        <div className="space-y-3">
+          <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Fitness 1/(|f|+ε), blend crossover, Gaussian mutation, bounds [a,b] — same block as{" "}
+            <code>NumericalAnalysisToolbox_V11</code> Run Analysis.
+          </p>
+          <Field label="f(x)">
+            <TextInput value={expression} onChange={(e) => setExpression(e.target.value)} />
+          </Field>
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                ["x - cos(x)", "x−cos"],
+                ["(x-1)^3", "(x−1)³"],
+                ["x^5 - 2*x + 0.1", "quintic"],
+              ] as const
+            ).map(([expr, label]) => (
+              <GhostButton key={expr} type="button" onClick={() => setExpression(expr)}>
+                {label}
+              </GhostButton>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="a">
+              <NumberInput value={a} step="any" onChange={(e) => setA(Number(e.target.value))} />
+            </Field>
+            <Field label="b">
+              <NumberInput value={b} step="any" onChange={(e) => setB(Number(e.target.value))} />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Population">
+              <NumberInput
+                value={popSize}
+                min={4}
+                max={500}
+                onChange={(e) => setPopSize(Number(e.target.value))}
+              />
+            </Field>
+            <Field label="Generations">
+              <NumberInput
+                value={generations}
+                min={1}
+                max={2000}
+                onChange={(e) => setGenerations(Number(e.target.value))}
+              />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Mut. rate">
+              <NumberInput
+                value={mutationRate}
+                step="any"
+                onChange={(e) => setMutationRate(Number(e.target.value))}
+              />
+            </Field>
+            <Field label="Mut. step">
+              <NumberInput
+                value={mutationStep}
+                step="any"
+                onChange={(e) => setMutationStep(Number(e.target.value))}
+              />
+            </Field>
+          </div>
+          <Field label="Seed">
+            <NumberInput value={seed} onChange={(e) => setSeed(Number(e.target.value))} />
+          </Field>
+          <RunButton type="button" onClick={run}>
+            Run Genetic Algorithm
+          </RunButton>
+          {best && (
+            <div className="grid grid-cols-2 gap-2">
+              <Metric label="x ≈" value={formatNumber(best.x, 12)} />
+              <Metric label="|f(x)|" value={formatNumber(Math.abs(best.f), 4)} accent="amber" />
+            </div>
+          )}
+          {error && <ErrorBanner message={error} />}
+        </div>
+      </Panel>
+
+      <div className="space-y-3">
+        {chartX.length > 0 && chartSeries.length > 0 && (
+          <Chart x={chartX} series={chartSeries} height={260} />
+        )}
+        <Panel title="Engine log" eyebrow="GENETIC · V11">
+          <pre className="max-h-72 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+            {log}
+          </pre>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
 function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
   const compute = React.useContext(NumericalComputeContext);
@@ -2190,6 +2716,9 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           {mode === "diff" && <DiffPanel />}
           {mode === "algorithms" && <AlgorithmsPanel />}
           {mode === "acm" && <AcmLabPanel />}
+          {mode === "bezier" && <BezierPanel />}
+          {mode === "symbolic" && <SymbolicPanel />}
+          {mode === "genetic" && <GeneticPanel />}
           {mode === "numerology" && <NumerologyPanel />}
           {mode === "references" && <ReferencesPanel />}
         </main>

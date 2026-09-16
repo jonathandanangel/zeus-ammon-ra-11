@@ -217,10 +217,17 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
       "Pedagogical structure for IVT scans, bisection, Newton, secant, MVT, Taylor, composite quadrature, sparse linear algebra, and transform methods.",
     entries: [
       {
+        title: "Program 3.7 — Freehand Draw Using Bézier Splines",
+        authors: "Timothy Sauer (Numerical Analysis)",
+        detail:
+          "Interactive cubic Bézier freehand drawing: first click places P0; each subsequent group of three clicks places control points P1, P2 and the next knot P3. Coefficients b = 3(P1−P0), c = 3(P2−P1)−b, d = P3−P0−b−c are evaluated with Horner's method on t ∈ [0,1]. Chained segments promote P3 → next P0. Ported as the BEZIER laboratory tab (domain [−1,1]² matching the Octave axes).",
+        venue: "Sauer, Numerical Analysis — Program 3.7 (bezierdraw)",
+      },
+      {
         title: "Numerical Analysis",
         authors: "Timothy Sauer",
         detail:
-          "Intermediate Value Theorem bracketing, bisection checks, and classroom-style root-finding workflow mirrored in MAIN sections 3–8.",
+          "Intermediate Value Theorem bracketing, bisection checks, and classroom-style root-finding workflow mirrored in MAIN sections 3–8. Program 3.7 supplies the BEZIER freehand spline lab.",
         venue: "Pearson / textbook editions",
       },
       {
@@ -304,6 +311,48 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
     ],
   },
   {
+    heading: "Evolutionary & global search (V11)",
+    blurb:
+      "Genetic Algorithm root approximation integrated into NumericalAnalysisToolbox_V11 Run Analysis, now a dedicated GENETIC laboratory tab.",
+    entries: [
+      {
+        title: "Genetic Algorithm root finder (V11 GUI block)",
+        authors: "Jonathan Angel (NumericalAnalysisToolbox_V11); Holland / Goldberg GA lineage",
+        detail:
+          "Population on [a,b], fitness 1/(|f(x)|+ε), roulette selection via cumulative fitness, blend (α) crossover in pairs, Gaussian mutation with rate/step, box projection to bounds. Defaults: popSize=50, generations=100, mutationRate=0.10, mutationStep=0.05. Reports best x, f(x), and |f(x)|. Ported as runGeneticRootFinder with a seeded PRNG for reproducible demos.",
+        venue: "NumericalAnalysisToolbox_V11 · GENETIC tab",
+      },
+      {
+        title: "Adaptation in Natural and Artificial Systems",
+        authors: "John H. Holland",
+        detail:
+          "Foundational genetic algorithm framework (selection, crossover, mutation) underlying the V11 root-approximation GA.",
+        venue: "MIT Press / University of Michigan Press",
+      },
+      {
+        title: "Genetic Algorithms in Search, Optimization, and Machine Learning",
+        authors: "David E. Goldberg",
+        detail:
+          "Classical GA operators and fitness-proportionate selection referenced by classroom evolutionary-optimization demos.",
+        venue: "Addison-Wesley",
+      },
+    ],
+  },
+  {
+    heading: "Symbolic calculus (Octave symbolic / browser CAS)",
+    blurb:
+      "Elementary indefinite/definite integration mirroring pkg load symbolic; int(f,x) demos — not a full SymPy/Octave CAS.",
+    entries: [
+      {
+        title: "Octave symbolic package · int(f, x)",
+        authors: "GNU Octave Forge symbolic (SymPy backend in Octave); browser elementary port",
+        detail:
+          "Session-style laboratory: syms x; f = …; integral_f = int(f, x) [or definite limits]. Covers polynomials, sin/cos/exp/log, and tabular integration-by-parts for xⁿ·{sin,cos,exp}. Side panel echoes the Octave script while the engine returns antiderivatives + C or definite values.",
+        venue: "SYMBOLIC tab · Octave symbolic / SymPy lineage",
+      },
+    ],
+  },
+  {
     heading: "Project lineage",
     blurb: "Ports and presentation layers that carried the toolbox into ZEUS AMMON-RA 11.",
     entries: [
@@ -317,13 +366,13 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NumericalAnalysisToolbox_V11_Neon_Vectorized_Calculus",
         authors: "Jonathan Angel (neon overlay)",
         detail:
-          "Non-destructive neon theme, VECTOR / METHOD / COMPOSITE / DIFF laboratories, keyboard shortcuts, and display utilities.",
+          "Non-destructive neon theme, VECTOR / METHOD / COMPOSITE / DIFF laboratories, keyboard shortcuts, display utilities, and the GUI-integrated Genetic Algorithm root block later ported to the GENETIC tab.",
       },
       {
         title: "NUMERICAL EXTREME (ZEUS AMMON-RA 11)",
         authors: "Jonathan Angel · WOZKAF presentation layer",
         detail:
-          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), and ACM SPARS (618 / 619 / 740).",
+          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), and GENETIC (V11 GA roots).",
       },
     ],
   },

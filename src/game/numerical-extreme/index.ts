@@ -81,6 +81,47 @@ export {
 export { TOOLBOX_REFERENCES } from "./references";
 export type { ReferenceEntry, ReferenceSection } from "./references";
 
+export {
+  bezierCoefficients,
+  evaluateBezierHorner,
+  buildBezierSegment,
+  formatBezierLog,
+} from "./bezier";
+export type { Point2, BezierSegment } from "./bezier";
+
+export {
+  symbolicIntegrate,
+  parseSymbolic,
+  symPretty,
+  SYMBOLIC_PRESETS,
+} from "./symbolic";
+export type { SymNode, SymbolicIntegralResult } from "./symbolic";
+
+export { runGeneticRootFinder } from "./genetic";
+export type { GeneticRootParams, GeneticRootResult } from "./genetic";
+
+export {
+  runSteadyPlate,
+  runTransientPlate,
+  runStraightFin,
+  runStandardAtmosphere,
+  runIsentropicNozzle,
+  runSparseLab,
+  runLbfgsbDemo,
+  runAdolcDemo,
+  HEAT_ACM_LABS,
+} from "./heat-aerospace";
+export type {
+  HeatAcmLabId,
+  SparseMethod,
+  SteadyPlateResult,
+  TransientPlateResult,
+  FinResult,
+  AtmosphereResult,
+  NozzleResult,
+  SparseLabResult,
+} from "./heat-aerospace";
+
 export { wordToNumerology, formatNumerologyReport, digitalRoot, bruteForceJohnsonExpand } from "./numerology";
 export type {
   NumerologyResult,
