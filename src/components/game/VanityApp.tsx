@@ -41,6 +41,23 @@ const VANITY_SOURCE_LINKS = [
   },
 ] as const;
 
+function VanityPrivacyNote({ className }: { className?: string }) {
+  return (
+    <p
+      className={cn(
+        "rounded-lg border border-amber/30 bg-amber/5 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground",
+        className,
+      )}
+    >
+      <span className="font-bold uppercase tracking-[0.12em] text-amber">Privacy · session only</span>
+      <span className="mt-1 block text-moon/90">
+        Vanity App does not save data used or API — only focuses on mechanistic functionality for the
+        user.
+      </span>
+    </p>
+  );
+}
+
 function VanitySourcesBlurb({ className }: { className?: string }) {
   return (
     <div
@@ -285,6 +302,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <p className="mt-1 font-mono text-[10px] text-muted-foreground">
               Face++ Detect batch · Beauty → IQ-like / ATTR / CAC · keys never hardcoded
             </p>
+            <VanityPrivacyNote className="mt-3 max-w-3xl" />
             <VanitySourcesBlurb className="mt-3 max-w-3xl" />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -320,6 +338,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <span className="text-cyan">API Secret</span>. Values stay in session memory only — never
             stored as <code className="text-amber">paste</code> placeholders.
           </p>
+          <VanityPrivacyNote />
           <VanitySourcesBlurb />
           <label className="block space-y-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-magenta">
