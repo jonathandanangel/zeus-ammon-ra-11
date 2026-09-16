@@ -111,7 +111,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
     setMode("overworld");
   }, []);
   const btn =
-    "rounded-lg border border-cyan/50 bg-deepblue/70 px-5 py-3 font-display text-sm uppercase tracking-[0.22em] text-cyan transition-colors hover:bg-cyan/20 hover:text-moon";
+    "rounded-sm border border-[#39ff14]/75 bg-deepblue/50 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#b8f5b8] backdrop-blur-md transition-colors hover:bg-[#39ff14]/15 hover:text-moon";
   const menuBtn =
     "w-full border-2 border-game-yellow px-3 py-2 font-pixel text-[10px] text-game-yellow transition-colors hover:bg-game-yellow hover:text-game-bg";
 
