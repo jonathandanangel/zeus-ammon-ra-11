@@ -8,8 +8,9 @@ import {
   Field,
   GhostButton,
   Metric,
-  NumberInput,
   BoundNumberInput,
+  DraftNumberInput,
+  GraphBoundsFields,
   NumericalComputeContext,
   Panel,
   RunButton,
@@ -383,14 +384,7 @@ function MainPanel() {
           <p className="font-mono text-[9px] text-muted-foreground">
             {FUNCTION_PRESETS.length} V15 demo f(x) samples · hover for expression
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="a">
-              <BoundNumberInput value={a} onChange={setA} />
-            </Field>
-            <Field label="b">
-              <BoundNumberInput value={b} onChange={setB} />
-            </Field>
-          </div>
+          <GraphBoundsFields a={a} b={b} onAChange={setA} onBChange={setB} />
           <Field label="Plot click mode">
             <Select
               value={clickMode}
@@ -406,18 +400,20 @@ function MainPanel() {
           </Field>
           <Field label="Secant seeds" hint={clickMode === "secant" ? "click plot twice" : "blank = auto"}>
             <div className="grid grid-cols-2 gap-2">
-              <NumberInput
-                value={seedOne}
-                placeholder="x0"
-                step="any"
-                onChange={(e) => setSeedOne(e.target.value)}
-              />
-              <NumberInput
-                value={seedTwo}
-                placeholder="x1"
-                step="any"
-                onChange={(e) => setSeedTwo(e.target.value)}
-              />
+              <Field label="x0">
+                <DraftNumberInput
+                  value={seedOne}
+                  placeholder="x0"
+                  onChange={setSeedOne}
+                />
+              </Field>
+              <Field label="x1">
+                <DraftNumberInput
+                  value={seedTwo}
+                  placeholder="x1"
+                  onChange={setSeedTwo}
+                />
+              </Field>
             </div>
           </Field>
           <div className="grid grid-cols-2 gap-2">
@@ -597,14 +593,14 @@ function VectorPanel() {
             <Field label="Paste raw algebraic equation" hint="implicit products cleaned">
               <TextArea value={raw} onChange={(e) => setRaw(e.target.value)} rows={8} />
             </Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Lower x">
-                <BoundNumberInput value={a} onChange={setA} />
-              </Field>
-              <Field label="Upper x">
-                <BoundNumberInput value={b} onChange={setB} />
-              </Field>
-            </div>
+            <GraphBoundsFields
+              a={a}
+              b={b}
+              onAChange={setA}
+              onBChange={setB}
+              aLabel="Lower x"
+              bLabel="Upper x"
+            />
             <RunButton>Vectorize & clean</RunButton>
             {error && <ErrorBanner message={error} />}
             <p className="font-mono text-[10px] text-mint/80">{status}</p>
@@ -998,14 +994,14 @@ function CompositePanel() {
                 </GhostButton>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Lower a">
-                <BoundNumberInput value={a} onChange={setA} />
-              </Field>
-              <Field label="Upper b">
-                <BoundNumberInput value={b} onChange={setB} />
-              </Field>
-            </div>
+            <GraphBoundsFields
+              a={a}
+              b={b}
+              onAChange={setA}
+              onBChange={setB}
+              aLabel="Lower a"
+              bLabel="Upper b"
+            />
             <Field label="Subintervals n" hint="even for 1/3 · ÷3 for 3/8">
               <BoundNumberInput value={subintervals} min={1} onChange={setSubintervals} />
             </Field>
@@ -2171,14 +2167,14 @@ function SymbolicPanel() {
             Definite integral int(f, x, a, b)
           </label>
           {definite && (
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Lower">
-                <BoundNumberInput value={lower} onChange={setLower} />
-              </Field>
-              <Field label="Upper">
-                <BoundNumberInput value={upper} onChange={setUpper} />
-              </Field>
-            </div>
+            <GraphBoundsFields
+              a={lower}
+              b={upper}
+              onAChange={setLower}
+              onBChange={setUpper}
+              aLabel="Lower"
+              bLabel="Upper"
+            />
           )}
           <RunButton type="button" onClick={run}>
             Run int(f, {variable || "x"})
@@ -2274,14 +2270,7 @@ function GeneticPanel() {
               </GhostButton>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="a">
-              <BoundNumberInput value={a} onChange={setA} />
-            </Field>
-            <Field label="b">
-              <BoundNumberInput value={b} onChange={setB} />
-            </Field>
-          </div>
+          <GraphBoundsFields a={a} b={b} onAChange={setA} onBChange={setB} />
           <div className="grid grid-cols-2 gap-2">
             <Field label="Population">
               <BoundNumberInput value={popSize} min={4} max={500} onChange={setPopSize} />

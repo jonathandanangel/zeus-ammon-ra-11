@@ -207,6 +207,68 @@ export function BoundNumberInput({
   );
 }
 
+/** Optional numeric text (empty allowed) — for secant seeds and similar graph picks. */
+export function DraftNumberInput({
+  value,
+  onChange,
+  className,
+  onBlur,
+  ...props
+}: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> & {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <input
+      {...props}
+      type="text"
+      inputMode="decimal"
+      className={cn(controlClass, "tabular-nums", className)}
+      value={value}
+      onChange={(event) => {
+        const raw = event.target.value;
+        if (raw === "" || isAllowedNumericDraft(raw)) onChange(raw);
+      }}
+      onBlur={(event) => {
+        if (value === "-" || value === "+" || value === "." || value === "-." || value === "+.") {
+          onChange("");
+        } else if (isCompleteNumeric(value)) {
+          onChange(String(Number(value)));
+        }
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
+/** Shared graph interval [a, b] — negative bounds and mid-entry “-” supported. */
+export function GraphBoundsFields({
+  a,
+  b,
+  onAChange,
+  onBChange,
+  aLabel = "A",
+  bLabel = "B",
+}: {
+  a: number;
+  b: number;
+  onAChange: (value: number) => void;
+  onBChange: (value: number) => void;
+  aLabel?: string;
+  bLabel?: string;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Field label={aLabel}>
+        <BoundNumberInput value={a} onChange={onAChange} />
+      </Field>
+      <Field label={bLabel}>
+        <BoundNumberInput value={b} onChange={onBChange} />
+      </Field>
+    </div>
+  );
+}
+
 export function TextArea({
   className,
   ...props
