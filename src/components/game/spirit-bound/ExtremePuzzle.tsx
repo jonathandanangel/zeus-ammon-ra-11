@@ -7,6 +7,7 @@ import {
   type ExtremePuzzleAnswers,
   type ExtremePuzzleResult,
 } from "@/game/extreme-puzzle/assets";
+import { BUNDLED_ANSWER_KEY } from "@/game/extreme-puzzle/answer-key";
 import {
   AGE_BANDS,
   EXTREME_PUZZLE_ITEM_COUNT,
@@ -49,7 +50,7 @@ const HEBREW_INDUCTION_LINES = [
   "מבחן אינדוקציה",
   "מבחן החשיבה האינדוקטיבית",
   "מבחן אינדוקציה",
-  "TRI · מבחן אינדוקציה",
+  "מבחן אינדוקציה",
   "מבחן אינדוקציה",
 ] as const;
 
@@ -409,8 +410,9 @@ export function ExtremePuzzle({ onExit }: Props) {
   const [hebrewLine, setHebrewLine] = React.useState(0);
   const [years, setYears] = React.useState(25);
   const [months, setMonths] = React.useState(0);
-  const [answers, setAnswers] = React.useState<ExtremePuzzleAnswers | null>(null);
+  const [answers, setAnswers] = React.useState<ExtremePuzzleAnswers>(() => ({ ...BUNDLED_ANSWER_KEY }));
   const [loadError, setLoadError] = React.useState("");
+  const [ageError, setAgeError] = React.useState("");
   const [index, setIndex] = React.useState(0);
   const [selected, setSelected] = React.useState<number[]>([]);
   const [correctCount, setCorrectCount] = React.useState(0);
@@ -455,13 +457,20 @@ export function ExtremePuzzle({ onExit }: Props) {
     void (async () => {
       const data = await loadExtremePuzzleAnswers();
       if (!alive) return;
-      if (!data) {
-        setLoadError(
-          "Local TRI item pack missing. Run scripts/extract-tri52.py with your PDF once (assets stay private / gitignored).",
-        );
-        return;
-      }
       setAnswers(data);
+      // Soft notice only — play still works via bundled key
+      try {
+        const probe = await fetch(itemImageUrl(1), { method: "HEAD", cache: "no-store" });
+        if (!probe.ok) {
+          setLoadError(
+            "Item images not found locally. Run scripts/extract-tri52.py once for q01–q52.png (gitignored). Scoring still works.",
+          );
+        }
+      } catch {
+        setLoadError(
+          "Item images not found locally. Run scripts/extract-tri52.py once for q01–q52.png (gitignored). Scoring still works.",
+        );
+      }
     })();
     return () => {
       alive = false;
@@ -483,10 +492,26 @@ export function ExtremePuzzle({ onExit }: Props) {
   }
 
   function startPlay() {
-    if (years < 6) {
+    const y = Math.floor(Number(years));
+    const m = Math.floor(Number(months));
+    if (!Number.isFinite(y) || y < 6) {
       playSfx("invalid");
+      setAgeError("Enter age years 6 or older to begin.");
       return;
     }
+    if (!Number.isFinite(m) || m < 0 || m > 11) {
+      playSfx("invalid");
+      setAgeError("Months must be 0–11.");
+      return;
+    }
+    if (!answers) {
+      playSfx("invalid");
+      setAgeError("Answer key still loading — try again in a moment.");
+      return;
+    }
+    setAgeError("");
+    setYears(y);
+    setMonths(m);
     playSfx("arcade");
     setPhase("play");
     setIndex(0);
@@ -545,7 +570,7 @@ export function ExtremePuzzle({ onExit }: Props) {
               <p className="extreme-hebrew-flash__text" lang="he" dir="rtl">
                 {HEBREW_INDUCTION_LINES[hebrewLine] ?? HEBREW_INDUCTION_LINES[0]}
               </p>
-              <p className="extreme-hebrew-flash__sub">TEST OF INDUCTION</p>
+              <p className="extreme-hebrew-flash__sub">666 · CAUTION · 676</p>
             </div>
           </div>
         )}
@@ -714,7 +739,7 @@ export function ExtremePuzzle({ onExit }: Props) {
           EXTREME PUZZLE · 666
         </p>
         <p className="text-center font-pixel text-[9px] leading-relaxed text-[#c8a048]">
-          Untimed · 52 items · enter age for TRI/JCTI age-referenced scoring
+          Untimed · 52 seals · enter age for the dark score
         </p>
         {loadError && (
           <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
@@ -746,6 +771,11 @@ export function ExtremePuzzle({ onExit }: Props) {
         <p className="font-pixel text-[8px] text-[#a88828]">
           Band: {band.label} · seals 666 / 676 / 69 / 13
         </p>
+        {ageError && (
+          <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
+            {ageError}
+          </p>
+        )}
         {history.length > 0 && (
           <p className="font-pixel text-[7px] text-[#c8a048]">
             {history.length} prior attempt{history.length === 1 ? "" : "s"} · latest{" "}
@@ -754,9 +784,8 @@ export function ExtremePuzzle({ onExit }: Props) {
         )}
         <button
           type="button"
-          disabled={!answers}
           onClick={startPlay}
-          className="border-2 border-[#ff3030] px-3 py-3 font-pixel text-[11px] text-[#ff4040] transition hover:bg-[#ff3030] hover:text-black disabled:opacity-40"
+          className="relative z-10 border-2 border-[#ff3030] bg-[#3a0000] px-3 py-3 font-pixel text-[11px] text-[#ff4040] transition hover:bg-[#ff3030] hover:text-black"
         >
           BEGIN · 52 ITEMS · 666
         </button>

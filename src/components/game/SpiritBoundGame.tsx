@@ -601,7 +601,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
                 >
                   E · EXTREME PUZZLE
                   <span className="mt-1 block text-[8px]">
-                    Warning → age → 52 items · dated score log · rocket + sources
+                    Warning → age → 52 seals · dated score log · rocket + sources
                   </span>
                 </button>
               ) : (

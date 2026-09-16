@@ -855,6 +855,7 @@
 .extreme-puzzle-stage {
   position: relative;
   z-index: 1;
+  pointer-events: auto;
 }
 
 /* Apocalypse backdrop */

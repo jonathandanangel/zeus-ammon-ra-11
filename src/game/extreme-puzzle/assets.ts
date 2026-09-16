@@ -1,3 +1,5 @@
+import { BUNDLED_ANSWER_KEY } from "@/game/extreme-puzzle/answer-key";
+
 export type ExtremePuzzleAnswers = Record<string, number[]>;
 
 export type ExtremePuzzleResult = {
@@ -9,14 +11,24 @@ export type ExtremePuzzleResult = {
   ageReferencedScore: number | null;
 };
 
-export async function loadExtremePuzzleAnswers(): Promise<ExtremePuzzleAnswers | null> {
+function isValidAnswers(data: unknown): data is ExtremePuzzleAnswers {
+  if (!data || typeof data !== "object") return false;
+  const keys = Object.keys(data as object);
+  return keys.length >= 40;
+}
+
+/** Prefer local answers.json when present; always fall back to bundled key. */
+export async function loadExtremePuzzleAnswers(): Promise<ExtremePuzzleAnswers> {
   try {
     const res = await fetch("/extreme-puzzle/answers.json", { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as ExtremePuzzleAnswers;
+    if (res.ok) {
+      const data: unknown = await res.json();
+      if (isValidAnswers(data)) return data;
+    }
   } catch {
-    return null;
+    /* use bundled */
   }
+  return { ...BUNDLED_ANSWER_KEY };
 }
 
 export function itemImageUrl(n: number): string {

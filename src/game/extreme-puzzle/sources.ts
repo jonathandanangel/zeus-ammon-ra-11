@@ -1,14 +1,14 @@
-/** Educational disclaimer + published JCTI / TRI-52 correlation refs (no item content). */
+/** Opening caution (no creator credits) + end-screen JCTI / TRI-52 refs. */
 
 export const EXTREME_PUZZLE_WARNING = {
   title: "⚠ WARNING ⚠",
   subtitle: "CAUTION · VERY HARD · ABANDON HOPE",
   lines: [
-    "THIS IS NOT A TOY. Fifty-two untimed inductive-reasoning items. Most will fail. Many will quit. The seal did not lie.",
-    "Private practice UI only — not a clinical evaluation, not a licensed diagnosis, not an official Cogn-IQ / Cerebrals administration.",
-    "Item images and the answer key stay on YOUR machine (gitignored). Do not redistribute copyrighted TRI / JCTI materials.",
-    "Age-referenced scores are approximate curiosities for self-tracking. Practice effects and fatigue will haunt you.",
-    "By continuing you accept personal study inside ZEUS AMMON RA only — never employment, admission, or clinical use.",
+    "THIS IS NOT A TOY. Fifty-two untimed seals. Most will fail. Many will quit. The mark did not lie.",
+    "The inverted star watches. The horned moon judges. Turn back if you value mercy.",
+    "What follows is a trial of endurance and pattern — not a blessing, not a diagnosis, not salvation.",
+    "Practice effects and fatigue will haunt you. The abyss does not grade on a curve.",
+    "By continuing you accept the curse inside ZEUS AMMON RA only. Flee while you still can.",
   ],
 } as const;
 
