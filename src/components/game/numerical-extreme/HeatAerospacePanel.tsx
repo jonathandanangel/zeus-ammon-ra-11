@@ -600,7 +600,7 @@ export function HeatAerospacePanel() {
           </Panel>
 
           <Panel title="OUTPUT LOG" eyebrow="HTANT V2">
-            <pre className="max-h-72 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+            <pre className="max-h-72 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
               {log}
             </pre>
           </Panel>

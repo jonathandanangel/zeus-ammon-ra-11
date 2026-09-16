@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const NumericalComputeContext = React.createContext<() => void>(() => {});
 
 const controlClass =
-  "w-full rounded-lg border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+  "w-full rounded-sm border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
 
 /** Monospace equation / telemetry box — matches MAIN / ALGORITHMS engine logs. */
 export function EquationBox({
@@ -26,7 +26,7 @@ export function EquationBox({
           {label}
         </p>
       )}
-      <pre className="max-h-56 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap break-all">
+      <pre className="max-h-56 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap break-all">
         {children}
       </pre>
     </div>
@@ -49,7 +49,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "nx-panel overflow-hidden rounded-xl border border-cyan/40 bg-deepblue/70 shadow-[0_0_28px_rgba(34,211,238,0.08)]",
+        "nx-panel zeus-outline-box overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70",
         className,
       )}
     >
@@ -312,7 +312,7 @@ export function RunButton({
       type={props.type ?? "submit"}
       disabled={loading || props.disabled}
       className={cn(
-        "nx-run flex w-full items-center justify-center gap-2 rounded-lg border border-cyan/60 bg-cyan/20 px-4 py-2.5 font-display text-xs uppercase tracking-[0.2em] text-cyan shadow-[0_0_24px_rgba(34,211,238,0.18)] transition hover:bg-cyan/30 hover:text-moon disabled:cursor-not-allowed disabled:opacity-50",
+        "nx-run flex w-full items-center justify-center gap-2 rounded-sm border border-cyan/60 bg-cyan/20 px-4 py-2.5 font-display text-xs uppercase tracking-[0.2em] text-cyan shadow-[0_0_24px_rgba(34,211,238,0.18)] transition hover:bg-cyan/30 hover:text-moon disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
     >
@@ -329,7 +329,7 @@ export function GhostButton({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg border border-cyan/30 bg-deepblue/50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-moon/80 transition hover:border-amber/50 hover:text-amber disabled:opacity-40",
+        "inline-flex items-center justify-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-moon/80 transition hover:border-amber/50 hover:text-amber disabled:opacity-40",
         className,
       )}
       {...props}
@@ -360,7 +360,7 @@ export function Metric({
   return (
     <div
       className={cn(
-        "nx-metric rounded-lg border bg-gradient-to-br to-transparent p-3",
+        "nx-metric rounded-sm border bg-gradient-to-br to-transparent p-3",
         colors[accent],
       )}
     >
@@ -378,7 +378,7 @@ export function ErrorBanner({ message }: { message: string }) {
     if (message) audio.play("numeric-error");
   }, [message]);
   return (
-    <div className="nx-error rounded-lg border border-magenta/40 bg-magenta/10 px-3 py-2.5 font-mono text-xs text-magenta">
+    <div className="nx-error rounded-sm border border-magenta/40 bg-magenta/10 px-3 py-2.5 font-mono text-xs text-magenta">
       {message}
     </div>
   );

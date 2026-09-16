@@ -99,7 +99,7 @@ const selectIntermission = (correctMilestone: number, questionCheckpoint: number
 };
 
 const btn =
-  "rounded-lg border border-cyan/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-cyan transition-colors hover:bg-cyan/20 disabled:opacity-40";
+  "rounded-sm border border-cyan/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-cyan transition-colors hover:bg-cyan/20 disabled:opacity-40";
 
 function Hud({
   question,

@@ -64,7 +64,7 @@ export function CutscenePlayer({
       <AnimatePresence mode="wait">
         <motion.div
           key={idx}
-          className="relative m-3 border-4 border-game-yellow bg-[#201808] p-4 shadow-[0_0_0_4px_#181010]"
+          className="relative m-3 border-4 border-game-yellow bg-[#201808] p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]"
           initial={reducedMotion ? false : { y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={reducedMotion ? { opacity: 1 } : { y: 8, opacity: 0 }}

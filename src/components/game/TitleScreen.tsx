@@ -325,7 +325,7 @@ export function TitleScreen(p: TitleScreenProps) {
             key={section.id}
             id={`mode-${section.id}`}
             className={cn(
-              "zeus-mode-panel relative overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
+              "zeus-mode-panel zeus-outline-box relative overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
               section.accentClass,
               "bg-deepblue/50 backdrop-blur-sm",
             )}
@@ -348,7 +348,7 @@ export function TitleScreen(p: TitleScreenProps) {
                     type="button"
                     onClick={action.onClick}
                     className={cn(
-                      "rounded-xl border bg-black/35 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em] transition-colors",
+                      "rounded-sm border bg-black/35 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em] transition-colors",
                       action.buttonClass ?? section.buttonClass,
                     )}
                   >

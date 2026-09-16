@@ -260,7 +260,7 @@ export function MemoryGauntlet({
           </p>
           <button
             type="button"
-            className="rounded-lg border border-cyan/60 bg-deepblue/70 px-6 py-3 font-display text-sm uppercase tracking-[0.2em] text-cyan hover:bg-cyan/20"
+            className="rounded-sm border border-cyan/60 bg-deepblue/70 px-6 py-3 font-display text-sm uppercase tracking-[0.2em] text-cyan hover:bg-cyan/20"
             onClick={beginStage}
           >
             Begin trial
@@ -354,7 +354,7 @@ export function MemoryGauntlet({
               </p>
               <button
                 type="button"
-                className="rounded-lg border border-cyan/60 bg-deepblue/70 px-6 py-3 font-display text-sm uppercase tracking-[0.2em] text-cyan hover:bg-cyan/20"
+                className="rounded-sm border border-cyan/60 bg-deepblue/70 px-6 py-3 font-display text-sm uppercase tracking-[0.2em] text-cyan hover:bg-cyan/20"
                 onClick={continueAfterResult}
               >
                 {won ? (stage === 3 ? "Enter the gauntlet" : "Next trial") : lives > 0 ? "Retry trial" : "Exit run"}

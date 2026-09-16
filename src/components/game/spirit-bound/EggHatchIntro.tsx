@@ -114,7 +114,7 @@ export function EggHatchIntro({ onDone }: Props) {
       initial={{ opacity: 1 }}
       animate={{ opacity: phase === "fade" ? 0 : 1 }}
       transition={{ duration: 0.45 }}
-      className="flex min-h-[420px] w-full flex-col items-center justify-center gap-3 rounded-lg border-4 border-game-yellow bg-game-bg p-4 text-center shadow-[0_0_0_4px_#181010]"
+      className="flex min-h-[420px] w-full flex-col items-center justify-center gap-3 rounded-sm border border-[#39ff14]/75 bg-game-bg p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]"
     >
       <canvas
         ref={canvasRef}

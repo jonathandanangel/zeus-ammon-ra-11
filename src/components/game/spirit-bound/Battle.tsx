@@ -248,7 +248,7 @@ export function Battle({ enemy, level, hp, maxHp, items: startItems, onEnd }: Pr
   const hpPct = Math.max(0, Math.min(1, rollHp / maxHp));
 
   return (
-    <div className="relative mx-auto w-full max-w-[640px] select-none border-4 border-game-yellow bg-game-bg p-3 font-pixel text-[#f8f0c8] shadow-[0_0_0_4px_#181010]">
+    <div className="relative mx-auto w-full max-w-[640px] select-none border-4 border-game-yellow bg-game-bg p-3 font-pixel text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
       <div className="relative flex h-[190px] items-center justify-center overflow-hidden bg-[#102010]">
         <TriangleField />
         <div

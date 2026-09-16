@@ -18,7 +18,7 @@ export function StatementCard({ source, statement, access }: Props) {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.22 }}
       className={cn(
-        "border-4 px-4 py-4 shadow-[0_0_0_4px_#181010]",
+        "border-4 px-4 py-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]",
         access.highContrast
           ? "border-white bg-black text-white"
           : "border-game-yellow bg-[#1a1208] text-[#f8f0c8]",

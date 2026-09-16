@@ -79,7 +79,7 @@ export function ShrineTrial({ onSolved }: Props) {
 
   return (
     <section
-      className="relative overflow-hidden border-4 border-game-yellow bg-game-bg p-3 text-[#f8f0c8] shadow-[0_0_0_4px_#181010] sm:p-4"
+      className="relative overflow-hidden border-4 border-game-yellow bg-game-bg p-3 text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-4"
       data-high-contrast={shrine.access.highContrast ? "on" : "off"}
     >
       {shrine.phase === "intro" && (

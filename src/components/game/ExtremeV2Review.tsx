@@ -20,7 +20,7 @@ export function ExtremeV2Review({
   onMenu: () => void;
 }) {
   const btn =
-    "rounded-lg border border-[#e879f9]/60 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#e879f9] hover:bg-[#e879f9]/20";
+    "rounded-sm border border-[#e879f9]/60 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#e879f9] hover:bg-[#e879f9]/20";
 
   return (
     <div className="extreme-v2-shell mx-auto w-full max-w-3xl space-y-5">

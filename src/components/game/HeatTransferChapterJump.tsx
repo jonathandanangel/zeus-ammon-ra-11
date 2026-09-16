@@ -31,7 +31,7 @@ export function HeatTransferChapterJump({
 
   const btn = (forward: boolean) =>
     cn(
-      "rounded-lg border px-4 py-3 text-left font-display text-sm uppercase tracking-[0.14em] transition-colors",
+      "rounded-sm border px-4 py-3 text-left font-display text-sm uppercase tracking-[0.14em] transition-colors",
       psychedelic
         ? forward
           ? "border-[#d946ef]/60 bg-[#2a0a33]/70 text-[#f0abfc] hover:bg-[#d946ef]/20"
@@ -142,7 +142,7 @@ export function HeatTransferChapterJump({
         <button
           type="button"
           className={cn(
-            "w-full max-w-sm rounded-lg border px-6 py-4 font-display text-base uppercase tracking-[0.28em] transition-colors",
+            "w-full max-w-sm rounded-sm border px-6 py-4 font-display text-base uppercase tracking-[0.28em] transition-colors",
             psychedelic
               ? "border-[#e879f9] bg-[#e879f9]/15 text-[#f5d0fe] hover:bg-[#e879f9]/30"
               : "border-[#ff2a2a] bg-[#ff2a2a]/15 text-[#ffb4b4] hover:bg-[#ff2a2a]/30",

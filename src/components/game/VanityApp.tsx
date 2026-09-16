@@ -45,7 +45,7 @@ function VanityPrivacyNote({ className }: { className?: string }) {
   return (
     <p
       className={cn(
-        "rounded-lg border border-amber/30 bg-amber/5 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground",
+        "rounded-sm border border-amber/30 bg-amber/5 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground",
         className,
       )}
     >
@@ -62,7 +62,7 @@ function VanityProcessInfo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "space-y-3 rounded-xl border border-cyan/35 bg-black/35 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground",
+        "space-y-3 rounded-sm border border-cyan/35 bg-black/35 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground",
         className,
       )}
     >
@@ -159,7 +159,7 @@ function VanitySourcesBlurb({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-cyan/25 bg-black/25 px-3 py-2.5 font-mono text-[10px] leading-relaxed text-muted-foreground",
+        "rounded-sm border border-cyan/25 bg-black/25 px-3 py-2.5 font-mono text-[10px] leading-relaxed text-muted-foreground",
         className,
       )}
     >
@@ -382,13 +382,13 @@ export function VanityApp({ onMenu }: VanityAppProps) {
   }
 
   const field =
-    "w-full rounded-lg border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+    "w-full rounded-sm border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
   const btn =
-    "rounded-lg border border-cyan/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.18em] text-cyan transition hover:bg-cyan/20 hover:text-moon disabled:opacity-40";
+    "rounded-sm border border-cyan/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.18em] text-cyan transition hover:bg-cyan/20 hover:text-moon disabled:opacity-40";
 
   return (
     <div className="extreme-shell relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-2 py-4">
-      <header className="overflow-hidden rounded-xl border border-magenta/50 bg-deepblue/80 shadow-[0_0_40px_rgba(236,72,153,0.14)]">
+      <header className="zeus-outline-box overflow-hidden rounded-sm border border-[#ff2a2a]/70 bg-deepblue/80">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-magenta/30 px-4 py-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan">
@@ -420,7 +420,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <button
               type="button"
               onClick={onMenu}
-              className="rounded-lg border border-amber/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
+              className="rounded-sm border border-amber/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
             >
               Main menu
             </button>
@@ -442,7 +442,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
       {!unlocked ? (
         <form
           onSubmit={unlock}
-          className="mx-auto w-full max-w-lg space-y-4 rounded-xl border border-cyan/40 bg-deepblue/70 p-5 shadow-[0_0_28px_rgba(34,211,238,0.08)]"
+          className="zeus-outline-box mx-auto w-full max-w-lg space-y-4 rounded-sm border border-[#ff2a2a]/55 bg-deepblue/70 p-5"
         >
           <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
             Enter your Face++ <span className="text-cyan">API Key</span> and{" "}
@@ -495,20 +495,20 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             </select>
           </label>
           {gateError && (
-            <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 font-mono text-[11px] text-red-300">
+            <p className="rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2 font-mono text-[11px] text-red-300">
               {gateError}
             </p>
           )}
           <button
             type="submit"
-            className="w-full rounded-lg border border-magenta/60 bg-magenta/25 px-4 py-3 font-display text-sm uppercase tracking-[0.2em] text-moon transition hover:bg-magenta/40"
+            className="w-full rounded-sm border border-magenta/60 bg-magenta/25 px-4 py-3 font-display text-sm uppercase tracking-[0.2em] text-moon transition hover:bg-magenta/40"
           >
             Unlock Vanity App
           </button>
         </form>
       ) : (
         <div className="grid gap-3 lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]">
-          <section className="space-y-3 rounded-xl border border-cyan/40 bg-deepblue/70 p-4">
+          <section className="space-y-3 rounded-sm border border-cyan/40 bg-deepblue/70 p-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
               Batch controls
             </p>
@@ -555,7 +555,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             </button>
 
             {batch && batch.nValid > 0 && (
-              <div className="space-y-2 rounded-lg border border-cyan/25 bg-black/30 p-3 font-mono text-[11px] text-mint">
+              <div className="space-y-2 rounded-sm border border-cyan/25 bg-black/30 p-3 font-mono text-[11px] text-mint">
                 <p>CAC IQ ≈ {batch.cacIq?.toFixed(2)} ({batch.cacPct?.toFixed(1)}%)</p>
                 <p>CAC ATTR ≈ {batch.cacAttr?.toFixed(2)} ({batch.cacAttrPct?.toFixed(1)}%)</p>
                 <p>Pref ensemble ≈ {batch.compositePref?.toFixed(2)}</p>
@@ -576,7 +576,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
           </section>
 
           <div className="space-y-3">
-            <section className="overflow-hidden rounded-xl border border-cyan/40 bg-deepblue/70">
+            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70">
               <header className="border-b border-cyan/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
                 Per-image results
               </header>
@@ -622,7 +622,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-xl border border-cyan/40 bg-deepblue/70">
+            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70">
               <header className="border-b border-cyan/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
                 Engine log / report
               </header>

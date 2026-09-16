@@ -47,7 +47,7 @@ function ChoiceList({ question, answer, setAnswer, locked }: InteractionProps) {
               setAnswer([c]);
             }}
             className={cn(
-              "flex items-start gap-3 rounded-lg border p-3 text-left text-sm transition-colors",
+              "flex items-start gap-3 rounded-sm border p-3 text-left text-sm transition-colors",
               active
                 ? "border-mint bg-mint/15 text-moon glow-mint"
                 : "border-border bg-deepblue/70 text-foreground hover:border-cyan hover:bg-cyan/10",

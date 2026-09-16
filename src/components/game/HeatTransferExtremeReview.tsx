@@ -21,7 +21,7 @@ export function HeatTransferExtremeReview({
 }) {
   const total = questions.length;
   const btn =
-    "rounded-lg border border-[#ff2a2a]/70 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff2a2a] hover:bg-[#ff2a2a]/20";
+    "rounded-sm border border-[#ff2a2a]/70 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff2a2a] hover:bg-[#ff2a2a]/20";
 
   return (
     <div className="ht-extreme-shell mx-auto w-full max-w-3xl space-y-5">

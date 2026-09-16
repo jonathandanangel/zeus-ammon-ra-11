@@ -340,7 +340,7 @@ function MainPanel() {
       );
     }
     return (
-      <div className="grid h-[300px] place-items-center rounded-lg border border-dashed border-cyan/25 bg-deepblue/40 text-center">
+      <div className="grid h-[300px] place-items-center rounded-sm border border-dashed border-cyan/25 bg-deepblue/40 text-center">
         <div>
           <p className="font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
             No plot data
@@ -367,7 +367,7 @@ function MainPanel() {
       onSubmit={runFunction}
       className="grid gap-3 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]"
     >
-      <aside className="space-y-4 rounded-xl border border-cyan/35 bg-deepblue/60 p-3">
+      <aside className="space-y-4 rounded-sm border border-cyan/35 bg-deepblue/60 p-3">
         <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-amber">Inputs</p>
         <div className="space-y-2">
           <Field label="f(x)">
@@ -444,7 +444,7 @@ function MainPanel() {
               <TextInput value={degrees} onChange={(e) => setDegrees(e.target.value)} />
             </Field>
           </div>
-          <label className="flex items-center gap-2 rounded-lg border border-cyan/30 bg-deepblue/80 px-3 py-2 font-mono text-[10px] text-moon/80">
+          <label className="flex items-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/80 px-3 py-2 font-mono text-[10px] text-moon/80">
             <input
               type="checkbox"
               checked={shift}
@@ -513,7 +513,7 @@ function MainPanel() {
       <div className="min-w-0 space-y-3">
         {chart}
         <Panel title="Engine log" eyebrow="V15 telemetry · sections 1–11">
-          <pre className="max-h-80 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-80 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
         </Panel>
@@ -648,7 +648,7 @@ function VectorPanel() {
                         {copied === name ? "Copied" : "Copy"}
                       </GhostButton>
                     </div>
-                    <pre className="overflow-x-auto rounded-lg border border-cyan/20 bg-black/40 p-2.5 font-mono text-[11px] text-mint">
+                    <pre className="overflow-x-auto rounded-sm border border-cyan/20 bg-black/40 p-2.5 font-mono text-[11px] text-mint">
                       {value}
                     </pre>
                   </div>
@@ -1428,7 +1428,7 @@ function AlgorithmsPanel() {
     <div className="grid gap-3 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
       <Panel title="Algorithm suite" eyebrow="V15 ports">
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-1 rounded-lg border border-cyan/30 p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-sm border border-cyan/30 p-1">
             {(
               [
                 ["cholesky", "Chol"],
@@ -1520,7 +1520,7 @@ function AlgorithmsPanel() {
           <Chart x={chartX} series={chartSeries} height={280} />
         )}
         <Panel title="Engine log" eyebrow="Algorithms">
-          <pre className="max-h-72 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-72 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
         </Panel>
@@ -1701,7 +1701,7 @@ function AcmLabPanel() {
     <div className="grid gap-3 lg:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
       <Panel title="ACM 618 / 619 / 740 Laboratory" eyebrow="V5 · rev 1.4">
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-1 rounded-lg border border-cyan/30 p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-sm border border-cyan/30 p-1">
             {(
               [
                 ["618", "618 Jac"],
@@ -1840,7 +1840,7 @@ function AcmLabPanel() {
           <Chart x={chartX} series={chartSeries} height={280} />
         )}
         <Panel title="Engine log" eyebrow="ACM SPARS">
-          <pre className="max-h-80 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-80 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
         </Panel>
@@ -2004,7 +2004,7 @@ function BezierPanel() {
           role="img"
           aria-label="Bézier freehand canvas"
           className={cn(
-            "block rounded-lg border border-cyan/30 bg-deepblue/60",
+            "block rounded-sm border border-cyan/30 bg-deepblue/60",
             done ? "cursor-default" : "cursor-crosshair",
           )}
           onClick={handleClick}
@@ -2198,12 +2198,12 @@ function SymbolicPanel() {
 
       <div className="space-y-3">
         <Panel title="Octave session echo" eyebrow="Off to the side">
-          <pre className="max-h-64 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-64 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {octave}
           </pre>
         </Panel>
         <Panel title="Engine log" eyebrow="SYMBOLIC">
-          <pre className="max-h-56 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-56 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
         </Panel>
@@ -2320,7 +2320,7 @@ function GeneticPanel() {
           <Chart x={chartX} series={chartSeries} height={260} />
         )}
         <Panel title="Engine log" eyebrow="GENETIC · V11">
-          <pre className="max-h-72 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+          <pre className="max-h-72 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
         </Panel>
@@ -2717,7 +2717,7 @@ function GeometryColourCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-black/50",
+        "relative overflow-hidden rounded-sm border bg-black/50",
         compact ? "p-3" : "p-4",
       )}
       style={{
@@ -2800,7 +2800,7 @@ function RelevantThoughtForms({
         {plates.map((plate) => (
           <figure
             key={plate.id}
-            className="overflow-hidden rounded-xl border border-cyan/25 bg-black/40"
+            className="overflow-hidden rounded-sm border border-cyan/25 bg-black/40"
           >
             <div className="relative aspect-[4/5] overflow-hidden bg-black/60">
               <img
@@ -2855,7 +2855,7 @@ function PhilosophyThoughtsBlock({
       {philosophy.thoughts.map((t) => (
         <div
           key={t.philosopher}
-          className={`rounded-lg border p-3 ${accent[t.philosopher] ?? "border-cyan/25 bg-black/30"}`}
+          className={`rounded-sm border p-3 ${accent[t.philosopher] ?? "border-cyan/25 bg-black/30"}`}
           style={
             t.philosopher === "Theosophical Society"
               ? {
@@ -2966,7 +2966,7 @@ function SourcePassagePanel({
           {passages.map((passage) => (
             <article
               key={passage.id}
-              className="rounded-lg border border-magenta/25 bg-black/40 px-3 py-2.5"
+              className="rounded-sm border border-magenta/25 bg-black/40 px-3 py-2.5"
             >
               <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-magenta">
                 PDF p.{passage.page}
@@ -3081,7 +3081,7 @@ function JohnsonEntryPanel({
           ))}
         </ol>
         {entry.facsimileUrl && (
-          <figure className="overflow-hidden rounded-lg border border-cyan/25 bg-black/50">
+          <figure className="overflow-hidden rounded-sm border border-cyan/25 bg-black/50">
             <img
               src={entry.facsimileUrl}
               alt={`Johnson facsimile page ${entry.facsimilePage ?? ""}`}
@@ -3261,7 +3261,7 @@ function NumerologyPanel() {
       <div className="space-y-3">
         <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
-            <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
+            <p className="rounded-sm border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
               Samuel Johnson 1755 and 1773 (4th ed.) define your typed word when found. Secret
               Doctrine and Greek Myths add passages via exact / anagram / scramble / similar
               letter-count matches. Ruckman cites 1611 KJV verses for your path number.
@@ -3311,7 +3311,7 @@ function NumerologyPanel() {
               <p className="font-mono text-[10px] text-amber">
                 Traits · {result.traits.join(" · ")}
               </p>
-              <div className="rounded-lg border border-magenta/30 bg-black/40 p-3">
+              <div className="rounded-sm border border-magenta/30 bg-black/40 p-3">
                 <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-magenta">
                   Tarot · {result.tarot.arcana}
                 </p>
@@ -3397,7 +3397,7 @@ function NumerologyPanel() {
         ) : (
           <>
             <Panel title="Letter ledger" eyebrow="Running sum">
-              <div className="max-h-48 overflow-auto rounded-lg border border-cyan/20 bg-black/40">
+              <div className="max-h-48 overflow-auto rounded-sm border border-cyan/20 bg-black/40">
                 <table className="w-full font-mono text-[10px] text-mint">
                   <thead className="sticky top-0 bg-deepblue text-amber">
                     <tr>
@@ -3499,7 +3499,7 @@ function ReferencesPanel() {
               {section.entries.map((entry) => (
                 <li
                   key={entry.title}
-                  className="rounded-lg border border-cyan/25 bg-black/30 px-3 py-2.5"
+                  className="rounded-sm border border-cyan/25 bg-black/30 px-3 py-2.5"
                 >
                   <p className="font-display text-sm uppercase tracking-[0.08em] text-cyan">
                     {entry.title}
@@ -3548,7 +3548,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           onDone={() => setOverloadBurst(0)}
         />
 
-        <header className="nx-header overflow-hidden rounded-xl border border-cyan/50 bg-deepblue/80 shadow-[0_0_40px_rgba(34,211,238,0.14)]">
+        <header className="nx-header zeus-outline-box overflow-hidden rounded-sm border border-cyan/50 bg-deepblue/80">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cyan/30 px-4 py-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-magenta">
@@ -3564,7 +3564,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
             <button
               type="button"
               onClick={onMenu}
-              className="rounded-lg border border-amber/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
+              className="rounded-sm border border-amber/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
             >
               Main menu
             </button>
