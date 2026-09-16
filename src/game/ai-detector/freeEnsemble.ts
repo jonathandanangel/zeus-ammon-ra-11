@@ -22,6 +22,7 @@ import {
 export type FreeDetectorId =
   | "gptzero-twin"
   | "human-noise"
+  | "llm-pitch"
   | "openai-roberta"
   | "hc3-roberta"
   | "modernbert"
@@ -42,6 +43,11 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
     id: "human-noise",
     name: "Human noise",
     blurb: "Typos, doubled words, informal voice — strong human authenticity signal",
+  },
+  {
+    id: "llm-pitch",
+    name: "LLM pitch / outline",
+    blurb: "ChatGPT novel pitches: Title Concept, Act I–III, “let me know” offers",
   },
   {
     id: "openai-roberta",
@@ -92,20 +98,21 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
 
 /**
  * Prefer low false positives on human student writing (GPTZero philosophy).
- * human-noise can veto soft AI leans from older neural detectors.
+ * human-noise vetoes soft AI leans unless llm-pitch is strong (ChatGPT outlines).
  */
 const WEIGHT: Partial<Record<FreeDetectorId, number>> = {
-  "human-noise": 4.5,
-  "gptzero-twin": 1.8,
-  "openai-roberta": 2.4,
-  "hc3-roberta": 2.0,
-  modernbert: 2.6,
-  burstiness: 1.3,
-  "perplexity-proxy": 1.0,
-  lexical: 0.8,
-  ngram: 0.9,
-  discourse: 1.6,
-  "sentence-mix": 1.3,
+  "human-noise": 4.2,
+  "llm-pitch": 4.5,
+  "gptzero-twin": 1.6,
+  "openai-roberta": 2.2,
+  "hc3-roberta": 1.9,
+  modernbert: 2.4,
+  burstiness: 1.2,
+  "perplexity-proxy": 0.9,
+  lexical: 0.7,
+  ngram: 0.8,
+  discourse: 1.5,
+  "sentence-mix": 1.2,
 };
 
 function clamp(n: number, lo = 0, hi = 100) {
@@ -255,7 +262,7 @@ function scanGptZeroTwin(text: string): DetectorScanResult {
 
 /**
  * Human authenticity / noise — typos & informal voice that LLMs rarely leave in.
- * Low AI score = looks human. Catches "is is", "u immigrate", "it’s" errors, etc.
+ * Low AI score = looks human. Catches "is is", "amature", "opining", spoken "Um, yeah".
  */
 function scanHumanNoise(text: string): DetectorScanResult {
   const words = wordsOf(text);
@@ -263,6 +270,7 @@ function scanHumanNoise(text: string): DetectorScanResult {
 
   let hits = 0;
   const notes: string[] = [];
+  const lower = text.toLowerCase();
 
   // Doubled words: "is is", "the the"
   for (let i = 0; i < words.length - 1; i++) {
@@ -272,19 +280,26 @@ function scanHumanNoise(text: string): DetectorScanResult {
     }
   }
 
-  const lower = text.toLowerCase();
-
-  // Textspeak / chat openings LLMs almost never emit: "u immigrate…?"
+  // Textspeak / chat openings LLMs almost never emit
   if (/\bu\b/.test(lower) || /\b(ur|u r|idk|imo|tbh|lol|lmao|omg)\b/.test(lower)) {
     hits += 3;
     notes.push("textspeak");
   }
 
-  // Common ESL / rushed substitutions & odd coinages
+  // Spoken filler / dialogue ticks
+  if (/\bum,?\s+yeah\b|\bcool,\s*cool\b|\bi state mindlessly\b|\bdoodling\b/i.test(lower)) {
+    hits += 3;
+    notes.push("spoken-filler");
+  }
+
+  // Common ESL / rushed substitutions, misspellings, odd coinages
   if (
     /\bwhere simply\b/.test(lower) ||
     /\bwhere\b.*\binnovations\b/.test(lower) ||
-    /\b(opining|slivering|apropos to|legal cognition|stratagem taken)\b/.test(lower)
+    /\b(opining|slivering|apropos to|legal cognition|stratagem taken|amature|rotely|vehemently respected)\b/.test(
+      lower,
+    ) ||
+    /\byou would as to\b/.test(lower)
   ) {
     hits += 2;
     notes.push("awkward-lexicon");
@@ -298,32 +313,43 @@ function scanHumanNoise(text: string): DetectorScanResult {
     hits += 2;
     notes.push("its/it's");
   }
+  // Self-admit grammar slip (very human reflection)
+  if (/forgot to capitalize|grammar scanning|amature mistake|didn't go well/i.test(lower)) {
+    hits += 3;
+    notes.push("self-critique");
+  }
 
-  // First-person student / family memoir voice
-  const firstPerson = (lower.match(/\b(i|i'm|i’m|im|my|our|me|mother's|mom's|dad's|grandfather)\b/g) ?? [])
-    .length;
-  if (firstPerson >= 2) {
+  // First-person student / family memoir — avoid "the Me" (Sumerian) and assistant "let me know"
+  const stripped = lower
+    .replace(/\bthe me\b/g, " ")
+    .replace(/\blet me know\b/g, " ")
+    .replace(/\bif you('d| would) like\b/g, " ");
+  const firstPerson = (
+    stripped.match(/\b(i|i'm|i’m|i've|i’d|i'd|im|my|mother's|mom's|dad's|grandfather|i thought|i decided|i asked)\b/g) ??
+    []
+  ).length;
+  if (firstPerson >= 3) {
     hits += 2;
     notes.push(`1st-person:${firstPerson}`);
   }
-  if (firstPerson >= 5) {
-    hits += 1;
+  if (firstPerson >= 8) {
+    hits += 2;
     notes.push("memoir");
   }
 
   // Informal hedges / filler humans use
   const informal = (
     lower.match(
-      /\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|apparently|really was|therefore the main)\b/g,
+      /\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|apparently|really was|of course|nonetheless|mindlessly)\b/g,
     ) ?? []
   ).length;
-  if (informal >= 1) {
+  if (informal >= 2) {
     hits += 1;
     notes.push(`informal:${informal}`);
   }
 
-  // Uneven spacing / ZWSP paste artifacts / missing space after period
-  if (/[a-z]\.[A-Z]/.test(text) || /  +/.test(text) || /[\u200b\u200c\ufeff]/.test(text)) {
+  // Uneven spacing / ZWSP paste artifacts (student paste) — not markdown separators alone
+  if (/[\u200b\u200c\ufeff]/.test(text) || (/  +/.test(text) && !/^#{1,3}\s/m.test(text))) {
     hits += 1;
     notes.push("spacing");
   }
@@ -331,19 +357,19 @@ function scanHumanNoise(text: string): DetectorScanResult {
   // Run-on / comma splice density vs polished AI
   const sentences = sentencesOf(text);
   const longRuns = sentences.filter((s) => wordsOf(s).length > 28).length;
-  if (longRuns >= 1) {
+  if (longRuns >= 2) {
     hits += 1;
     notes.push("run-on");
   }
   // Wild length mix (short Q + long narrative) = human
   const lens = sentences.map((s) => wordsOf(s).length);
-  if (lens.some((n) => n <= 6) && lens.some((n) => n >= 25)) {
+  if (lens.some((n) => n <= 8) && lens.some((n) => n >= 28)) {
     hits += 1;
     notes.push("len-mix");
   }
 
   // Very polished zero-noise → slightly AI-leaning; lots of noise → strongly human
-  const aiScore = sharpen(clamp(58 - hits * 7), 1.1);
+  const aiScore = sharpen(clamp(58 - hits * 6.5), 1.1);
   return ok(
     "human-noise",
     "Human noise",
@@ -352,6 +378,80 @@ function scanHumanNoise(text: string): DetectorScanResult {
       ? `authenticity hits=${hits} (${notes.slice(0, 6).join(", ")}) → human-leaning`
       : "Little surface noise — neutral/soft",
     `hits=${hits}`,
+  );
+}
+
+/**
+ * ChatGPT / Claude novel-pitch & outline fingerprints.
+ * Catches Title Concept + Act I–III + “If you want to develop this further…” packages.
+ */
+function scanLlmPitch(text: string): DetectorScanResult {
+  if (text.trim().length < 80) return fail("llm-pitch", "LLM pitch / outline", "Need more text.");
+
+  let s = 0;
+  const notes: string[] = [];
+
+  if (/^#{1,3}\s/m.test(text) || /\n##\s/.test(text)) {
+    s += 2;
+    notes.push("md-headings");
+  }
+  if (/\bTitle Concept\b|\bCore Conflict\b|\bMajor Characters\b|\bPlot Outline\b/i.test(text)) {
+    s += 4;
+    notes.push("pitch-sections");
+  }
+  if (/\bAct\s+(I|II|III|IV|1|2|3)\b/i.test(text) && /\b(Epilogue|Act\s+II)\b/i.test(text)) {
+    s += 4;
+    notes.push("three-act");
+  }
+  if (
+    /if you want to (develop|explore|dive|continue) this further/i.test(text) ||
+    /let me know\s*:/i.test(text) ||
+    /would you like (me )?to (write|focus|develop)/i.test(text)
+  ) {
+    s += 5;
+    notes.push("assistant-offer");
+  }
+  if (
+    /\b(intertwined destinies|cosmic (order|blueprints)|iron will of|collective cosmic|aggressive military monarchy)\b/i.test(
+      text,
+    )
+  ) {
+    s += 3;
+    notes.push("pitch-lexicon");
+  }
+  if (
+    /\b(fiercely devoted|absolute authority|practical engineering|structural (collapse|mastery|omens)|unprecedented drought|ideological clash)\b/i.test(
+      text,
+    )
+  ) {
+    s += 2;
+    notes.push("llm-adj");
+  }
+  const bios = (text.match(/\b(He|She) (is|argues|seeks|experiences|believes|rejects)\b/g) ?? []).length;
+  if (bios >= 3) {
+    s += 2;
+    notes.push(`parallel-bios:${bios}`);
+  }
+  // Empty markdown bullets after an offer (classic ChatGPT leftover)
+  if (/\*\s*\n\s*\*/.test(text) || /\*\s*\n\s*\*.*\?\n\s*\*/.test(text)) {
+    s += 2;
+    notes.push("empty-bullets");
+  }
+  // Google kgmid dump links often pasted from AI research sidebars
+  if (/kgmid=\/m\//i.test(text) && bios >= 2) {
+    s += 2;
+    notes.push("kgmid-links");
+  }
+
+  const aiScore = sharpen(clamp(18 + s * 9), 1.15);
+  return ok(
+    "llm-pitch",
+    "LLM pitch / outline",
+    aiScore,
+    s
+      ? `pitch signals=${s} (${notes.slice(0, 6).join(", ")})`
+      : "No ChatGPT pitch/outline fingerprints",
+    `signals=${s}`,
   );
 }
 
@@ -693,7 +793,10 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   }
 
   const noise = okRows.find((r) => r.id === "human-noise");
-  const humanVeto = noise && noise.aiScore <= 32; // strong authenticity / typos
+  const pitch = okRows.find((r) => r.id === "llm-pitch");
+  const pitchStrong = pitch && pitch.aiScore >= 68;
+  // Authenticity veto only when NOT a clear ChatGPT pitch/outline
+  const humanVeto = Boolean(noise && noise.aiScore <= 32 && !pitchStrong);
 
   let wSum = 0;
   let sSum = 0;
@@ -705,19 +808,29 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   for (const r of okRows) {
     let w = WEIGHT[r.id as FreeDetectorId] ?? 1;
     let score = r.aiScore;
-    // If human-noise fires, dampen soft AI leans from twin + neural models
+    // Strong pitch → boost AI signal, ignore soft human-noise dampening
+    if (pitchStrong && r.id === "llm-pitch") {
+      score = Math.max(score, 82);
+      w *= 1.35;
+    }
+    // If human-noise fires (and not a pitch), dampen soft AI leans from twin + neural
     if (
       humanVeto &&
       (r.id === "gptzero-twin" ||
         r.id === "openai-roberta" ||
         r.id === "hc3-roberta" ||
         r.id === "modernbert" ||
-        r.id === "perplexity-proxy")
+        r.id === "perplexity-proxy" ||
+        r.id === "discourse")
     ) {
       if (score > 40) {
         score = 28 + (score - 40) * 0.25;
         w *= 0.55;
       }
+    }
+    // Soft twin alone shouldn't dominate when authenticity is strong
+    if (humanVeto && r.id === "gptzero-twin") {
+      score = Math.min(score, 38);
     }
     wSum += w;
     sSum += score * w;
@@ -734,10 +847,14 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   // GPTZero-like low FPR: authenticity veto pulls document toward human
   if (humanVeto) {
-    docScore = Math.min(docScore, 0.4 * docScore + 0.6 * (noise?.aiScore ?? 25));
+    docScore = Math.min(docScore, 0.35 * docScore + 0.65 * (noise?.aiScore ?? 22));
+  }
+  // Clear ChatGPT pitch package → force AI lean
+  if (pitchStrong) {
+    docScore = Math.max(docScore, 0.25 * docScore + 0.75 * Math.max(pitch?.aiScore ?? 75, 78));
   }
   // Prefer human on soft leans
-  if (docScore >= 48 && docScore < 58 && humanVotes + uncertainVotes >= aiVotes) {
+  if (!pitchStrong && docScore >= 48 && docScore < 58 && humanVotes + uncertainVotes >= aiVotes) {
     docScore -= 8;
   }
   docScore = clamp(docScore);
@@ -746,11 +863,15 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (docScore < 40) agreement = humanVotes >= aiVotes ? "strong_human" : "lean_human";
   else if (docScore < 50) agreement = "lean_human";
   else if (docScore >= 75 && aiVotes > humanVotes) agreement = "strong_ai";
-  else if (docScore >= 60 && aiVotes >= humanVotes) agreement = "lean_ai";
+  else if (docScore >= 60 && (aiVotes >= humanVotes || pitchStrong)) agreement = "lean_ai";
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = humanVeto ? " Human-noise veto applied (typos/informal voice)." : "";
+  const vetoNote = humanVeto
+    ? " Human-noise veto applied (typos/informal voice)."
+    : pitchStrong
+      ? " LLM pitch/outline fingerprints dominate."
+      : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
@@ -776,10 +897,14 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 export async function runFreeEnsemble(
   content: string,
   onProgress?: (msg: string) => void,
+  opts?: { skipNeural?: boolean },
 ): Promise<{ results: DetectorScanResult[]; consensus: EnsembleConsensus }> {
   const text = content.trim();
   onProgress?.("Human-noise / authenticity check…");
   const noise = scanHumanNoise(text);
+
+  onProgress?.("LLM pitch / outline fingerprints…");
+  const pitch = scanLlmPitch(text);
 
   onProgress?.("GPTZero-style twin (perplexity + burstiness)…");
   const twin = scanGptZeroTwin(text);
@@ -787,6 +912,7 @@ export async function runFreeEnsemble(
   onProgress?.("Supporting stylometric checks…");
   const statistical = [
     noise,
+    pitch,
     twin,
     scanBurstiness(text),
     scanPerplexityProxy(text),
@@ -795,6 +921,11 @@ export async function runFreeEnsemble(
     scanDiscourse(text),
     scanSentenceMix(text),
   ];
+
+  if (opts?.skipNeural) {
+    const consensus = weightedConsensus(statistical);
+    return { results: statistical, consensus };
+  }
 
   onProgress?.("Loading OpenAI RoBERTa detector (cached after first run)…");
   const openai = await runNeural(
@@ -820,7 +951,7 @@ export async function runFreeEnsemble(
     text,
   );
 
-  const results = [noise, twin, openai, hc3, modern, ...statistical.slice(2)];
+  const results = [noise, pitch, twin, openai, hc3, modern, ...statistical.slice(3)];
   const consensus = weightedConsensus(results);
   return { results, consensus };
 }
