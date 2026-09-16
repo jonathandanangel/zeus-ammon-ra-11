@@ -353,6 +353,50 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
     ],
   },
   {
+    heading: "THE VANITY APP · Face++ Detect batch & attractiveness literature",
+    blurb:
+      "Session-gated Face++ Detect batch (Beauty → IQ-like / ATTR / CAC) ported from TheVanityApp.m. Literature anchors r≈0.78 and r≈0.88 feed the Correlation-Adjusted Composite; the 0.08% NIST FRVT identification floor is used only as an error-budget term (ID task, not Beauty).",
+    entries: [
+      {
+        title: "Face++ Detect API & Beauty attribute",
+        authors: "Megvii / Face++",
+        detail:
+          "Detect endpoint with return_attributes including beauty (male_score, female_score), gender, age, and emotion. Image constraints: JPG/PNG, 48–4096 px, ≤2MB. Browser port: auto-repair, URL-encoded then multipart fallback, US↔CN endpoint fallback, skip-on-failure batching.",
+        venue:
+          "https://console.faceplusplus.com/documents/5679127 · https://www.faceplusplus.com/beauty/",
+      },
+      {
+        title: "Face++ Common Return Values / errors",
+        authors: "Megvii / Face++",
+        detail:
+          "Shared error_message / request_id / time_used fields used in per-image skip reasons and the FacePP_Batch_Report.txt meta line.",
+        venue: "https://console.faceplusplus.com/documents/7078059",
+      },
+      {
+        title: "Facial attractiveness prediction correlations (group-level)",
+        authors: "Hindawi CIN 2021; SCUT-FBP; SCUT-FBP5500 literature",
+        detail:
+          "Group-level prediction reliabilities used as CAC anchors: Hindawi 2021 r≈0.7836; SCUT-FBP CNN up to ~0.82; SCUT-FBP5500 r≈0.78. Fisher-z average → r̄, then r² reliabilities with CV dispersion penalties.",
+        venue:
+          "https://www.hindawi.com/journals/cin/2021/5594303/ · https://arxiv.org/pdf/1511.02459 · https://jov.arvojournals.org/article.aspx?articleid=2809824",
+      },
+      {
+        title: "NIST FRVT face-identification error floor (0.08%)",
+        authors: "NIST FRVT (as summarized in secondary reporting)",
+        detail:
+          "0.08% identification-task floor combined in quadrature with batch sampling SE for possible overall IQ/ATTR percent error. Explicitly an ID-task floor, not a Beauty-score uncertainty.",
+        venue: "https://lab.imedd.org/en/how-accurate-facial-recognition-systems/",
+      },
+      {
+        title: "TheVanityApp.m (MATLAB) → THE VANITY APP (ZEUS)",
+        authors: "Jonathan Angel",
+        detail:
+          "Preferred/Alternate IQ-like baselines (μ=56.4,σ=10.3 / μ=40.9,σ=17.1), THE IQ, ATTR (mean=6, SD=1.25), arithmetic/trimmed/winsorized/Huber ensemble with fairness penalty, CAC meta-ensemble, and FacePP_Batch_Report.txt text page.",
+        venue: "Title screen · VANITY APP",
+      },
+    ],
+  },
+  {
     heading: "Project lineage",
     blurb: "Ports and presentation layers that carried the toolbox into ZEUS AMMON-RA 11.",
     entries: [
@@ -372,7 +416,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NUMERICAL EXTREME (ZEUS AMMON-RA 11)",
         authors: "Jonathan Angel · WOZKAF presentation layer",
         detail:
-          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), and GENETIC (V11 GA roots).",
+          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), GENETIC (V11 GA roots), HEAT (HTANT V2), and THE VANITY APP Face++ batch.",
       },
     ],
   },

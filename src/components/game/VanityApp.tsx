@@ -96,6 +96,9 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             femaleScore: null,
             age: null,
             gender: "",
+            emotion: null,
+            faceCount: 0,
+            encoding: "",
             meta: "",
           }),
         );
@@ -114,7 +117,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             returnAttributes: "gender,age,emotion,beauty",
           },
         });
-        const meta = `[endpoint=${result.endpoint} status=${result.status ?? "?"} req=${result.requestId || "-"} time=${result.timeUsed ?? "?"}ms]`;
+        const meta = `[endpoint=${result.endpoint} status=${result.status ?? "?"} req=${result.requestId || "-"} time=${result.timeUsed ?? "?"}ms enc=${result.encoding || "-"}]`;
         if (!result.ok || (result.maleScore === null && result.femaleScore === null)) {
           nextRows.push(
             enrichRow({
@@ -126,6 +129,9 @@ export function VanityApp({ onMenu }: VanityAppProps) {
               femaleScore: result.femaleScore,
               age: result.age,
               gender: result.gender,
+              emotion: result.emotion,
+              faceCount: result.faceCount,
+              encoding: result.encoding,
               meta,
             }),
           );
@@ -140,6 +146,9 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             femaleScore: result.femaleScore,
             age: result.age,
             gender: result.gender,
+            emotion: result.emotion,
+            faceCount: result.faceCount,
+            encoding: result.encoding,
             meta,
           });
           nextRows.push(row);
@@ -159,6 +168,9 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             femaleScore: null,
             age: null,
             gender: "",
+            emotion: null,
+            faceCount: 0,
+            encoding: "",
             meta: "",
           }),
         );
@@ -352,9 +364,18 @@ export function VanityApp({ onMenu }: VanityAppProps) {
                 <p>CAC IQ ≈ {batch.cacIq?.toFixed(2)} ({batch.cacPct?.toFixed(1)}%)</p>
                 <p>CAC ATTR ≈ {batch.cacAttr?.toFixed(2)} ({batch.cacAttrPct?.toFixed(1)}%)</p>
                 <p>Pref ensemble ≈ {batch.compositePref?.toFixed(2)}</p>
+                <p>Alt ensemble ≈ {batch.compositeAlt?.toFixed(2)}</p>
                 <p>
                   valid {batch.nValid} / {batch.nSelected} · err ±{batch.peTotalPct?.toFixed(2)}%
                 </p>
+                {batch.telemetry && (
+                  <p className="text-[10px] text-muted-foreground">
+                    AM/TM/WM/HR {batch.telemetry.AM_pref.toFixed(1)}/
+                    {batch.telemetry.TM_pref.toFixed(1)}/{batch.telemetry.WM_pref.toFixed(1)}/
+                    {batch.telemetry.HR_pref.toFixed(1)} · r̄=
+                    {batch.telemetry.r_bar.toFixed(3)}
+                  </p>
+                )}
               </div>
             )}
           </section>
