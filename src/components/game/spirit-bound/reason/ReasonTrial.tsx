@@ -61,7 +61,7 @@ export function ReasonTrial({ kind, onExit }: Props) {
   if (game.over) {
     const unlocked = save.achievements.map((id) => ACHIEVEMENTS[id]);
     return (
-      <section className={cn("flex min-h-[420px] flex-col items-center justify-center gap-4 border-4 border-game-yellow bg-game-bg p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]", font)}>
+      <section className={cn("flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]", font)}>
         <p className="text-[12px] text-game-yellow">{TITLES[kind]}</p>
         <p className="text-[18px] text-game-yellow">{game.score.total} PTS</p>
         <p className={cn("leading-relaxed", textPad)}>
@@ -88,7 +88,7 @@ export function ReasonTrial({ kind, onExit }: Props) {
   if (game.chapterClear && chapterMeta) {
     const relic = save.collectibles[save.collectibles.length - 1];
     return (
-      <section className={cn("flex min-h-[420px] flex-col items-center justify-center gap-4 border-4 border-game-yellow bg-game-bg p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]", font)}>
+      <section className={cn("flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]", font)}>
         <p className="text-[10px] text-game-orange">BRIEFING SEALED</p>
         <p className="text-[12px] text-game-yellow">{chapterMeta.title}</p>
         <p className="text-[9px] leading-relaxed">{chapterMeta.blurb}</p>
@@ -107,7 +107,7 @@ export function ReasonTrial({ kind, onExit }: Props) {
   return (
     <section
       className={cn(
-        "relative overflow-hidden border-4 border-game-yellow bg-game-bg p-3 text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-4",
+        "relative overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-3 text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-4",
         font,
       )}
     >

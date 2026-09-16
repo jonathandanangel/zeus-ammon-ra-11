@@ -49,7 +49,7 @@ export function DialogueBox({ name, lines, onDone, onLine }: Props) {
 
   return (
     <div className="pointer-events-none absolute inset-x-3 bottom-3">
-      <div className="pointer-events-auto border-4 border-game-yellow bg-[#201808] p-4 shadow-[0_0_0_4px_#181010,inset_0_0_0_2px_#705018]">
+      <div className="pointer-events-auto rounded-sm border border-[#39ff14]/75 bg-[#201808] p-4 shadow-[0_0_0_4px_#181010,inset_0_0_0_2px_#705018]">
         {name && <div className="mb-2 text-[10px] tracking-widest text-game-yellow">{name}</div>}
         <p className="min-h-[3.2em] whitespace-pre-line text-[11px] leading-relaxed text-[#f8f0c8]">
           {shown}

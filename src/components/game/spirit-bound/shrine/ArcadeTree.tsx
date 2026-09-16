@@ -47,7 +47,7 @@ export function ArcadeTree({ kind, onExit }: Props) {
 
   if (arcade.over) {
     return (
-      <section className="flex min-h-[420px] flex-col items-center justify-center gap-4 border-4 border-game-yellow bg-game-bg p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+      <section className="flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-6 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
         <p className="text-[12px] text-game-yellow">
           {kind === "sprint" ? "TIME" : kind === "extreme" ? "EXTREME" : "LONG GAME"}
         </p>
@@ -69,7 +69,7 @@ export function ArcadeTree({ kind, onExit }: Props) {
   }
 
   return (
-    <section className="relative overflow-hidden border-4 border-game-yellow bg-game-bg p-3 text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-4">
+    <section className="relative overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-3 text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[9px]">
         <span className="text-game-yellow">
           {kind === "sprint"

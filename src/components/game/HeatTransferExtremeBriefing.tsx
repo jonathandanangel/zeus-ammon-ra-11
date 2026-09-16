@@ -70,7 +70,7 @@ export function HeatTransferExtremeBriefing({
   }, [stage, onComplete, reducedMotion]);
 
   const skipBtn =
-    "rounded-sm border border-red-400/70 bg-deepblue/70 px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff2a2a] transition-colors hover:bg-[#ff2a2a]/20";
+    "rounded-sm border border-red-400/70 bg-deepblue/50 backdrop-blur-sm px-5 py-2 font-display text-xs uppercase tracking-[0.2em] text-[#ff2a2a] transition-colors hover:bg-[#ff2a2a]/20";
 
   if (stage === "outro") {
     return (
@@ -123,7 +123,7 @@ export function HeatTransferExtremeBriefing({
         {slide.title}
       </h2>
 
-      <div className="w-full rounded-sm border border-[#ff2a2a]/50 bg-white p-3">
+      <div className="w-full rounded-sm border border-[#ff2a2a]/50 bg-deepblue/50 backdrop-blur-sm p-3">
         <img src={slide.url} alt={slide.alt} className="mx-auto max-h-[58vh] w-auto max-w-full object-contain" />
       </div>
 

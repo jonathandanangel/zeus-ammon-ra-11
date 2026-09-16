@@ -119,7 +119,7 @@ export function Chart({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-sm border border-cyan/30 bg-deepblue/60",
+        "overflow-hidden rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-sm",
         className,
       )}
     >

@@ -518,7 +518,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         )}
       >
         {mode === "title" && (
-          <section className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 overflow-hidden rounded-sm border border-[#39ff14]/75 bg-game-bg p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+          <section className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
             <div className="relative flex flex-col items-center leading-none text-game-yellow">
               <span className="text-[28px]">▲</span>
               <span className="-mt-2 text-[28px] tracking-[0.55em]">▲ ▲</span>
@@ -642,7 +642,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         )}
 
         {(mode === "overworld" || mode === "dialogue") && (
-          <section className="relative overflow-hidden rounded-sm border border-[#39ff14]/75 bg-game-bg shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+          <section className="relative overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
             {mapId === "greenvale" ? (
               <Overworld
                 spawn={spawn}
@@ -752,7 +752,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         )}
 
         {mode === "gameover" && (
-          <section className="flex min-h-[420px] flex-col items-center justify-center gap-6 rounded-sm border border-[#39ff14]/75 bg-game-bg p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+          <section className="flex min-h-[420px] flex-col items-center justify-center gap-6 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
             <p className="text-[28px] text-game-yellow">▲</p>
             <p className="text-[18px] text-game-hp">GAME OVER</p>
             <p className="text-[10px] leading-relaxed text-game-yellow">
@@ -771,7 +771,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         )}
 
         {mode === "ending" && (
-          <section className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-sm border border-[#39ff14]/75 bg-game-bg p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+          <section className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
             <div className="leading-none text-game-yellow">
               <p className="text-[22px]">▲</p>
               <p className="-mt-1 text-[22px] tracking-[0.4em]">▲ ▲</p>

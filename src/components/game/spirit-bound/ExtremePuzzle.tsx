@@ -161,7 +161,7 @@ const goldBtnGhost =
 const goldField =
   "w-full border-2 border-[#a88828] bg-[#100808] px-3 py-2 font-pixel text-[11px] text-[#f8f0c8] outline-none focus:border-game-yellow";
 const goldPanel =
-  "relative z-[1] mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-sm border border-[#39ff14]/75 bg-game-bg p-5 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-8";
+  "relative z-[1] mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm p-5 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)] sm:p-8";
 
 export function ExtremePuzzle({ onExit }: Props) {
   const { settings, progress } = useGame();
@@ -501,7 +501,7 @@ export function ExtremePuzzle({ onExit }: Props) {
   }
 
   return shell(
-    <section className="relative z-[1] mx-auto w-full max-w-3xl overflow-hidden rounded-sm border border-[#39ff14]/75 bg-game-bg text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+    <section className="relative z-[1] mx-auto w-full max-w-3xl overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-sm text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b-4 border-game-yellow bg-[#201808] px-3 py-2">
         <div className="flex items-center gap-2">
           <div className="h-2 w-40 overflow-hidden border border-game-yellow bg-[#100808]">

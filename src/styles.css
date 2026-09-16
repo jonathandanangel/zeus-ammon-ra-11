@@ -88,11 +88,13 @@
   --blood-moon-core: #ff6475;
   --crimson-glow: #d80f32;
   --crimson-horizon: #7d071d;
-  --panel: rgba(7, 18, 37, 0.82);
+  --panel: rgba(7, 18, 37, 0.5);
   --panel-border: rgba(37, 217, 255, 0.35);
   /* Thin boxy outlines — match title/intro mode panels everywhere */
   --outline-radius: 2px;
   --outline-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 80px rgba(0, 0, 0, 0.45);
+  --outline-glass: rgba(7, 18, 37, 0.5);
+  --outline-blur: 10px;
 
   --background: var(--midnight);
   --foreground: var(--moon);
@@ -146,11 +148,12 @@
 }
 
 @utility panel {
-  background: var(--panel);
+  background: var(--outline-glass);
   border: 1px solid var(--panel-border);
   border-radius: var(--outline-radius);
   box-shadow: var(--outline-shadow);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(var(--outline-blur));
+  -webkit-backdrop-filter: blur(var(--outline-blur));
 }
 
 @utility glow-cyan {
@@ -2234,22 +2237,44 @@
 }
 
 .zeus-mode-panel,
-.zeus-outline-box {
+.zeus-outline-box,
+.nx-panel {
   border-radius: var(--outline-radius);
   box-shadow: var(--outline-shadow);
+  background: var(--outline-glass) !important;
+  backdrop-filter: blur(var(--outline-blur));
+  -webkit-backdrop-filter: blur(var(--outline-blur));
 }
 
-/* Force thin boxy outlines on major game chrome (keep CTAs softer via buttons) */
-.numerical-extreme-shell > header,
-.numerical-extreme-shell .nx-panel,
+/* Frosted glass main frames — every mode shell */
 .extreme-shell > header,
 .extreme-shell > section,
 .extreme-shell > form,
+.extreme-shell > .panel,
+.extreme-v2-shell > header,
+.extreme-v2-shell > section,
+.extreme-v2-shell .panel,
+.ht-extreme-shell > header,
+.ht-extreme-shell > section,
 .ht-extreme-shell .panel,
+.ht-intro-shell > header,
+.ht-intro-shell > section,
 .ht-intro-shell .panel,
-.extreme-v2-shell .panel {
+.numerical-extreme-shell > header,
+.numerical-extreme-shell .nx-panel,
+.numerical-extreme-shell > section,
+.spirit-bound-shell > section,
+.spirit-bound-shell > div > section,
+.saltburg-shell > section,
+.lightcycle-shell,
+.maze-shell,
+.gauntlet-field,
+.ht-enoch-jump {
   border-radius: var(--outline-radius);
   box-shadow: var(--outline-shadow);
+  background: var(--outline-glass) !important;
+  backdrop-filter: blur(var(--outline-blur));
+  -webkit-backdrop-filter: blur(var(--outline-blur));
 }
 
 @keyframes zeus-intro-breathe {

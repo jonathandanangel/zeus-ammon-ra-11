@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export const NumericalComputeContext = React.createContext<() => void>(() => {});
 
 const controlClass =
-  "w-full rounded-sm border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+  "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
 
 /** Monospace equation / telemetry box — matches MAIN / ALGORITHMS engine logs. */
 export function EquationBox({
@@ -49,7 +49,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "nx-panel zeus-outline-box overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70",
+        "nx-panel zeus-outline-box overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm",
         className,
       )}
     >

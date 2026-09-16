@@ -653,7 +653,7 @@ export function Diagram({
   className,
 }: DiagramProps) {
   return (
-    <div className={cn("relative w-full overflow-hidden rounded-sm border border-border bg-deepblue/60", className)}>
+    <div className={cn("relative w-full overflow-hidden rounded-sm border border-border bg-deepblue/50 backdrop-blur-sm", className)}>
       <svg viewBox="0 0 400 220" className="block w-full" role="img" aria-label={`${type} diagram`}>
         <Axes />
         <Shape type={type} />

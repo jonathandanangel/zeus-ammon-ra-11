@@ -382,13 +382,13 @@ export function VanityApp({ onMenu }: VanityAppProps) {
   }
 
   const field =
-    "w-full rounded-sm border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-xs text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
+    "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm px-3 py-2 font-mono text-xs text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
   const btn =
-    "rounded-sm border border-cyan/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.18em] text-cyan transition hover:bg-cyan/20 hover:text-moon disabled:opacity-40";
+    "rounded-sm border border-cyan/50 bg-deepblue/50 backdrop-blur-sm px-4 py-2 font-display text-xs uppercase tracking-[0.18em] text-cyan transition hover:bg-cyan/20 hover:text-moon disabled:opacity-40";
 
   return (
     <div className="extreme-shell relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-2 py-4">
-      <header className="zeus-outline-box overflow-hidden rounded-sm border border-[#ff2a2a]/70 bg-deepblue/80">
+      <header className="zeus-outline-box overflow-hidden rounded-sm border border-[#ff2a2a]/70 bg-deepblue/50 backdrop-blur-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-magenta/30 px-4 py-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-cyan">
@@ -420,7 +420,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <button
               type="button"
               onClick={onMenu}
-              className="rounded-sm border border-amber/50 bg-deepblue/70 px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
+              className="rounded-sm border border-amber/50 bg-deepblue/50 backdrop-blur-sm px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
             >
               Main menu
             </button>
@@ -442,7 +442,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
       {!unlocked ? (
         <form
           onSubmit={unlock}
-          className="zeus-outline-box mx-auto w-full max-w-lg space-y-4 rounded-sm border border-[#ff2a2a]/55 bg-deepblue/70 p-5"
+          className="zeus-outline-box mx-auto w-full max-w-lg space-y-4 rounded-sm border border-[#ff2a2a]/55 bg-deepblue/50 p-5 backdrop-blur-sm"
         >
           <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
             Enter your Face++ <span className="text-cyan">API Key</span> and{" "}
@@ -508,7 +508,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
         </form>
       ) : (
         <div className="grid gap-3 lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]">
-          <section className="space-y-3 rounded-sm border border-cyan/40 bg-deepblue/70 p-4">
+          <section className="space-y-3 rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm p-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
               Batch controls
             </p>
@@ -576,7 +576,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
           </section>
 
           <div className="space-y-3">
-            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70">
+            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm">
               <header className="border-b border-cyan/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
                 Per-image results
               </header>
@@ -622,7 +622,7 @@ export function VanityApp({ onMenu }: VanityAppProps) {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/70">
+            <section className="overflow-hidden rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-sm">
               <header className="border-b border-cyan/25 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-magenta">
                 Engine log / report
               </header>
