@@ -3540,7 +3540,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
 
   return (
     <NumericalComputeContext.Provider value={triggerEnochRa}>
-      <div className="numerical-extreme-shell extreme-shell relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-2 py-4">
+      <div className="numerical-extreme-shell relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-2 py-4">
         <BrainOverload
           burst={overloadBurst}
           reducedMotion={settings.reducedMotion}

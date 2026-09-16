@@ -1484,7 +1484,7 @@
 }
 
 .numerical-extreme-shell {
-  filter: drop-shadow(0 0 32px color-mix(in srgb, #ff2a2a 36%, transparent));
+  filter: drop-shadow(0 0 32px color-mix(in srgb, var(--neon-cyan, #25d9ff) 32%, transparent));
 }
 
 .font-pixel {
