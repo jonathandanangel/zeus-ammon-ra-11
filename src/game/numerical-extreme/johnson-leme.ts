@@ -77,7 +77,9 @@ export async function loadJohnsonResources(): Promise<JohnsonResources> {
       fetchJson<FacsimileManifest>("/johnson/facsimile/manifest.json").catch(() => ({
         pages: [],
       })),
-      fetchJson<HocrEstimates>("/johnson/hocr-page-estimates.json").catch(() => ({})),
+      fetchJson<HocrEstimates>("/johnson/hocr-page-estimates.json").catch(
+        (): HocrEstimates => ({}),
+      ),
     ]);
 
     const maxScanPage =
