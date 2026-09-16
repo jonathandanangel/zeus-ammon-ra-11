@@ -351,17 +351,16 @@ export function philosophyForNumber(n: number): NumberPhilosophy {
   return NUMBER_PHILOSOPHY[key]!;
 }
 
-export function formatPhilosophyBlock(philosophy: NumberPhilosophy): string {
-  const lines = [
-    `NUMBER ${philosophy.number} · ${philosophy.sacredName.toUpperCase()}`,
-    "─".repeat(48),
-    ...philosophy.thoughts.flatMap((t) => [
-      `${t.phosopher.toUpperCase()} · ${t.work}`,
-      t.thought,
-      "",
-    ]),
-  ];
-  return lines.join("\n").trimEnd();
+export function formatPhilosophyBlock(entry: NumberPhilosophy): string {
+  const header = `NUMBER ${entry.number} · ${entry.sacredName.toUpperCase()}`;
+  const divider = "─".repeat(48);
+  const body = entry.thoughts
+    .map(
+      (thought) =>
+        `${thought.philosopher.toUpperCase()} · ${thought.work}\n${thought.thought}`,
+    )
+    .join("\n\n");
+  return `${header}\n${divider}\n\n${body}`.trimEnd();
 }
 
 export function formatAllNumbersPhilosophy(): string {
