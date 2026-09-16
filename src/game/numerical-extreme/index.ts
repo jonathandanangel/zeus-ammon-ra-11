@@ -45,6 +45,29 @@ export {
   runDerpar,
 } from "./algorithms";
 
+export {
+  compileComplexLaplace,
+  isDefaultSinTransform,
+  runAcm618,
+  runAcm618Suite,
+  runAcm619,
+  acm619Dlainv,
+  runAcm740,
+  runAcm740Suite,
+  acm740Matrix,
+} from "./acm-sparse";
+export type {
+  Complex,
+  ComplexLaplaceFn,
+  Acm618OrderingMode,
+  Acm618Result,
+  Acm619Point,
+  Acm619Result,
+  Acm740MatrixKind,
+  Acm740Row,
+  Acm740Result,
+} from "./acm-sparse";
+
 export type * from "./types";
 
 export {

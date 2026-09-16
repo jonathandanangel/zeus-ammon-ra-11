@@ -17,27 +17,41 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
   {
     heading: "ACM Collected Algorithms (CALGO)",
     blurb:
-      "Core numerical kernels in the original Octave/MATLAB toolbox were adapted from Transactions on Mathematical Software collected algorithms.",
+      "Core numerical kernels in the original Octave/MATLAB toolbox were adapted from Transactions on Mathematical Software collected algorithms. The ACM SPARS laboratory (V5) adds Algorithms 618, 619, and 740 alongside the earlier 420–695 roster.",
     entries: [
       {
         title: "Algorithm 420 — HIDE: Hidden-Line Plotting Program",
         authors: "Hugh Williamson",
         detail:
-          "Hidden-line removal and surface rendering for technical plots; cited in the V15 header as part of the visualization lineage.",
+          "Hidden-line removal and surface rendering for technical plots; cited in the V15 header as part of the visualization lineage. Informs plot-inspect markers and multi-axis laboratory layouts (MAIN / ACM SPARS visual panes).",
         venue: "ACM TOMS / CALGO",
       },
       {
         title: "Algorithm 502 — DERPAR: Continuation Method",
         authors: "Milan Kubíček",
         detail:
-          "Parameter continuation with Newton correction, GAUSE free-coordinate selection, and Adams–Bashforth prediction (ADAMS/GAUSE loop in V15).",
+          "Parameter continuation with Newton correction, GAUSE free-coordinate selection, and Adams–Bashforth prediction (ADAMS/GAUSE loop in V15). Ported to TypeScript as runDerpar in the ALGORITHMS lab with exact α = 1 − x² comparison curves.",
         venue: "ACM TOMS / CALGO",
+      },
+      {
+        title: "Algorithm 618 — DSM / FDJS: Consistent Partitioning & Sparse Jacobian Estimation",
+        authors: "Thomas F. Coleman, Burton S. Garbow, Jorge J. Moré",
+        detail:
+          "Direct Sparse Matrix (DSM) column intersection-graph coloring (smallest-last, incidence-degree, largest-first) plus Finite-Difference Jacobian Sparse (FDJS) grouped forward differences. Neutron-kinetics sparsity driver: N divisible by 3; columns sharing a row cannot share a group. Reports MINGRP/MAXGRP, grouped vs ungrouped evaluations, and relative Frobenius error versus the exact sparse Jacobian. Ported as runAcm618 / runAcm618Suite (N = 300…1200) in the ACM SPARS laboratory from Argonne MINPACK (July 1983).",
+        venue: "ACM TOMS, Vol. 10, No. 3, Sept. 1984, pp. 346–347; Argonne National Laboratory, MINPACK Project",
+      },
+      {
+        title: "Algorithm 619 — DLAINV: Durbin Inverse Laplace + Wynn ε-Extrapolation",
+        authors: "ACM TOMS authors (CALGO 619); P. Wynn (ε-algorithm, 1956)",
+        detail:
+          "Durbin formula for numerical Laplace inversion with Wynn’s epsilon table acceleration. V5 / rev 1.4 retains at most 50 partial sums (LIMEXP-style bound) to avoid unbounded dense ε-table rebuilds that freeze GUIs; adds finite-value guards and status codes ier = 3 (scale overflow) / 4 (non-finite F(s)). Default F(s) = 1/(s²+1) compares against sin(t). Ported as acm619Dlainv / runAcm619 with a complex F(s) expression compiler.",
+        venue: "ACM TOMS, Vol. 10, No. 3, Sept. 1984, pp. 348–353; Wynn, P. (1956) ε-algorithm",
       },
       {
         title: "Algorithm 652 — HOMPACK: Globally Convergent Homotopy Algorithms",
         authors: "Layne T. Watson, Stephen C. Billups, Alexander P. Morgan",
         detail:
-          "Homotopy / continuation framework for globally convergent nonlinear solves; referenced as an inspiration for robust path-following design.",
+          "Homotopy / continuation framework for globally convergent nonlinear solves; referenced as an inspiration for robust path-following design alongside DERPAR (Alg 502).",
         venue: "ACM TOMS / CALGO",
       },
       {
@@ -58,22 +72,64 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "Algorithm 682 — Talbot’s Method for Laplace Inversion",
         authors: "A. Murli, M. Rizzardi (implementation); A. Talbot (contour method)",
         detail:
-          "Contour quadrature for numerical Laplace transform inversion (talbot_tapar / talbot_tsum demos in ALGORITHMS and MAIN §10). Talbot’s original contour deformation underlies the CALGO packaging.",
+          "Contour quadrature for numerical Laplace transform inversion (talbot_tapar / talbot_tsum demos in ALGORITHMS and MAIN §10). Complements Algorithm 619 (Durbin–Wynn) as an alternate inversion strategy: Talbot deforms a Bromwich contour; DLAINV sums Durbin blocks with ε-extrapolation. Talbot’s original contour deformation underlies the CALGO packaging.",
         venue: "ACM TOMS / CALGO; Talbot, IMA J. Numer. Anal. / related Laplace-inversion literature",
       },
       {
         title: "Algorithm 695 — Modified Cholesky Factorization",
         authors: "Elizabeth Eskow, Robert B. Schnabel",
         detail:
-          "Modified Cholesky of the form PᵀAP + E = LLᵀ with Gerschgorin-guided diagonal additions (Eskow–Schnabel phase 1/2). Driver / modchl / mkmat / solve Fortran lineage from TOMS Vol. 17.",
+          "Modified Cholesky of the form PᵀAP + E = LLᵀ with Gerschgorin-guided diagonal additions (Eskow–Schnabel phase 1/2). Driver / modchl / mkmat / solve Fortran lineage from TOMS Vol. 17. Distinct from Algorithm 740 incomplete (zero-fill / threshold) factorizations — 695 restores positive-definiteness via diagonal perturbation; 740 approximates A ≈ LLᵀ with controlled fill.",
         venue: "ACM TOMS, Vol. 17, No. 3, Sept. 1991, pp. 306–312",
+      },
+      {
+        title: "Algorithm 740 — Incomplete Cholesky Factorization Methods",
+        authors: "Mark T. Jones, Paul E. Plassmann (Jones–Plassmann IC variants; CALGO packaging)",
+        detail:
+          "Three incomplete Cholesky strategies: STANDARD IC(0) preserving the original lower sparsity; COLUMN- and ROW-oriented Jones/Plassmann structural budgets that retain the largest-magnitude candidates per column budget. Drivers cover banded, arrowhead, 2-D Laplacian, and the original 4×4 failure matrix. Reports return code, lower-half Frobenius residual ‖tril(A−LLᵀ)‖_F, max abs residual, nnz(L), and timing. Ported as runAcm740 / runAcm740Suite in ACM SPARS.",
+        venue: "ACM TOMS, Vol. 21, No. 1, March 1995, pp. 18–19",
+      },
+    ],
+  },
+  {
+    heading: "ACM SPARS laboratory (V5 integration)",
+    blurb:
+      "ACMsPARSENumericsGUIINTEGRATIONV5 — Octave/MATLAB clean-room translation of Fortran/pseudo-code with one-based pointer semantics retained where practical; sparse matrices replace static work arrays. Integrated into Numerical Extreme as the ACM SPARS tab (2026-09-15, rev 1.4).",
+    entries: [
+      {
+        title: "ACMsPARSENumericsGUIINTEGRATIONV5",
+        authors: "Jonathan Angel (Octave GUI laboratory); TypeScript port in ZEUS Numerical Extreme",
+        detail:
+          "Three-tab laboratory: ACM 618 Sparse Jacobian, ACM 619 Inverse Laplace, ACM 740 Incomplete Cholesky. Revision 1.4 fixes Octave SPY/BAR/IMAGESC output-arity issues, axes-first graphics wrappers, click-to-inspect markers, bounded Wynn tables, DLAINV progress/finite guards (ier 3/4), recursive log normalization, and nested-cell log construction. Integration contract: add-on laboratory without mutating existing V15 callbacks.",
+        venue: "NumericalAnalysisToolbox_V15 companion · ZEUS NUMERICAL EXTREME ACM SPARS",
+      },
+      {
+        title: "Coleman–Garbow–Moré consistent partitioning (DSM)",
+        authors: "Thomas F. Coleman, Burton S. Garbow, Jorge J. Moré",
+        detail:
+          "Intersection-graph coloring of sparse Jacobian columns so that a single grouped difference recovers all nonzeros in a color class. Ordering heuristics: smallest-last (SL), incidence-degree (IDO), largest-first (LF); mode “best of three” selects the minimum MAXGRP. Classical reference for cheap sparse Jacobian estimation in large-scale nonlinear optimization / MINPACK-style drivers.",
+        venue: "Argonne MINPACK Project; TOMS 1984",
+      },
+      {
+        title: "Wynn ε-algorithm (bounded LIMEXP adaptation)",
+        authors: "P. Wynn",
+        detail:
+          "Nonlinear sequence transformation accelerating slowly convergent series. Original DQEXT stores a condensed table (~52); the V5 port keeps the most recent 50 Durbin partial sums and limits each extrapolation to O(50²), matching LIMEXP ≈ 50 intent and preventing GUI freezes from unbounded dense rebuilds.",
+        venue: "Wynn (1956); ACM Algorithm 619 packaging",
+      },
+      {
+        title: "Jones–Plassmann incomplete factorization fill control",
+        authors: "Mark T. Jones, Paul E. Plassmann",
+        detail:
+          "Structural budget equal to the original lower-nonzero count per column; candidate fill is generated then truncated to the largest-magnitude entries (column order or sorted row order). Complements classical IC(0) which never creates fill outside the original pattern.",
+        venue: "ACM Algorithm 740; sparse preconditioning literature",
       },
     ],
   },
   {
     heading: "Named classical methods (V15 method roster)",
     blurb:
-      "Authors and eponyms listed in the NumericalAnalysisToolbox_V15 footer — Adams–Bashforth through Taylor — that the MAIN / ALGORITHMS labs exercise.",
+      "Authors and eponyms listed in the NumericalAnalysisToolbox_V15 footer — Adams–Bashforth through Taylor — that the MAIN / ALGORITHMS / ACM SPARS labs exercise.",
     entries: [
       {
         title: "Adams–Bashforth multistep predictors",
@@ -109,7 +165,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "Taylor polynomials via finite differences",
         authors: "Brook Taylor; finite-difference NA practice",
         detail:
-          "Numeric Taylor coefficients about x = 0 using central / recursive FD (MAIN §7).",
+          "Numeric Taylor coefficients about x = 0 using central / recursive FD (MAIN §7). Related pedagogy to Algorithm 618’s grouped finite-difference Jacobian estimation.",
       },
       {
         title: "Gaussian elimination with pivoting & substitution",
@@ -133,7 +189,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "Machine epsilon / unit roundoff",
         authors: "Forsythe / Moler numerical computing tradition; IEEE-754 practice",
         detail:
-          "mcheps-style ε used for τ₁, τ₂ = ε^(1/3) tolerances in Eskow–Schnabel; d1mach_local analogs in Talbot overflow tests.",
+          "mcheps-style ε used for τ₁, τ₂ = ε^(1/3) tolerances in Eskow–Schnabel; d1mach_local analogs in Talbot overflow tests; 5ε|result| floors on Algorithm 619 estimated errors.",
       },
       {
         title: "Brent-style scalar root polishing",
@@ -141,12 +197,24 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         detail:
           "Hybrid bisection / inverse-quadratic polishing used where V15 called fzero for MVT and average-value locations.",
       },
+      {
+        title: "Durbin formula for Laplace inversion",
+        authors: "F. Durbin (Fourier-series form of the Bromwich integral)",
+        detail:
+          "Discretized Bromwich inversion underlying Algorithm 619 DLAINV: successive blocks of sine/cosine-weighted F(c+ia) samples, scaled by e^{ct}/(16t) factors, then accelerated by Wynn ε.",
+      },
+      {
+        title: "Forward-difference Jacobian approximation",
+        authors: "Classical finite-difference NA; Curtis–Powell–Reid / Coleman–Moré sparse FD lineage",
+        detail:
+          "Grouped forward differences J[:,G] ≈ (F(x+h·e_G) − F(x))/h with consistency ensuring unique recovery of each structural nonzero — core of Algorithm 618 FDJS.",
+      },
     ],
   },
   {
     heading: "Textbooks & classroom NA",
     blurb:
-      "Pedagogical structure for IVT scans, bisection, Newton, secant, MVT, Taylor, and composite quadrature.",
+      "Pedagogical structure for IVT scans, bisection, Newton, secant, MVT, Taylor, composite quadrature, sparse linear algebra, and transform methods.",
     entries: [
       {
         title: "Numerical Analysis",
@@ -166,6 +234,26 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         authors: "Kendall E. Atkinson",
         detail:
           "Classical theory for approximation, nonlinear equations, and quadrature referenced by the toolbox’s method roster.",
+      },
+      {
+        title: "Golub & Van Loan — Matrix Computations",
+        authors: "Gene H. Golub, Charles F. Van Loan",
+        detail:
+          "Authoritative reference for Cholesky variants, sparse factorization structure, and residual norms used when interpreting Algorithms 695 and 740 outputs.",
+        venue: "Johns Hopkins University Press",
+      },
+      {
+        title: "Saad — Iterative Methods for Sparse Linear Systems",
+        authors: "Yousef Saad",
+        detail:
+          "Incomplete factorization preconditioners (IC, ILU) and sparse graph perspectives that contextualize Algorithm 740’s STANDARD / COLUMN / ROW strategies.",
+        venue: "SIAM",
+      },
+      {
+        title: "Ortega & Rheinboldt — Iterative Solution of Nonlinear Equations in Several Variables",
+        authors: "J. M. Ortega, W. C. Rheinboldt",
+        detail:
+          "Foundational nonlinear systems text behind Newton–Jacobi METHOD-lab workflows and sparse Jacobian estimation motivation for Algorithm 618.",
       },
     ],
   },
@@ -223,7 +311,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NumericalAnalysisToolbox_V15",
         authors: "Jonathan Angel (original Octave/MATLAB GUI)",
         detail:
-          "Cross-platform Octave-compatible analyzer with plot inspect, symbolic factorization/shift when available, ACM demos (420–695 roster), and SDOF vibrations. Designed for MATLAB↔Octave portability.",
+          "Cross-platform Octave-compatible analyzer with plot inspect, symbolic factorization/shift when available, ACM demos (420–695 roster), and SDOF vibrations. Designed for MATLAB↔Octave portability. Companion V5 module ACMsPARSENumericsGUIINTEGRATIONV5 adds Algorithms 618 / 619 / 740 without mutating existing callbacks.",
       },
       {
         title: "NumericalAnalysisToolbox_V11_Neon_Vectorized_Calculus",
@@ -235,7 +323,7 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NUMERICAL EXTREME (ZEUS AMMON-RA 11)",
         authors: "Jonathan Angel · WOZKAF presentation layer",
         detail:
-          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style audio and Enoch-Ra compute feedback.",
+          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY, REFS, ALGORITHMS (695 / 682 / 502), and ACM SPARS (618 / 619 / 740).",
       },
     ],
   },

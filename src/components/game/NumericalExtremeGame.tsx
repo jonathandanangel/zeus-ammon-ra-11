@@ -30,6 +30,11 @@ import {
   FUNCTION_PRESETS,
   interpolate,
   parseNumberList,
+  runAcm618,
+  runAcm618Suite,
+  runAcm619,
+  runAcm740,
+  runAcm740Suite,
   runDerpar,
   runModifiedCholesky,
   runTalbot,
@@ -37,6 +42,8 @@ import {
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
+  type Acm618OrderingMode,
+  type Acm740MatrixKind,
   type FunctionAnalysisResult,
   type IntegrationResult,
   type InterpolationResult,
@@ -55,6 +62,7 @@ type Mode =
   | "composite"
   | "diff"
   | "algorithms"
+  | "acm"
   | "numerology"
   | "references";
 
@@ -65,6 +73,7 @@ const MODES: Array<{ id: Mode; label: string }> = [
   { id: "composite", label: "COMPOSITE" },
   { id: "diff", label: "DIFF" },
   { id: "algorithms", label: "ALGORITHMS" },
+  { id: "acm", label: "ACM SPARS" },
   { id: "numerology", label: "NUMEROLOGY" },
   { id: "references", label: "REFS" },
 ];
@@ -1531,6 +1540,362 @@ function AlgorithmsPanel() {
   );
 }
 
+function AcmLabPanel() {
+  const [tab, setTab] = React.useState<"618" | "619" | "740">("618");
+  const [log, setLog] = React.useState("(select ACM 618 / 619 / 740 and run)");
+  const [error, setError] = React.useState("");
+  const [chartX, setChartX] = React.useState<number[]>([]);
+  const [chartSeries, setChartSeries] = React.useState<
+    Array<{ key: string; label: string; values: Array<number | null>; color: string }>
+  >([]);
+
+  // 618
+  const [n618, setN618] = React.useState(300);
+  const [h618, setH618] = React.useState(0.001);
+  const [order618, setOrder618] = React.useState<Acm618OrderingMode>(1);
+  const [validate618, setValidate618] = React.useState(true);
+
+  // 619
+  const [expr619, setExpr619] = React.useState("1/(s^2+1)");
+  const [t619, setT619] = React.useState("0.1,1,2,3,4,5,10,20");
+  const [c619, setC619] = React.useState(0);
+  const [er619, setEr619] = React.useState(1e-8);
+  const [ea619, setEa619] = React.useState(1e-8);
+  const [mx619, setMx619] = React.useState(120);
+
+  // 740
+  const [kind740, setKind740] = React.useState<Acm740MatrixKind>(1);
+  const [n740, setN740] = React.useState(50);
+  const [band740, setBand740] = React.useState(25);
+
+  function run618() {
+    setError("");
+    try {
+      const result = runAcm618(n618, h618, order618, validate618);
+      setLog(result.log.join("\n"));
+      setChartX(result.groupCounts.map((_, i) => i + 1));
+      setChartSeries([
+        {
+          key: "groups",
+          label: "Columns per group",
+          values: result.groupCounts,
+          color: "#22d3ee",
+        },
+      ]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Algorithm 618 failed.");
+    }
+  }
+
+  function suite618() {
+    setError("");
+    try {
+      const result = runAcm618Suite();
+      setLog(result.log.join("\n"));
+      setChartX(result.ns);
+      setChartSeries([
+        {
+          key: "maxgrp",
+          label: "MAXGRP",
+          values: result.maxgrp,
+          color: "#22d3ee",
+        },
+        {
+          key: "nnz",
+          label: "NNZ / 100",
+          values: result.nnz.map((v) => v / 100),
+          color: "#f59e0b",
+        },
+      ]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Algorithm 618 suite failed.");
+    }
+  }
+
+  function run619() {
+    setError("");
+    try {
+      const tv = parseNumberList(t619);
+      const result = runAcm619(expr619, tv, c619, er619, ea619, mx619);
+      setLog(result.log.join("\n"));
+      setChartX(result.points.map((p) => p.t));
+      const series: Array<{
+        key: string;
+        label: string;
+        values: Array<number | null>;
+        color: string;
+      }> = [
+        {
+          key: "dlainv",
+          label: "DLAINV",
+          values: result.points.map((p) => p.result),
+          color: "#22d3ee",
+        },
+      ];
+      if (result.isDefault) {
+        series.push({
+          key: "exact",
+          label: "sin(t)",
+          values: result.points.map((p) => p.exact),
+          color: "#f59e0b",
+        });
+      }
+      const hist = result.points[result.points.length - 1]?.history ?? [];
+      if (hist.length > 1) {
+        series.push({
+          key: "esterr",
+          label: "ε-est (last t)",
+          values: [
+            ...new Array(Math.max(0, result.points.length - hist.length)).fill(null),
+            ...hist,
+          ].slice(0, result.points.length),
+          color: "#c084fc",
+        });
+      }
+      setChartSeries(series);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Algorithm 619 failed.");
+    }
+  }
+
+  function run740() {
+    setError("");
+    try {
+      const result = runAcm740(kind740, n740, band740);
+      setLog(result.log.join("\n"));
+      setChartX([1, 2, 3]);
+      setChartSeries([
+        {
+          key: "fro",
+          label: "‖tril(A−LLᵀ)‖_F",
+          values: result.rows.map((r) => r.fro),
+          color: "#22d3ee",
+        },
+      ]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Algorithm 740 failed.");
+    }
+  }
+
+  function suite740() {
+    setError("");
+    try {
+      const result = runAcm740Suite();
+      setLog(result.log.join("\n"));
+      setChartX([1, 2, 3, 4]);
+      setChartSeries([
+        {
+          key: "std",
+          label: "Standard",
+          values: result.frobenius.map((row) => row[0] ?? null),
+          color: "#22d3ee",
+        },
+        {
+          key: "col",
+          label: "Column",
+          values: result.frobenius.map((row) => row[1] ?? null),
+          color: "#f59e0b",
+        },
+        {
+          key: "row",
+          label: "Row",
+          values: result.frobenius.map((row) => row[2] ?? null),
+          color: "#c084fc",
+        },
+      ]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Algorithm 740 suite failed.");
+    }
+  }
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(240px,340px)_minmax(0,1fr)]">
+      <Panel title="ACM 618 / 619 / 740 Laboratory" eyebrow="V5 · rev 1.4">
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-1 rounded-lg border border-cyan/30 p-1">
+            {(
+              [
+                ["618", "618 Jac"],
+                ["619", "619 Lap"],
+                ["740", "740 IC"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={cn(
+                  "rounded-md px-2 py-2 font-mono text-[9px] uppercase tracking-[0.1em] transition",
+                  tab === id ? "bg-cyan text-deepblue" : "text-cyan hover:bg-cyan/15",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {tab === "618" && (
+            <div className="space-y-2">
+              <Field label="Problem size N" hint="divisible by 3">
+                <NumberInput
+                  value={n618}
+                  min={3}
+                  max={1200}
+                  step={3}
+                  onChange={(e) => setN618(Number(e.target.value))}
+                />
+              </Field>
+              <Field label="Difference step h">
+                <NumberInput
+                  value={h618}
+                  step="any"
+                  onChange={(e) => setH618(Number(e.target.value))}
+                />
+              </Field>
+              <Field label="Ordering">
+                <Select
+                  value={String(order618)}
+                  onChange={(e) => setOrder618(Number(e.target.value) as Acm618OrderingMode)}
+                >
+                  <option value="1">Best of SL / ID / LF</option>
+                  <option value="2">Smallest-last</option>
+                  <option value="3">Incidence-degree</option>
+                  <option value="4">Largest-first</option>
+                </Select>
+              </Field>
+              <label className="flex items-center gap-2 font-mono text-[10px] text-moon">
+                <input
+                  type="checkbox"
+                  checked={validate618}
+                  onChange={(e) => setValidate618(e.target.checked)}
+                  className="accent-cyan"
+                />
+                Compare with exact sparse Jacobian
+              </label>
+              <RunButton type="button" onClick={run618}>
+                Run DSM + FDJS
+              </RunButton>
+              <GhostButton type="button" onClick={suite618} className="w-full">
+                Run N=300:1200 suite
+              </GhostButton>
+              <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                Columns sharing a row may not share a group. Chart: columns per consistent color
+                class (or MAXGRP / NNZ suite).
+              </p>
+            </div>
+          )}
+
+          {tab === "619" && (
+            <div className="space-y-2">
+              <Field label="F(s) expression">
+                <TextInput value={expr619} onChange={(e) => setExpr619(e.target.value)} />
+              </Field>
+              <Field label="t values" hint="comma-separated, positive">
+                <TextInput value={t619} onChange={(e) => setT619(e.target.value)} />
+              </Field>
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Abscissa c">
+                  <NumberInput
+                    value={c619}
+                    step="any"
+                    onChange={(e) => setC619(Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Max blocks">
+                  <NumberInput
+                    value={mx619}
+                    min={3}
+                    max={2000}
+                    onChange={(e) => setMx619(Number(e.target.value))}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Rel tol">
+                  <NumberInput
+                    value={er619}
+                    step="any"
+                    onChange={(e) => setEr619(Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Abs tol">
+                  <NumberInput
+                    value={ea619}
+                    step="any"
+                    onChange={(e) => setEa619(Number(e.target.value))}
+                  />
+                </Field>
+              </div>
+              <RunButton type="button" onClick={run619}>
+                Run DLAINV
+              </RunButton>
+              <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                Default 1/(s²+1) compares to sin(t). Bounded Wynn ε on ≤50 Durbin sums (V5 rev 1.4).
+              </p>
+            </div>
+          )}
+
+          {tab === "740" && (
+            <div className="space-y-2">
+              <Field label="Test matrix">
+                <Select
+                  value={String(kind740)}
+                  onChange={(e) => setKind740(Number(e.target.value) as Acm740MatrixKind)}
+                >
+                  <option value="1">Banded</option>
+                  <option value="2">Arrowhead</option>
+                  <option value="3">2-D Laplacian</option>
+                  <option value="4">Original 4×4 failure</option>
+                </Select>
+              </Field>
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Order N / grid LN">
+                  <NumberInput
+                    value={n740}
+                    min={1}
+                    max={80}
+                    onChange={(e) => setN740(Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Semi-bandwidth">
+                  <NumberInput
+                    value={band740}
+                    min={0}
+                    onChange={(e) => setBand740(Number(e.target.value))}
+                  />
+                </Field>
+              </div>
+              <RunButton type="button" onClick={run740}>
+                Run three factorizations
+              </RunButton>
+              <GhostButton type="button" onClick={suite740} className="w-full">
+                Run four original tests
+              </GhostButton>
+              <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                STANDARD = IC(0). COLUMN / ROW keep largest entries per structural budget
+                (Jones–Plassmann).
+              </p>
+            </div>
+          )}
+
+          {error && <ErrorBanner message={error} />}
+        </div>
+      </Panel>
+
+      <div className="space-y-3">
+        {chartX.length > 0 && chartSeries.length > 0 && (
+          <Chart x={chartX} series={chartSeries} height={280} />
+        )}
+        <Panel title="Engine log" eyebrow="ACM SPARS">
+          <pre className="max-h-80 overflow-auto rounded-lg border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
+            {log}
+          </pre>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
 function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
   const compute = React.useContext(NumericalComputeContext);
@@ -1711,8 +2076,8 @@ function ReferencesPanel() {
       <Panel title="People & literature that inspired the toolbox" eyebrow="REFS">
         <p className="font-mono text-xs leading-relaxed text-muted-foreground">
           Numerical Extreme carries forward NumericalAnalysisToolbox_V15 / V11 Neon: ACM Collected
-          Algorithms, Sauer-style root finding, classical quadrature & interpolation, and SDOF
-          vibration analysis — presented in the ZEUS neon shell.
+          Algorithms (including SPARS 618 / 619 / 740), Sauer-style root finding, classical
+          quadrature & interpolation, and SDOF vibration analysis — presented in the ZEUS neon shell.
         </p>
       </Panel>
 
@@ -1824,6 +2189,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           {mode === "composite" && <CompositePanel />}
           {mode === "diff" && <DiffPanel />}
           {mode === "algorithms" && <AlgorithmsPanel />}
+          {mode === "acm" && <AcmLabPanel />}
           {mode === "numerology" && <NumerologyPanel />}
           {mode === "references" && <ReferencesPanel />}
         </main>
