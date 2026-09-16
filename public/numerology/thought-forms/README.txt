@@ -1,8 +1,14 @@
 Public-domain plates from Annie Besant & C.W. Leadbeater, Thought-Forms
-(Theosophical Publishing Society, 1901/1905), via Project Gutenberg eBook #16269.
-https://www.gutenberg.org/ebooks/16269
+(Theosophical Publishing Society, 1901/1905), via Project Gutenberg eBook #16269
+and the user’s 1905 PDF scan (book/ subfolder).
 
-colorchart.jpg  — Frontispiece: Meaning of the Colours
+GENERAL SOURCE (all words / path numbers / scrambles / colour combinations):
+key-to-meanings-of-colours.png
+  — Frontispiece “Key to the Meanings of Colours” (Besant & Leadbeater).
+    Always shown in the Numerology tab for every path digit. Use this chart
+    when decoding colour mixes, word–number anagrams, and combination rates.
+
+colorchart.jpg  — Alternate / Gutenberg colour chart scan
 fig1.png        — Fig. 1: Chladni's Sound Plate (vibration → form)
 fig2.png        — Fig. 2: Forms produced in sound
 fig3.png        — Fig. 3: Forms produced in sound
@@ -13,3 +19,4 @@ figs44-47.png   — Figs. 44–47: Threefold / sevenfold manifestation
 figm.jpg        — Plate M: Music of Mendelssohn (form built by vibration)
 figg.jpg        — Plate G: Music of Gounod
 figw.jpg        — Plate W: Music of Wagner
+book/           — High-res plates extracted from the 1905 PDF (page_xN.png)

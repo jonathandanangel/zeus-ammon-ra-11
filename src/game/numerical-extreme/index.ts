@@ -149,8 +149,22 @@ export type {
 } from "./numerology";
 export {
   THOUGHT_FORM_PLATES,
+  THOUGHT_FORM_FIGURES,
+  COLOUR_KEY,
+  COLOUR_KEY_GRID,
+  COLOUR_KEY_GENERAL_SOURCE,
+  COLOUR_COMBINATIONS,
+  THOUGHT_FORM_THREE_LAWS,
+  THOUGHT_FORM_DOUBLE_EFFECT,
   THEOSOPHY_RAYS,
+  thoughtFormBundleForNumber,
+  colourKeyCellsForNumber,
   type ThoughtFormPlate,
+  type ThoughtFormFigure,
+  type ColourKeyCell,
+  type ColourKeyEntry,
+  type ColourCombination,
+  type PathThoughtFormBundle,
   type TheosophyRay,
 } from "./thought-forms";
 export { searchSecretDoctrine, loadSecretDoctrineManifest } from "./secret-doctrine";

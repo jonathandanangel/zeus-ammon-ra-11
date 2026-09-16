@@ -56,7 +56,8 @@ import {
   searchSecretDoctrine,
   searchGreekMyths,
   getRuckmanVersesForNumber,
-  THOUGHT_FORM_PLATES,
+  thoughtFormBundleForNumber,
+  COLOUR_KEY_GENERAL_SOURCE,
   type Acm618OrderingMode,
   type Acm740MatrixKind,
   type BezierSegment,
@@ -2776,29 +2777,121 @@ function RelevantThoughtForms({
   number: number;
   colorName: string;
 }) {
-  const plates = THOUGHT_FORM_PLATES.filter((plate) => {
-    if (plate.id === "colour-chart") return true;
-    if (plate.id === "chladni") return true;
-    if (number === 7 && plate.id === "sevenfold") return true;
-    if ((number === 3 || number === 6) && plate.id === "sevenfold") return true;
-    return false;
-  });
+  const bundle = thoughtFormBundleForNumber(number);
+  const key = COLOUR_KEY_GENERAL_SOURCE;
+  const emotionPlates = bundle.figures.filter((f) => f.id !== "colour-key");
 
   return (
     <Panel
       title="Thought-Forms · for this number"
-      eyebrow={`Theosophy · ${colorName} · vibration → form`}
+      eyebrow={`Theosophy · ${colorName} · ${bundle.musicalNote} · vibration → form`}
     >
       <p className="mb-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
-        Official plates from Besant & Leadbeater that bear on{" "}
-        <span style={{ color: "inherit" }} className="text-amber">
-          number {number}
-        </span>
-        : the colour key for your ray, and Chladni’s proof that vibration builds geometry
-        {number === 7 || number === 3 || number === 6 ? ", plus sevenfold / threefold manifestation" : ""}.
+        {bundle.blurb}
       </p>
+
+      {/* Always-visible general source for every path / scramble / combination */}
+      <figure className="mb-4 overflow-hidden rounded-sm border border-amber/40 bg-black/50">
+        <div className="border-b border-amber/25 bg-amber/10 px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-amber">
+            General source · all words & number scrambles
+          </p>
+          <p className="font-mono text-[12px] text-cyan">{key.title}</p>
+          <p className="font-mono text-[9px] text-muted-foreground">{key.bookRef}</p>
+        </div>
+        <div className="relative max-h-[420px] overflow-auto bg-black/70 p-2">
+          <img
+            src={key.src}
+            alt={key.title}
+            className="mx-auto h-auto w-full max-w-3xl object-contain"
+            loading="lazy"
+          />
+        </div>
+        <figcaption className="space-y-2 border-t border-amber/20 px-3 py-2.5">
+          <p className="font-mono text-[10px] leading-relaxed text-moon/90">{key.quote}</p>
+          <p className="font-mono text-[9px] text-muted-foreground">{key.role}</p>
+          {bundle.gridCells.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {bundle.gridCells.map((cell) => (
+                <span
+                  key={`${cell.row}-${cell.col}`}
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-white/15 px-2 py-1 font-mono text-[9px] text-moon"
+                  title={`Grid ${cell.row},${cell.col}`}
+                >
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-sm border border-white/30"
+                    style={{ backgroundColor: cell.hex }}
+                  />
+                  {cell.row},{cell.col} · {cell.emotion}
+                </span>
+              ))}
+            </div>
+          )}
+        </figcaption>
+      </figure>
+
+      {bundle.colourKeys.length > 0 && (
+        <div className="mb-4 space-y-1.5">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
+            Meaning of the Colours · pp. 32–35 · path {number}
+          </p>
+          {bundle.colourKeys.map((entry) => (
+            <div
+              key={entry.id}
+              className="flex gap-2 rounded-sm border border-cyan/20 bg-black/30 px-2.5 py-2"
+            >
+              <span
+                className="mt-0.5 h-3 w-3 shrink-0 rounded-sm border border-white/25"
+                style={{ backgroundColor: entry.hex }}
+              />
+              <div>
+                <p className="font-mono text-[11px] text-cyan">
+                  {entry.colorName} · {entry.emotion}
+                </p>
+                <p className="font-mono text-[10px] leading-relaxed text-moon/90">{entry.quote}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {bundle.combinations.length > 0 && (
+        <div className="mb-4 space-y-1.5">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
+            Colour / number combinations · anagrams of rates
+          </p>
+          {bundle.combinations.map((combo) => (
+            <div
+              key={combo.id}
+              className="rounded-sm border border-violet-400/25 bg-black/30 px-2.5 py-2"
+            >
+              <p className="font-mono text-[10px] text-cyan">
+                {combo.inputs.join(" + ")} → {combo.result}
+              </p>
+              <p className="font-mono text-[9px] text-muted-foreground">
+                Combos {combo.numberCombos.join(" · ")} · book p. {combo.bookPage}
+              </p>
+              <p className="mt-1 font-mono text-[10px] leading-relaxed text-moon/90">{combo.quote}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mb-3 space-y-1">
+        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
+          Three laws · p. 31
+        </p>
+        <ul className="space-y-1">
+          {bundle.laws.map((law) => (
+            <li key={law.law} className="font-mono text-[10px] text-moon/90">
+              · {law.law}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {plates.map((plate) => (
+        {emotionPlates.map((plate) => (
           <figure
             key={plate.id}
             className="overflow-hidden rounded-sm border border-cyan/25 bg-black/40"
@@ -2806,17 +2899,20 @@ function RelevantThoughtForms({
             <div className="relative aspect-[4/5] overflow-hidden bg-black/60">
               <img
                 src={plate.src}
-                alt={plate.title}
+                alt={`${plate.fig} · ${plate.emotion}`}
                 className="h-full w-full object-contain"
                 loading="lazy"
               />
             </div>
             <figcaption className="space-y-1 border-t border-cyan/15 px-3 py-2.5">
               <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
-                {plate.kind}
+                {plate.kind} · {plate.fig} · p. {plate.bookPage}
               </p>
-              <p className="font-mono text-[11px] text-cyan">{plate.title}</p>
-              <p className="font-mono text-[10px] leading-relaxed text-moon/90">{plate.caption}</p>
+              <p className="font-mono text-[11px] text-cyan">{plate.emotion}</p>
+              <p className="font-mono text-[9px] text-muted-foreground">
+                {plate.shape} · {plate.colours}
+              </p>
+              <p className="font-mono text-[10px] leading-relaxed text-moon/90">{plate.quote}</p>
             </figcaption>
           </figure>
         ))}

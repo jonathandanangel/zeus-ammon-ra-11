@@ -454,8 +454,8 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "Thought-Forms (1901) · The Secret Doctrine · colour–sound–number",
         authors: "Annie Besant & C. W. Leadbeater; H. P. Blavatsky (Secret Doctrine I–II); Theosophical Society",
         detail:
-          "Tradition cards now quote both Thought-Forms (vibration/form/colour) and Secret Doctrine (Power of Numbers, Monad/Duad, Fohat’s five strides & six-to-seventh, Hebdomad/septenary, Unity begetting Numbers), plus prismatic colour / note and plate imagery. Separate Secret Doctrine & Greek Myths search panels unchanged — they already work well.",
-        venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/ · public/secret-doctrine/",
+          "Tradition cards quote Thought-Forms (vibration/form/colour) and Secret Doctrine (Power of Numbers, Monad/Duad, Fohat’s five strides & six-to-seventh, Hebdomad/septenary, Unity begetting Numbers), plus prismatic colour / note and plate imagery. Frontispiece Key to the Meanings of Colours (key-to-meanings-of-colours.png) is the always-on general source for every path digit, word scramble, and colour combination. Separate Secret Doctrine & Greek Myths search panels unchanged.",
+        venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/key-to-meanings-of-colours.png · public/secret-doctrine/",
       },
       {
         title: "Timaeus · Elements VII Def. 22",
