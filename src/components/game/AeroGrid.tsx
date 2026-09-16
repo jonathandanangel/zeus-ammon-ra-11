@@ -274,17 +274,9 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "numerical-extreme" || mode === "vanity-app") {
+    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "spirit-bound") {
+      // Legend of Triangles / Numerical / Vanity manage their own beds — no title or Extreme track.
       return undefined;
-    }
-    if (mode === "spirit-bound") {
-      audio.setGenre("supersonic", 1);
-      audio.setExtremeTrack(1);
-      audio.setTempoMultiplier(1.4);
-      return () => {
-        audio.setTempoMultiplier(1);
-        audio.setExtremeTrack(0);
-      };
     }
     if (isExtremeFamily(mode)) {
       // Every 3 completed questions the turbulent track rotates and escalates.
@@ -732,7 +724,13 @@ export function AeroGrid() {
             setScreen("briefing");
           }}
           onSpiritBound={() => {
-            startAudio();
+            // SFX only — stop main/title beds; Legend of Triangles owns its own music.
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
+            audio.setExtremeTrack(0);
+            audio.setTempoMultiplier(1);
             setMode("spirit-bound");
             setReviewIds([]);
             setLocalIndex(0);

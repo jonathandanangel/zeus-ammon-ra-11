@@ -337,18 +337,18 @@ function SourceList({
   items: readonly ExtremePuzzleSourceLink[];
 }) {
   return (
-    <div className="rounded-lg border border-cyan/25 bg-black/25 px-3 py-3 text-left">
-      <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">{title}</p>
+    <div className="rounded border border-[#a88828]/50 bg-[#100808] px-3 py-3 text-left">
+      <p className="font-pixel text-[9px] tracking-[0.16em] text-game-yellow">{title}</p>
       <ul className="mt-2 space-y-2">
         {items.map((item) => (
-          <li key={item.href + item.label} className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-            <span className="text-moon">{item.label}</span>
-            <span className="mt-0.5 block text-muted-foreground">{item.detail}</span>
+          <li key={item.href + item.label} className="font-pixel text-[7px] leading-relaxed text-[#c8a048]">
+            <span className="text-[#f8f0c8]">{item.label}</span>
+            <span className="mt-0.5 block text-[#a88828]">{item.detail}</span>
             <a
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-0.5 block break-all text-amber underline decoration-amber/40 underline-offset-2 hover:text-moon"
+              className="mt-0.5 block break-all text-[#48a0f8] underline decoration-[#48a0f8]/40 underline-offset-2 hover:text-game-yellow"
             >
               {item.href}
             </a>
@@ -362,15 +362,15 @@ function SourceList({
 function ScoreHistory({ attempts }: { attempts: ExtremePuzzleAttempt[] }) {
   if (attempts.length === 0) {
     return (
-      <p className="font-mono text-[10px] text-muted-foreground">
+      <p className="font-pixel text-[8px] text-[#a88828]">
         No prior attempts yet — each finish here is dated and stored on this device.
       </p>
     );
   }
   return (
-    <div className="max-h-48 overflow-y-auto rounded-lg border border-cyan/20 bg-black/30">
-      <table className="w-full text-left font-mono text-[10px]">
-        <thead className="sticky top-0 bg-deepblue text-cyan">
+    <div className="max-h-48 overflow-y-auto rounded border border-[#a88828]/40 bg-[#100808]">
+      <table className="w-full text-left font-pixel text-[7px]">
+        <thead className="sticky top-0 bg-[#181008] text-[#f8d030]">
           <tr>
             <th className="px-2 py-1.5 font-normal tracking-[0.12em]">DATE</th>
             <th className="px-2 py-1.5 font-normal tracking-[0.12em]">RAW</th>
@@ -380,12 +380,12 @@ function ScoreHistory({ attempts }: { attempts: ExtremePuzzleAttempt[] }) {
         </thead>
         <tbody>
           {attempts.map((a) => (
-            <tr key={a.at} className="border-t border-cyan/10 text-muted-foreground">
-              <td className="px-2 py-1.5 text-moon">{formatAttemptDate(a.at)}</td>
+            <tr key={a.at} className="border-t border-[#a88828]/25 text-[#c8a048]">
+              <td className="px-2 py-1.5 text-[#f8f0c8]">{formatAttemptDate(a.at)}</td>
               <td className="px-2 py-1.5">
                 {a.rawScore}/{a.total}
               </td>
-              <td className="px-2 py-1.5 text-amber">
+              <td className="px-2 py-1.5 text-game-yellow">
                 {a.ageReferencedScore === null ? "—" : a.ageReferencedScore}
               </td>
               <td className="px-2 py-1.5">{a.ageBandLabel}</td>
@@ -401,7 +401,7 @@ function NumberRibbon({ className }: { className?: string }) {
   return (
     <p
       className={cn(
-        "text-center font-mono text-[10px] uppercase tracking-[0.28em] text-magenta/80",
+        "text-center font-pixel text-[9px] tracking-[0.28em] text-[#ff4040]",
         className,
       )}
       aria-hidden
@@ -415,7 +415,7 @@ function ThetaLogo({ className, size = "hero" }: { className?: string; size?: "h
   return (
     <div
       className={cn(
-        "extreme-theta-logo select-none text-center leading-none",
+        "extreme-theta-logo extreme-theta-logo--gold select-none text-center leading-none",
         size === "hero" && "extreme-theta-logo--hero",
         size === "flash" && "extreme-theta-logo--flash",
         size === "mark" && "extreme-theta-logo--mark",
@@ -428,14 +428,15 @@ function ThetaLogo({ className, size = "hero" }: { className?: string; size?: "h
   );
 }
 
-const neonBtn =
-  "rounded-lg border border-cyan/50 bg-deepblue/70 px-5 py-3 font-display text-sm uppercase tracking-[0.22em] text-cyan transition-colors hover:bg-cyan/20 hover:text-moon";
-const neonBtnGhost =
-  "rounded-lg border border-border bg-transparent px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-cyan/40 hover:text-cyan";
-const neonField =
-  "w-full rounded-lg border border-cyan/40 bg-deepblue/80 px-3 py-2 font-mono text-sm text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
-const neonPanel =
-  "panel relative z-[1] mx-auto w-full max-w-2xl space-y-4 border border-cyan/40 bg-deepblue/85 p-6 text-center shadow-[0_0_40px_rgba(56,189,248,0.12)] backdrop-blur-sm";
+/** Legend of Triangles golden-ink chrome */
+const goldBtn =
+  "relative z-10 w-full border-2 border-game-yellow bg-[#3a2808] px-3 py-3 font-pixel text-[11px] text-game-yellow transition hover:bg-game-yellow hover:text-game-bg";
+const goldBtnGhost =
+  "relative z-10 w-full border border-[#a88828] px-3 py-2 font-pixel text-[9px] text-[#a88828] transition hover:border-game-yellow hover:text-game-yellow";
+const goldField =
+  "w-full border-2 border-[#a88828] bg-[#100808] px-3 py-2 font-pixel text-[11px] text-[#f8f0c8] outline-none focus:border-game-yellow";
+const goldPanel =
+  "relative z-[1] mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-lg border-4 border-game-yellow bg-game-bg p-5 text-center text-[#f8f0c8] shadow-[0_0_0_4px_#181010] sm:p-8";
 
 export function ExtremePuzzle({ onExit }: Props) {
   const { settings, progress } = useGame();
@@ -605,20 +606,20 @@ export function ExtremePuzzle({ onExit }: Props) {
         ? (index + 1) / EXTREME_PUZZLE_ITEM_COUNT
         : phase === "rocket"
           ? 1
-          : 0.45;
-    const inferno =
-      phase === "rocket" || (phase === "play" && index >= Math.floor(EXTREME_PUZZLE_ITEM_COUNT / 2));
+          : 0.55;
 
     return (
-      <div className="relative min-h-[min(92vh,900px)]">
+      <div className="relative min-h-[min(92vh,900px)] font-pixel">
+        {/* Scary Extreme backdrop only — GUI stays Legend of Triangles gold */}
         <WorldBackground
           progress={worldProgress}
           scanlines={settings.scanlines}
           reducedMotion={settings.reducedMotion}
           bloodMoon
           psychedelic
-          inferno={inferno}
+          inferno
         />
+        <ExtremeHalloweenBackdrop />
         {phase === "hebrew" && (
           <div className="extreme-hebrew-flash" aria-live="polite">
             <div className="flex flex-col items-center gap-4">
@@ -641,20 +642,27 @@ export function ExtremePuzzle({ onExit }: Props) {
 
   if (phase === "warning") {
     return shell(
-      <section className={neonPanel}>
-        <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
+      <section className={goldPanel}>
+        <div className="flex flex-col items-center leading-none text-game-yellow">
+          <span className="text-[22px]">▲</span>
+          <span className="-mt-1 text-[22px] tracking-[0.55em]">▲ ▲</span>
+        </div>
         <ThetaLogo size="hero" />
-        <h1 className="font-display text-3xl text-cyan text-glow sm:text-5xl">{EXTREME_PUZZLE_WARNING.title}</h1>
-        <p className="font-display text-sm uppercase tracking-[0.28em] text-amber">{EXTREME_PUZZLE_WARNING.subtitle}</p>
+        <h1 className="font-pixel text-[16px] uppercase tracking-[0.12em] text-game-yellow sm:text-[20px]">
+          {EXTREME_PUZZLE_WARNING.title}
+        </h1>
+        <p className="font-pixel text-[9px] uppercase tracking-[0.18em] text-[#ff6060]">
+          {EXTREME_PUZZLE_WARNING.subtitle}
+        </p>
         <NumberRibbon />
-        <p className="font-mono text-xs text-muted-foreground">
+        <p className="font-pixel text-[8px] text-[#a88828]">
           Extreme Puzzle · read before you continue
         </p>
         <ul className="space-y-2 text-left">
           {EXTREME_PUZZLE_WARNING.lines.map((line) => (
             <li
               key={line.slice(0, 48)}
-              className="rounded-lg border border-magenta/30 bg-black/30 px-3 py-2 font-mono text-[11px] leading-relaxed text-moon/90"
+              className="rounded border border-[#a88828]/40 bg-[#100808] px-3 py-2 font-pixel text-[8px] leading-relaxed text-[#f8f0c8]"
             >
               {line}
             </li>
@@ -662,17 +670,17 @@ export function ExtremePuzzle({ onExit }: Props) {
         </ul>
         {history.length > 0 && (
           <div className="space-y-2 text-left">
-            <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">
+            <p className="font-pixel text-[9px] tracking-[0.16em] text-game-yellow">
               Prior attempts ({history.length})
             </p>
             <ScoreHistory attempts={history.slice(0, 5)} />
           </div>
         )}
-        <button type="button" onClick={acceptWarning} className={neonBtn}>
-          I understand · continue
+        <button type="button" onClick={acceptWarning} className={goldBtn}>
+          I UNDERSTAND · CONTINUE
         </button>
-        <button type="button" onClick={leave} className={neonBtnGhost}>
-          Cancel · main screen
+        <button type="button" onClick={leave} className={goldBtnGhost}>
+          CANCEL · MAIN SCREEN
         </button>
       </section>,
     );
@@ -697,30 +705,29 @@ export function ExtremePuzzle({ onExit }: Props) {
             onContinue: leave,
           }}
         />
-        <section className={neonPanel}>
-          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-magenta">ZEUS AMMON-RA 11</p>
-          <p className="font-display text-lg text-cyan text-glow">Your score</p>
-          <p className="font-mono text-2xl text-mint">
+        <section className={goldPanel}>
+          <p className="font-pixel text-[9px] tracking-[0.2em] text-game-yellow">YOUR SCORE</p>
+          <p className="font-pixel text-[18px] text-[#f8f0c8]">
             Raw {result.rawScore} / {result.total}
           </p>
-          <p className="font-mono text-sm text-moon">
+          <p className="font-pixel text-[9px] text-[#c8a048]">
             Age-referenced ({result.ageBandLabel}):{" "}
-            <span className="text-amber">
+            <span className="text-game-yellow">
               {result.ageReferencedScore === null ? "—" : result.ageReferencedScore}
             </span>
           </p>
-          <p className="font-mono text-[10px] text-muted-foreground">
+          <p className="font-pixel text-[7px] text-[#a88828]">
             Age {result.ageYears}:{String(result.ageMonths).padStart(2, "0")} · saved{" "}
             {formatAttemptDate(history[0]?.at ?? new Date().toISOString())}
           </p>
           <div className="space-y-2 text-left">
-            <p className="font-display text-xs uppercase tracking-[0.16em] text-cyan">Score history</p>
+            <p className="font-pixel text-[9px] tracking-[0.16em] text-game-yellow">Score history</p>
             <ScoreHistory attempts={history} />
           </div>
           <SourceList title="Correlations (group-level)" items={EXTREME_PUZZLE_CORRELATIONS} />
           <SourceList title="Sources" items={EXTREME_PUZZLE_SOURCES} />
-          <button type="button" onClick={leave} className={neonBtn}>
-            Back to main screen
+          <button type="button" onClick={leave} className={goldBtn}>
+            BACK TO MAIN SCREEN
           </button>
         </section>
       </>,
@@ -729,75 +736,74 @@ export function ExtremePuzzle({ onExit }: Props) {
 
   if (phase === "age") {
     return shell(
-      <section className={cn(neonPanel, "max-w-md")}>
-        <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
+      <section className={cn(goldPanel, "max-w-md")}>
         <ThetaLogo size="mark" />
-        <h2 className="font-display text-2xl text-cyan text-glow">Extreme Puzzle</h2>
-        <p className="font-mono text-xs text-muted-foreground">
+        <h2 className="font-pixel text-[14px] tracking-[0.14em] text-game-yellow">EXTREME PUZZLE</h2>
+        <p className="font-pixel text-[8px] leading-relaxed text-[#a88828]">
           Untimed · 52 items · enter age for age-referenced scoring
         </p>
         {loadError && (
-          <p className="rounded-lg border border-magenta/40 bg-magenta/10 px-3 py-2 font-mono text-[10px] text-amber">
+          <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
             {loadError}
           </p>
         )}
         <label className="block space-y-1 text-left">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan">Age · years</span>
+          <span className="font-pixel text-[8px] tracking-[0.14em] text-game-yellow">Age · years</span>
           <input
             type="number"
             min={6}
             max={120}
             value={years}
             onChange={(e) => setYears(Number(e.target.value))}
-            className={neonField}
+            className={goldField}
           />
         </label>
         <label className="block space-y-1 text-left">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan">Age · months (0–11)</span>
+          <span className="font-pixel text-[8px] tracking-[0.14em] text-game-yellow">Age · months (0–11)</span>
           <input
             type="number"
             min={0}
             max={11}
             value={months}
             onChange={(e) => setMonths(Math.max(0, Math.min(11, Number(e.target.value))))}
-            className={neonField}
+            className={goldField}
           />
         </label>
-        <p className="font-mono text-[10px] text-muted-foreground">Band: {band.label}</p>
+        <p className="font-pixel text-[8px] text-[#a88828]">Band: {band.label}</p>
         {ageError && (
-          <p className="rounded-lg border border-magenta/40 bg-magenta/10 px-3 py-2 font-mono text-[10px] text-amber">
+          <p className="rounded border border-game-hp/50 bg-game-hp/10 px-3 py-2 font-pixel text-[8px] leading-relaxed text-game-hp">
             {ageError}
           </p>
         )}
         {history.length > 0 && (
-          <p className="font-mono text-[10px] text-muted-foreground">
+          <p className="font-pixel text-[7px] text-[#c8a048]">
             {history.length} prior attempt{history.length === 1 ? "" : "s"} · latest{" "}
             {formatAttemptDate(history[0]!.at)} · raw {history[0]!.rawScore}/{history[0]!.total}
           </p>
         )}
-        <button type="button" onClick={startPlay} className={neonBtn}>
-          Begin · 52 items
+        <button type="button" onClick={startPlay} className={goldBtn}>
+          BEGIN · 52 ITEMS
         </button>
-        <button type="button" onClick={leave} className={neonBtnGhost}>
-          Cancel · main screen
+        <button type="button" onClick={leave} className={goldBtnGhost}>
+          CANCEL · MAIN SCREEN
         </button>
       </section>,
     );
   }
 
   return shell(
-    <section className="panel relative z-[1] mx-auto w-full max-w-3xl overflow-hidden border border-cyan/40 bg-deepblue/90 shadow-[0_0_40px_rgba(56,189,248,0.12)] backdrop-blur-sm">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan/30 bg-black/30 px-3 py-2">
+    <section className="relative z-[1] mx-auto w-full max-w-3xl overflow-hidden rounded-lg border-4 border-game-yellow bg-game-bg text-[#f8f0c8] shadow-[0_0_0_4px_#181010]">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b-4 border-game-yellow bg-[#201808] px-3 py-2">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-40 overflow-hidden rounded-sm bg-cyan/20">
+          <div className="h-2 w-40 overflow-hidden border border-game-yellow bg-[#100808]">
             <div
-              className="h-full bg-cyan transition-all"
+              className="h-full bg-game-yellow transition-all"
               style={{ width: `${((index + 1) / EXTREME_PUZZLE_ITEM_COUNT) * 100}%` }}
             />
           </div>
-          <span className="font-mono text-xs tracking-wide text-cyan">Q{itemNumber}</span>
+          <span className="font-pixel text-[10px] tracking-wide text-game-yellow">Q{itemNumber}</span>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+        <span className="font-pixel text-[8px] tracking-[0.16em] text-[#a88828]">
           {index + 1} / {EXTREME_PUZZLE_ITEM_COUNT}
         </span>
       </header>
@@ -822,14 +828,14 @@ export function ExtremePuzzle({ onExit }: Props) {
             draggable={false}
           />
         ) : (
-          <p className="py-16 text-center font-mono text-xs text-magenta">
+          <p className="py-16 text-center font-pixel text-[9px] text-game-hp">
             Missing item image q{String(itemNumber).padStart(2, "0")}.png
           </p>
         )}
       </div>
 
-      <div className="space-y-3 border-t border-cyan/30 bg-black/25 px-3 py-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <div className="space-y-3 border-t-4 border-game-yellow bg-[#201808] px-3 py-3">
+        <p className="font-pixel text-[8px] tracking-[0.12em] text-[#a88828]">
           Select option(s) 1–6 · some items need more than one
         </p>
         <div className="grid grid-cols-6 gap-2">
@@ -841,10 +847,10 @@ export function ExtremePuzzle({ onExit }: Props) {
                 type="button"
                 onClick={() => toggleOption(n)}
                 className={cn(
-                  "rounded-lg border px-2 py-3 font-display text-lg transition",
+                  "border-2 px-2 py-3 font-pixel text-[14px] transition",
                   on
-                    ? "border-cyan bg-cyan/30 text-moon"
-                    : "border-cyan/40 bg-deepblue/70 text-cyan hover:bg-cyan/15",
+                    ? "border-game-yellow bg-game-yellow text-game-bg"
+                    : "border-[#a88828] bg-[#100808] text-game-yellow hover:border-game-yellow",
                 )}
               >
                 {n}
@@ -853,11 +859,11 @@ export function ExtremePuzzle({ onExit }: Props) {
           })}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={submitItem} className={cn(neonBtn, "flex-1")}>
-            {index >= EXTREME_PUZZLE_ITEM_COUNT - 1 ? "Finish" : "Next"}
+          <button type="button" onClick={submitItem} className={cn(goldBtn, "flex-1")}>
+            {index >= EXTREME_PUZZLE_ITEM_COUNT - 1 ? "FINISH" : "NEXT"}
           </button>
-          <button type="button" onClick={leave} className={neonBtnGhost}>
-            Abort
+          <button type="button" onClick={leave} className={cn(goldBtnGhost, "w-auto px-4")}>
+            ABORT
           </button>
         </div>
       </div>
