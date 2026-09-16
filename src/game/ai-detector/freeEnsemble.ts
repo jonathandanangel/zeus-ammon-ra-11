@@ -95,8 +95,8 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
  * human-noise can veto soft AI leans from older neural detectors.
  */
 const WEIGHT: Partial<Record<FreeDetectorId, number>> = {
-  "human-noise": 4.0,
-  "gptzero-twin": 2.8,
+  "human-noise": 4.5,
+  "gptzero-twin": 1.8,
   "openai-roberta": 2.4,
   "hc3-roberta": 2.0,
   modernbert: 2.6,
@@ -217,8 +217,9 @@ function sentenceSurprisals(text: string): number[] {
 
 /**
  * Classic GPTZero pairing: low average “perplexity” + low burstiness → AI.
- * High / irregular surprisal → human.
- * Calibrated softer on short student essays to cut false AI flags.
+ * NOTE: this uses *within-document* bigram surprisal (not a real LM), so mid
+ * scores are common on long human sentences — bias hard toward human/uncertain
+ * unless BOTH signals are extreme.
  */
 function scanGptZeroTwin(text: string): DetectorScanResult {
   const surps = sentenceSurprisals(text);
@@ -227,22 +228,34 @@ function scanGptZeroTwin(text: string): DetectorScanResult {
   }
   const avgPpl = mean(surps);
   const burst = stdev(surps) / Math.max(0.35, avgPpl);
-  const fromPpl = clamp(88 - (avgPpl - 2.4) * 18);
-  const fromBurst = clamp(88 - burst * 85);
-  // Softer sharpen — avoid shoving informal human prose into “AI”
-  const aiScore = sharpen(0.55 * fromPpl + 0.45 * fromBurst, 1.15);
+  // Recalibrated: self-surprisal ~2.5–3.0 is normal for human essays (long sents
+  // reuse words). Only very smooth + very uniform → AI.
+  // ppl 2.0→~72, 2.7→~48, 3.5→~22; burst 0.15→~70, 0.30→~48, 0.50→~22
+  const fromPpl = clamp(100 - (avgPpl - 1.6) * 32);
+  const fromBurst = clamp(100 - burst * 140);
+  let aiScore = 0.5 * fromPpl + 0.5 * fromBurst;
+  // Require BOTH low-ppl and low-burst to call AI; otherwise pull toward human
+  if (!(avgPpl < 2.25 && burst < 0.22)) {
+    aiScore = Math.min(aiScore, 42 + (aiScore - 42) * 0.35);
+  }
+  // Sentence-length burstiness (real GPTZero cue) — if lengths vary, not AI
+  const lengths = sentencesOf(text).map((s) => wordsOf(s).length).filter((n) => n > 0);
+  const lenCv = stdev(lengths) / Math.max(1, mean(lengths));
+  if (lenCv >= 0.35) aiScore -= 18;
+  else if (lenCv >= 0.25) aiScore -= 10;
+  aiScore = sharpen(clamp(aiScore), 1.05);
   return ok(
     "gptzero-twin",
     "GPTZero-style twin",
     aiScore,
-    `sent-ppl≈${avgPpl.toFixed(2)} · burst=${burst.toFixed(3)} · n=${surps.length}`,
+    `sent-ppl≈${avgPpl.toFixed(2)} · burst=${burst.toFixed(3)} · lenCV=${lenCv.toFixed(2)} · n=${surps.length}`,
     `ppl=${avgPpl.toFixed(2)},burst=${burst.toFixed(3)}`,
   );
 }
 
 /**
  * Human authenticity / noise — typos & informal voice that LLMs rarely leave in.
- * Low AI score = looks human. Catches cases like "is is", "where" for "were", "I'm trying".
+ * Low AI score = looks human. Catches "is is", "u immigrate", "it’s" errors, etc.
  */
 function scanHumanNoise(text: string): DetectorScanResult {
   const words = wordsOf(text);
@@ -259,34 +272,58 @@ function scanHumanNoise(text: string): DetectorScanResult {
     }
   }
 
-  // Common ESL / rushed substitutions
   const lower = text.toLowerCase();
-  if (/\bwhere simply\b/.test(lower) || /\bwhere\b.*\binnovations\b/.test(lower)) {
+
+  // Textspeak / chat openings LLMs almost never emit: "u immigrate…?"
+  if (/\bu\b/.test(lower) || /\b(ur|u r|idk|imo|tbh|lol|lmao|omg)\b/.test(lower)) {
+    hits += 3;
+    notes.push("textspeak");
+  }
+
+  // Common ESL / rushed substitutions & odd coinages
+  if (
+    /\bwhere simply\b/.test(lower) ||
+    /\bwhere\b.*\binnovations\b/.test(lower) ||
+    /\b(opining|slivering|apropos to|legal cognition|stratagem taken)\b/.test(lower)
+  ) {
     hits += 2;
-    notes.push("where/were-slip");
+    notes.push("awkward-lexicon");
   }
   if (/\bthis time are\b/.test(lower)) {
     hits += 1;
     notes.push("tense-mix");
   }
+  // it’s / its confusion (possessive written as contraction)
+  if (/it['’]s\s+(undisclosed|own|way|destination|purpose|goal|mission)/.test(lower)) {
+    hits += 2;
+    notes.push("its/it's");
+  }
 
-  // First-person student voice
-  const firstPerson = (lower.match(/\b(i|i'm|im|my|our|me)\b/g) ?? []).length;
+  // First-person student / family memoir voice
+  const firstPerson = (lower.match(/\b(i|i'm|i’m|im|my|our|me|mother's|mom's|dad's|grandfather)\b/g) ?? [])
+    .length;
   if (firstPerson >= 2) {
     hits += 2;
     notes.push(`1st-person:${firstPerson}`);
   }
+  if (firstPerson >= 5) {
+    hits += 1;
+    notes.push("memoir");
+  }
 
   // Informal hedges / filler humans use
-  const informal = (lower.match(/\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|therefore the main)\b/g) ?? [])
-    .length;
+  const informal = (
+    lower.match(
+      /\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|apparently|really was|therefore the main)\b/g,
+    ) ?? []
+  ).length;
   if (informal >= 1) {
     hits += 1;
     notes.push(`informal:${informal}`);
   }
 
-  // Uneven spacing / missing space after period
-  if (/[a-z]\.[A-Z]/.test(text) || /  +/.test(text)) {
+  // Uneven spacing / ZWSP paste artifacts / missing space after period
+  if (/[a-z]\.[A-Z]/.test(text) || /  +/.test(text) || /[\u200b\u200c\ufeff]/.test(text)) {
     hits += 1;
     notes.push("spacing");
   }
@@ -294,20 +331,25 @@ function scanHumanNoise(text: string): DetectorScanResult {
   // Run-on / comma splice density vs polished AI
   const sentences = sentencesOf(text);
   const longRuns = sentences.filter((s) => wordsOf(s).length > 28).length;
-  if (longRuns >= 1 && sentences.length <= 8) {
+  if (longRuns >= 1) {
     hits += 1;
     notes.push("run-on");
   }
+  // Wild length mix (short Q + long narrative) = human
+  const lens = sentences.map((s) => wordsOf(s).length);
+  if (lens.some((n) => n <= 6) && lens.some((n) => n >= 25)) {
+    hits += 1;
+    notes.push("len-mix");
+  }
 
   // Very polished zero-noise → slightly AI-leaning; lots of noise → strongly human
-  // hits 0 → ~55, hits 3 → ~28, hits 6+ → ~12
-  const aiScore = sharpen(clamp(58 - hits * 8), 1.1);
+  const aiScore = sharpen(clamp(58 - hits * 7), 1.1);
   return ok(
     "human-noise",
     "Human noise",
     aiScore,
     hits
-      ? `authenticity hits=${hits} (${notes.slice(0, 5).join(", ")}) → human-leaning`
+      ? `authenticity hits=${hits} (${notes.slice(0, 6).join(", ")}) → human-leaning`
       : "Little surface noise — neutral/soft",
     `hits=${hits}`,
   );
@@ -663,11 +705,18 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   for (const r of okRows) {
     let w = WEIGHT[r.id as FreeDetectorId] ?? 1;
     let score = r.aiScore;
-    // If human-noise fires, dampen soft AI leans from older neural models
-    if (humanVeto && (r.id === "openai-roberta" || r.id === "hc3-roberta" || r.id === "modernbert")) {
-      if (score > 45 && score < 88) {
-        score = 35 + (score - 45) * 0.35;
-        w *= 0.65;
+    // If human-noise fires, dampen soft AI leans from twin + neural models
+    if (
+      humanVeto &&
+      (r.id === "gptzero-twin" ||
+        r.id === "openai-roberta" ||
+        r.id === "hc3-roberta" ||
+        r.id === "modernbert" ||
+        r.id === "perplexity-proxy")
+    ) {
+      if (score > 40) {
+        score = 28 + (score - 40) * 0.25;
+        w *= 0.55;
       }
     }
     wSum += w;
