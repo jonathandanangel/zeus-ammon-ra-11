@@ -7,6 +7,7 @@ import { GoldenEggReader, HawkEggReader } from "@/components/game/spirit-bound/G
 import { GrasslandsOverworld } from "@/components/game/spirit-bound/GrasslandsOverworld";
 import { JehovahBook } from "@/components/game/spirit-bound/JehovahBook";
 import { SplashIntro } from "@/components/game/spirit-bound/SplashIntro";
+import { MinecraftSplash } from "@/components/game/spirit-bound/MinecraftSplash";
 import { ArcadeTree } from "@/components/game/spirit-bound/shrine/ArcadeTree";
 import { ReasonTrial } from "@/components/game/spirit-bound/reason/ReasonTrial";
 import { ShrineTrial } from "@/components/game/spirit-bound/shrine/ShrineTrial";
@@ -515,11 +516,13 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
           "relative w-full max-w-[640px]",
           mode === "title" && "flex flex-col items-center",
         )}
-      >        {mode === "title" && (
-          <section className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-lg border-4 border-game-yellow bg-game-bg p-8 text-center text-[#f8f0c8] shadow-[0_0_0_4px_#181010]">
-            <div className="flex flex-col items-center leading-none text-game-yellow">
+      >
+        {mode === "title" && (
+          <section className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 overflow-hidden rounded-lg border-4 border-game-yellow bg-game-bg p-8 text-center text-[#f8f0c8] shadow-[0_0_0_4px_#181010]">
+            <div className="relative flex flex-col items-center leading-none text-game-yellow">
               <span className="text-[28px]">▲</span>
               <span className="-mt-2 text-[28px] tracking-[0.55em]">▲ ▲</span>
+              <MinecraftSplash className="mc-splash-title" />
             </div>
             <p className="text-[11px] leading-relaxed text-game-yellow">A tiny pixel quest through GREENVALE</p>
             <div className="space-y-2 text-[10px] leading-relaxed">

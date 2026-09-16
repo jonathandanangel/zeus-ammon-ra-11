@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { MinecraftSplash } from "@/components/game/spirit-bound/MinecraftSplash";
 
 const HOLD_MS = 1500;
 const FADE_MS = 450;
@@ -82,7 +83,13 @@ export function SplashIntro({ onDone }: Props) {
           </div>
           <span className="splash-wing splash-wing-right">⟩⟩</span>
         </div>
-        <p className="splash-title">THE LEGEND OF TRIANGLES</p>
+        <div className="splash-title-wrap">
+          <p className="splash-title">THE LEGEND OF TRIANGLES</p>
+          <MinecraftSplash
+            className="mc-splash-intro"
+            text="Rarity of beating game is 1 in 10³⁹!"
+          />
+        </div>
         <p className="splash-sub">GREENVALE</p>
       </section>
     </motion.button>
