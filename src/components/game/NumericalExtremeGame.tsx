@@ -3112,7 +3112,7 @@ function SecretDoctrinePanel({
       word={word}
       passages={passages}
       source={source}
-      loading={loading}
+      loading={loading ?? false}
       emptyHint={`No close passages found for “${word}” in The Secret Doctrine.`}
       matchHint={`Passages for “${word}” via exact / stem / anagram / scramble / similar letter-count, ranked with occult & path-number relevance.`}
     />
@@ -3137,7 +3137,7 @@ function GreekMythsPanel({
       word={word}
       passages={passages}
       source={source}
-      loading={loading}
+      loading={loading ?? false}
       emptyHint={`No close passages found for “${word}” in The Greek Myths.`}
       matchHint={`Passages for “${word}” via exact / stem / anagram / scramble / similar letter-count with shared letters — PDF page cited.`}
     />
