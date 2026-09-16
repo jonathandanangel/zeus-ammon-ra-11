@@ -2805,6 +2805,12 @@ function RelevantThoughtForms({
             alt={key.title}
             className="mx-auto h-auto w-full max-w-3xl object-contain"
             loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.dataset.fallback === "1") return;
+              img.dataset.fallback = "1";
+              img.src = "/numerology/thought-forms/colorchart.jpg";
+            }}
           />
         </div>
         <figcaption className="space-y-2 border-t border-amber/20 px-3 py-2.5">
