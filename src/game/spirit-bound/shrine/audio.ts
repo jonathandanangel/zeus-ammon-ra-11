@@ -1,4 +1,4 @@
-type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic" | "arcade";
+type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic" | "arcade" | "spirits";
 
 
 let ctx: AudioContext | null = null;
@@ -54,6 +54,16 @@ export function playSfx(kind: Sfx) {
     beep(1175, 0.09, "square", 0.05, 0.08);
     beep(1568, 0.16, "triangle", 0.06, 0.18);
     beep(2093, 0.22, "square", 0.045, 0.32);
+  }
+  if (kind === "spirits") {
+    // Whispering / wailing spirits under the Hebrew induction flash
+    beep(220, 0.55, "sine", 0.04);
+    beep(277, 0.7, "triangle", 0.035, 0.08);
+    beep(165, 0.9, "sine", 0.045, 0.12);
+    beep(330, 0.4, "sine", 0.03, 0.35);
+    beep(196, 1.1, "triangle", 0.04, 0.45);
+    beep(415, 0.35, "sine", 0.025, 0.7);
+    beep(147, 1.2, "sine", 0.05, 0.85);
   }
   if (kind === "fail") {
     beep(220, 0.18, "triangle", 0.05);
@@ -471,6 +481,35 @@ const DOCTRINE_MOTIFS: Theme[] = [
 export function startDoctrinePuzzleMusic(variationIndex: number) {
   const theme = DOCTRINE_MOTIFS[variationIndex % DOCTRINE_MOTIFS.length] ?? DOCTRINE_MOTIFS[0]!;
   startThemeLoop(theme.lead, theme.bass, theme.step, { loopForever: true, hitEvery: 4 });
+}
+
+/** Extreme Puzzle bed — looping Armageddon track under the Halloween seal UI. */
+let extremePuzzleBed: HTMLAudioElement | null = null;
+let extremePuzzleEnded: (() => void) | null = null;
+
+export function startExtremePuzzleMusic() {
+  stopAmbient();
+  if (typeof window === "undefined") return;
+  if (!extremePuzzleBed) {
+    extremePuzzleBed = new Audio("/audio/title-armageddon.mp3");
+    extremePuzzleBed.preload = "auto";
+    extremePuzzleBed.volume = 0.48;
+    extremePuzzleEnded = () => {
+      if (!extremePuzzleBed) return;
+      extremePuzzleBed.currentTime = 0;
+      void extremePuzzleBed.play().catch(() => undefined);
+    };
+    extremePuzzleBed.addEventListener("ended", extremePuzzleEnded);
+  }
+  extremePuzzleBed.loop = true;
+  extremePuzzleBed.currentTime = 0;
+  void extremePuzzleBed.play().catch(() => undefined);
+}
+
+export function stopExtremePuzzleMusic() {
+  if (!extremePuzzleBed) return;
+  extremePuzzleBed.pause();
+  extremePuzzleBed.currentTime = 0;
 }
 
 export function startAmbient() {
