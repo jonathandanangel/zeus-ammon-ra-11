@@ -130,6 +130,7 @@ export {
   lookupJohnsonInline,
   NUMBER_PHILOSOPHY,
   PHILOSOPHER_ORDER,
+  PHILOSOPHY_DISCLAIMER,
   philosophyForNumber,
   formatPhilosophyBlock,
   formatAllNumbersPhilosophy,

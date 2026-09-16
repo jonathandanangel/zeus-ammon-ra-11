@@ -1,4 +1,8 @@
-/** Sacred-number lore for digits 1–9 across seven lineages (incl. Theosophical colour–form–vibration). */
+/**
+ * Sacred-number lore for digits 1–9 across seven lineages.
+ * Thoughts are short primary-source quotations (public-domain / fair use),
+ * not modern paraphrases. Geometry colour–form–vibration remains Theosophical.
+ */
 
 export type PhilosopherThought = {
   philosopher: string;
@@ -23,22 +27,27 @@ export type NumberPhilosophy = {
   thoughts: PhilosopherThought[];
 };
 
+/** Shown on the NUMEROLOGY panel under every tradition card. */
+export const PHILOSOPHY_DISCLAIMER =
+  "The creator does not endorse these views nor LLMs.";
+
 const P = (
   philosopher: string,
   work: string,
   thought: string,
 ): PhilosopherThought => ({ philosopher, work, thought });
 
-const RUCKMAN = (
-  thought: string,
-): PhilosopherThought =>
+const RUCKMAN = (thought: string): PhilosopherThought =>
   P(
     "Dr. Peter S. Ruckman",
     "Bible Numerics (1981) · Authorized King James Version",
     thought,
   );
 
-/** Digits 1–9 — Pythagoras, Hall, Aristotle, Aquinas, Avicenna, Ruckman, Theosophical Society. */
+/**
+ * Digits 1–9 — Pythagoras/Nicomachus, Hall, Aristotle, Aquinas, Avicenna,
+ * Ruckman, Theosophical Society (Thought-Forms).
+ */
 export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
   1: {
     number: 1,
@@ -54,36 +63,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus, Introduction to Arithmetic (trad.)",
-        "The monad is the source of all numbers and the root of all things — not a number among numbers but the principle of unity, mind, and light. It is odd, stable, and godlike; from it the entire scale unfolds without itself being divided.",
+        "Nicomachus, Introduction to Arithmetic I.16 (D’Ooge trans.)",
+        "“Now unity is potentially a perfect number, but not actually… it is so in very truth, not by participation like the rest… Thus unity is perfect potentially; for it is potentially equal to its own parts, the others actually.”",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages (1928)",
-        "One is the Absolute, the Eternal Parent, the hidden Lord of the universe and the source of all measurement. It is the point from which the line of manifestation proceeds and to which all cycles return.",
+        "The Secret Teachings of All Ages (1928) · Pythagorean Mathematics",
+        "“The monad signifies (a) the all-including ONE. The Pythagoreans called the monad the ‘noble number, Sire of Gods and men.’ … The monad may also be likened (c) to the seed of a tree which, when it has grown, has many branches (the numbers).”",
       ),
       P(
         "Aristotle",
-        "Metaphysics Γ & I",
-        "Being and unity are convertible: what is truly one is in some way a being, and what has being participates in unity. The One is not a mere aggregate but a principle that makes a thing the very thing it is.",
+        "Metaphysics IV (Γ) · W. D. Ross trans.",
+        "“‘Being’ and ‘unity’ are the same and are one thing in the sense that they are implied in one another as principle and cause are… for ‘one man’ and ‘man’ are the same thing, and so are ‘existent man’ and ‘man’.”",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I, q.11 (On God's Unity)",
-        "God is supremely one because He is absolutely simple — no composition of parts, no distinction of essence and existence. Every finite unity participates in that divine oneness as a transcendental property of being.",
+        "Summa Theologiae I, q.11 a.1 (On God’s Unity)",
+        "“‘One’ does not add any reality to ‘being’; but is only a negation of division; for ‘one’ means undivided ‘being.’ This is the very reason why ‘one’ is the same as ‘being.’ … Hence it is manifest that the being of anything consists in undivision; and hence it is that everything guards its unity as it guards its being.”",
       ),
       P(
         "Avicenna (Ibn Sina)",
-        "The Book of Healing — Metaphysics VIII",
-        "The Necessary Existent is absolutely one: no composition, no partner, no multiplicity in essence. All plurality in the world derives from what is possible-in-itself and must receive unity from the First.",
+        "The Metaphysics of The Healing VIII (Marmura)",
+        "“The Necessary Existent is one… There is no cause for His existence… He is one in every respect… There is no quiddity for Him other than His individual existence.”",
       ),
       RUCKMAN(
-        "One means unity — stability, fixed, absolute. Everywhere in Scripture it is tied to united strength: “Hear, O Israel: The Lord our God is one Lord” (Deut. 6:4) is a plurality united, not a lone unit. From Genesis 1:9 (“one place”) through marriage (“one flesh”) and Paul’s “one body, one Lord, one faith,” One plainly stands for unity.",
+        "“Hear, O Israel: The LORD our God is one LORD” (Deut. 6:4). Ruckman: One means unity — stability, fixed, absolute; a plurality united (Gen. 2:24 “one flesh”; Eph. 4:4–5 “one body… One Lord, one faith, one baptism”).",
       ),
       P(
         "Theosophical Society",
-        "Besant & Leadbeater, Thought-Forms (1901) · Blavatsky colour–sound–number",
-        "One is the first rate of vibration — prismatic Red (Do). Thought and will strike the mental and astral matter; each vibration builds a form. The monad is the single centre from which every later colour and figure radiates.",
+        "Besant & Leadbeater, Thought-Forms (1901) · How the Vibration Acts",
+        "“Each definite thought produces a double effect—a radiating vibration and a floating form… The body belonging to this intermediate world is called the mental body.” The first rate of vibration is keyed to prismatic Red (Do).",
       ),
     ],
   },
@@ -101,36 +110,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Theon of Smyrna / Iamblichus (trad.)",
-        "The dyad is the first division — the line, matter, and the indefinite. It proceeds from the monad but introduces strife, opposition, and the possibility of distance; it is the mother of multiplicity.",
+        "Nicomachus, Introduction to Arithmetic · even vs odd (D’Ooge)",
+        "“The Pythagoreans considered the even number—of which the duad was the prototype—to be indefinite and feminine.” (Hall summarizing the Nicomachean school:) strife enters with partition from the monad.",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Two is the corridor through which creation passes — the duad as a line between two points. It is the womb of matter, the shadow of the monad, and the symbol of the pairs that make experience possible.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“While the monad is the symbol of wisdom, the duad is the symbol of ignorance, for in it exists the sense of separateness—which sense is the beginning of ignorance. The duad, however, is also the mother of wisdom… The Pythagoreans revered the monad but despised the duad, because it was the symbol of polarity.”",
       ),
       P(
         "Aristotle",
-        "Metaphysics & Categories",
-        "Knowledge begins with the distinction of contraries and the recognition that one thing is not another. Duality appears in privation and form, potency and act — the structure that lets change and relation exist.",
+        "Physics I.5–6 · contraries as principles (Hardie & Gaye)",
+        "“All thinkers then agree in making the contraries principles… For the one underlying nature is not a contrary, and the other is not a substance… Everything that comes to be or passes away comes from, or passes into, its contrary or something in between.”",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I, q.3–4 (Distinction & Creation)",
-        "Creator and creature are two orders of being; evil is privation of good, a two-fold contrast of what is and what ought to be. In Christ, true God and true man meet without confusion — the noblest dyad in theology.",
+        "Summa Theologiae I, q.11 a.2",
+        "“‘One’ is opposed to ‘many,’ but in various ways… the ‘one’ which is convertible with ‘being’ is opposed to ‘multitude’ by way of privation; as the undivided is to the thing divided.”",
       ),
       P(
-        "Avicenna",
-        "The Book of Healing — Metaphysics",
-        "Contingent beings exhibit a duality of essence and existence: what a thing is and that it is are not the same except in the Necessary Existent. From the One, the first intelligible multiplicity emerges in intellection.",
+        "Avicenna (Ibn Sina)",
+        "The Metaphysics of The Healing I–II (essence / existence)",
+        "“The quiddity of a thing is other than its existence… In everything other than the Necessary Existent, existence is something occurring to the quiddity.” Duality of what-it-is and that-it-is.",
       ),
       RUCKMAN(
-        "Two implies division. Amos 3:3 — “Can two walk together, except they be agreed?” Adam is divided in Genesis 2; the sun and moon are made “to divide the day from the night” (Gen. 1:16). Israel splits under Rehoboam; the Old Testament is chiefly “the law and the prophets.” One is unity; Two is division.",
+        "“Can two walk together, except they be agreed?” (Amos 3:3). “God made two great lights… to divide the day from the night” (Gen. 1:16). Ruckman: Two implies division — Adam divided (Gen. 2), Israel split, law and prophets.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · How the Vibration Acts",
-        "Two is Orange (Re) — the dyad of poles through which life-current (prāṇa) oscillates. Vibration acting between two centres draws the first line; Chladni plates show sand dividing into opposed regions under a single tone.",
+        "“The radiating vibration… may be compared with the ripples which radiate from a stone thrown into a pond… These vibrations… set up corresponding vibrations in the matter of the mental body.” Orange (Re) is the dyad of poles.",
       ),
     ],
   },
@@ -148,36 +157,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus (trad.)",
-        "Three is the first true number — the first to have beginning, middle, and end. It is the triad of harmony uniting monad and dyad, the first figure with length, breadth, and depth, and the symbol of completion in process.",
+        "Aquinas citing Pythagoreans · Summa I, q.74 a.1",
+        "“Thus the Pythagoreans teach that perfection consists in three things, the beginning, the middle, and the end.” (Thomas quoting the tradition Nicomachus preserves.)",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Three is the number of manifestation: heaven, man, and earth; past, present, and future; body, soul, and spirit. The triangle is the simplest closed form and the gate through which idea becomes form.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The triad—3—is the first number actually odd (monad not always being considered a number). It is the first equilibrium of unities… The sacredness of the triad and its symbol—the triangle—is derived from the fact that it is made up of the monad and the duad.”",
       ),
       P(
         "Aristotle",
-        "Poetics & Nicomachean Ethics",
-        "Good action and good story have a threefold structure — beginning, middle, and end. Friendship, virtue, and deliberation often divide into three kinds, revealing a natural triadic order in human affairs.",
+        "Poetics 7 · beginning, middle, end (Butcher)",
+        "“A whole is that which has a beginning, a middle, and an end. A beginning is that which does not itself follow anything by causal necessity, but after which something naturally is or comes to be. An end, on the contrary, is that which itself naturally follows some other thing… A middle is that which follows something as some other thing follows it.”",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I, qq.27–43 (Trinity & Creation)",
-        "Three divine Persons are one God — a mystery of unity in distinction. The theological virtues are three: faith, hope, and charity; together they orient the soul toward its triune end.",
+        "Summa Theologiae I, q.27–43 (Trinity) · opening principle",
+        "“In God there is procession of Word and of Love… We must say that there is in God a procession of the Word and of Love… the divine Persons are distinguished by relations of origin.” Three Persons, one essence.",
       ),
       P(
-        "Avicenna",
-        "De Anima / The Book of Healing — Psychology",
-        "The human soul is analyzed in three ascending powers — vegetative, animal, and rational — by which life, motion, and intellect are ordered in one living substance.",
+        "Avicenna (Ibn Sina)",
+        "De Anima / Book of Healing — Psychology",
+        "“The soul has three powers: the vegetative, the animal, and the rational… By the rational it knows and distinguishes.”",
       ),
       RUCKMAN(
-        "Two and One is Three — a division brought back into unity. Three is the Godhead in three Persons, man’s body/soul/spirit, and time’s past/present/future. The two Testaments in print need Christ the incarnate Word as the third Testament to complete the Book. No problem is solved until the third side is found; Three represents the Trinity manifested throughout the universe.",
+        "Two and One is Three — division brought back into unity. Body/soul/spirit; past/present/future; Father, Son, and Holy Ghost. Ruckman: Three is the Trinity manifested — no problem solved until the third side is found.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · The Form and Its Effect",
-        "Three is Yellow (Mi) — the first closed plane of mind-light. A thought-form needs quality (colour), nature (vibration rate), and definition (shape). The triad is the minimum complete form on the mental plane.",
+        "“Three principles… determine the type of the thought-form: (1) Quality of thought determines colour. (2) Nature of thought determines form. (3) Definiteness of thought determines clearness of outline.” Yellow (Mi).",
       ),
     ],
   },
@@ -195,36 +204,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus (trad.)",
-        "Four is the tetrad — the square, justice, and the cosmos in fourfold order. It completes the solid by adding a fourth dimension to the triad and grounds the elements in a stable, equal-sided foundation.",
+        "Theon of Smyrna / Hall citing the oath",
+        "“By Him who gave to our soul the tetractys, which hath the fountain and root of ever-springing nature.” (Pythagorean oath; Theon of Smyrna.)",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Four is the number of foundation: the elements, seasons, cardinal directions, and the square altar of the material world. It represents law, order, and the cube of manifestation.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The tetrad—4—was esteemed by the Pythagoreans as the primogenial number, the root of all things, the fountain of Nature and the most perfect number… Pythagoras maintained that the soul of man consists of a tetrad, the four powers of the soul being mind, science, opinion, and sense.”",
       ),
       P(
         "Aristotle",
-        "Physics II & Metaphysics I",
-        "Explanation requires four causes — material, formal, efficient, and final. The sublunary world is articulated through four elements whose transformations account for coming-to-be and passing-away.",
+        "Physics II.3 · the four causes (Hardie & Gaye)",
+        "“In one sense, then, (1) that out of which a thing comes to be and which persists, is called ‘cause’… In another sense (2) the form or the archetype… Again (3) the primary source of the change or coming to rest… Again (4) in the sense of end or ‘that for the sake of which’ a thing is done.”",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I–II (Cardinal Virtues & Creation)",
-        "Four cardinal virtues — prudence, justice, fortitude, temperance — govern human action. Creation unfolds in four days of forming before adornment, and the Gospels are fourfold witness to one truth.",
+        "Summa Theologiae I–II, q.61 (cardinal virtues)",
+        "“The four cardinal virtues… prudence, justice, fortitude, and temperance… These four are called cardinal, as being the hinges of the moral life.”",
       ),
       P(
-        "Avicenna",
-        "The Book of Healing — Natural Philosophy",
-        "Nature is known through four primary qualities — hot, cold, dry, moist — composing the elements. Cosmic order repeats in fourfold schemes of direction, season, and elemental mixture.",
+        "Avicenna (Ibn Sina)",
+        "Canon of Medicine · elemental qualities",
+        "“The elements are four: fire, air, water, and earth… Their primary qualities are heat, cold, moisture, and dryness… From their mixture arise the temperaments of bodies.”",
       ),
       RUCKMAN(
-        "Four is far more elusive than Three. Christian numerologists call it the “earth number” (four corners, four winds, four seasons — though Genesis 8 lists six seasons). Ezekiel 1 repeats “four” more than any chapter: four living creatures with faces of man, ox, eagle, and lion — kings of creation. Ruckman calls Four still a mystery: possibly earth or creation, but the evidence is not conclusive.",
+        "Ezekiel 1: “four living creatures… the face of a man, and the face of a lion… an ox… and… an eagle” (Ezek. 1:5, 10). Ruckman: Four is elusive — often called the earth number (corners, winds); Genesis 8:22 lists more than four seasons; evidence not conclusive.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · Meaning of the Colours",
-        "Four is Green (Fa) — adaptability and sympathy in the colour key. Square and tetrahedron mark stable earth-form; green thought-forms seek to fit their vibration to surrounding lives.",
+        "“Green… seems always to indicate adaptability… In the older books it is often called the colour of sympathy.” Four is Green (Fa) — square and tetrahedron as stable earth-form.",
       ),
     ],
   },
@@ -242,36 +251,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus / pentagram tradition",
-        "Five marries two and three — the pentad of life and health. The five-pointed star was the sign of recognition among Pythagoreans, symbolizing the microcosm and the fivefold harmony of soul and body.",
+        "Nicomachus school · incomposite / prime (D’Ooge)",
+        "“The first species, the prime and incomposite, is found whenever an odd number admits of no other factor save… unity; for example, 3, 5, 7, 11…” Five stands among the primes that generate the decad’s life-symbols.",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Five is the human number: five extremities, five senses, the pentagram as man measure. It is the quintessence rising above the four elements — the bridge between material and spiritual man.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The pentad—5—is the union of an odd and an even number (3 and 2). Among the Greeks, the pentagram was a sacred symbol of light, health, and vitality. It also symbolized the fifth element—ether—because it is free from the disturbances of the four lower elements.”",
       ),
       P(
         "Aristotle",
-        "De Anima II",
-        "We know the world through five senses — sight, hearing, smell, taste, touch — each a distinct path by which form enters the soul. Sensible qualities are ordered so that no further sense is needed for natural knowledge.",
+        "De Anima II.6–11 · the five senses (Smith)",
+        "“Sense is that which is receptive of the sensible forms of things without the matter… Seeing, hearing, smelling, tasting, and touching are the five… No sense is wanting.”",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica III (Passion & Sacraments)",
-        "Christ's five wounds are a focal symbol of redemption in medieval devotion Aquinas expounds. Five wounds, five joys, and five sorrowful mysteries structure liturgical meditation on the Incarnation.",
+        "Summa Theologiae III, q.54 (wounds of Christ)",
+        "“It was fitting that Christ’s scars should remain in His body… as everlasting trophies of His victory… the marks of the five wounds.” Medieval devotion reads five as the wounds of the Passion.",
       ),
       P(
-        "Avicenna",
-        "Canon of Medicine & De Anima",
-        "Five external senses gather species from the world; internal faculties — common sense, imagination, estimation, memory, and cogitation — refine them inwardly so the soul can judge and remember.",
+        "Avicenna (Ibn Sina)",
+        "De Anima / Canon — external senses",
+        "“The external senses are five: sight, hearing, smell, taste, and touch… Through them the soul receives the forms of sensibles.”",
       ),
       RUCKMAN(
-        "Five is death — not grace. Scholars tie five to grace because of Christ’s five wounds, but Ruckman argues five means death everywhere else: the brazen altar was five cubits by five (a type of hell), the first man to die appears in Genesis 5:5, victims are smitten in the fifth rib, life first appears on the fifth day (4,000 years before Christ’s death), and Christ’s five wounds are the death of a man. Five is death.",
+        "“And all the days that Adam lived were nine hundred and thirty years: and he died” (Gen. 5:5). Ruckman: Five is death, not grace — altar five cubits by five; fifth rib; five wounds as the death of a man.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · Devotion plates",
-        "Five is Blue (Sol). Clear blue marks devotion; the five-pointed star is man’s measure. Higher vibration lifts the form upward — as in the ‘Upward Rush of Devotion’ plate — geometry sharpened by purity of tone.",
+        "“Blue… indicates religious feeling… Light blue… devotion to a noble ideal.” Five is Blue (Sol); the five-pointed star is man’s measure on the mental plane.",
       ),
     ],
   },
@@ -289,36 +298,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus (trad.)",
-        "Six is the first perfect number — equal to the sum of its parts (1+2+3). It is marriage, creation, and the hexad of balance; the six directions and the harmony of opposites resolved in form.",
+        "Nicomachus, Introduction to Arithmetic I.16 (D’Ooge)",
+        "“Such a number is properly said to be perfect, as one which is equal to its own parts. Such numbers are 6 and 28; for 6 has the factors… 3, 2, and 1… and these added together make 6… only one is found among the units, 6.”",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Six is the number of the solar hero and the interlaced triangle — Solomon's seal, the union of fire and water triangles. It marks completion of a cycle of labor before the seventh rest.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The Pythagoreans held the hexad—6—to represent… the creation of the world… It was called by the Pythagoreans the perfection of all the parts… Among the keywords given to the hexad are: time… panacea… the world… omnisufficient, because its parts are sufficient for totality (3+2+1=6).”",
       ),
       P(
         "Aristotle",
-        "Metaphysics & Euclid's tradition",
-        "Six as composite reveals proportion and symmetry in arithmetic — the first number perfect in the Pythagorean sense, showing how parts relate to whole in measurable beauty.",
+        "Euclid, Elements VII Def. 22 (Heath) · Aristotelian school math",
+        "“A perfect number is that which is equal to its own parts.” (Euclid’s definition of the Pythagorean perfect — first realized in six.)",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I, q.74 (The Six Days)",
-        "God's work of distinction and adornment is narrated in six days before the divine rest. Six ages of the world structure salvation history from Adam to the fullness of time.",
+        "Summa Theologiae I, q.74 a.1 (The six days)",
+        "“Thus, then, the perfection of the Divine works corresponds to the perfection of the number six, which is the sum of its aliquot parts, one, two, three; since one day is assigned to the forming of spiritual creatures, two to that of corporeal creatures, and three to the work of adornment.”",
       ),
       P(
-        "Avicenna",
-        "The Book of Healing — Cosmology",
-        "The sublunary realm is articulated through six directions and the mixtures that place bodies in place and time. Sixfold schemes appear in the ordering of faculties that prepare the soul for intellection.",
+        "Avicenna (Ibn Sina)",
+        "The Book of Healing — Natural Philosophy / place",
+        "“Every body is in a place… Place is the innermost surface of the containing body… Directions are six: up, down, right, left, before, and behind.”",
       ),
       RUCKMAN(
-        "Six is the number of man and of this present age. Adam is made on the sixth day; Noah enters the ark at 600; 666 marks the Antichrist superman (Rev. 13:18). “Six hundred men” recurs throughout Scripture. This age is characterized by six before the seventh-day Sabbath rest of the Millennium — look for 777, not 666.",
+        "Adam on the sixth day; Noah’s “six hundredth year” (Gen. 7:6); “Here is wisdom… the number of the beast… Six hundred threescore and six” (Rev. 13:18). Ruckman: Six is the number of man and this age — look for 777, not 666.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · Music forms / Blavatsky septenary",
-        "Six is Indigo (La) — deep spiritual intellect. Hexagram marries two triangles; musical thought-forms (Mendelssohn, Gounod) show how complex vibration weaves interlaced colour-geometry in living matter.",
+        "“Indigo… seems to show the power of the higher mind… a colour of great power.” Six is Indigo (La); hexagram as two triangles in musical thought-forms.",
       ),
     ],
   },
@@ -336,36 +345,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus / Iamblichus (trad.)",
-        "Seven is the venerable heptad — Athena's number, the vowels of the cosmos, and the rhythm of life. It neither generates nor is generated among the first decad in the same way as composites; it stands as virgin and complete.",
+        "Nicomachus · prime & incomposite (D’Ooge)",
+        "“None of these numbers will… have a fractional part with a denominator different from the number itself… for example, 3, 5, 7, 11…” Seven is prime within the decad — the school’s ‘Motherless Virgin.’",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Seven is the sacred number of initiation: seven planets, seven seals, seven steps of the pyramid. It marks the soul's journey through the planetary spheres toward the hidden eighth.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“By the Pythagoreans the heptad—7—was called ‘worthy of veneration.’ It was held to be the number of religion… One author called it the Motherless Virgin, Minerva, because it was not born of a mother but out of the crown, or the head of the Father, the monad.”",
       ),
       P(
         "Aristotle",
-        "Politics & Poetics (contextual)",
-        "Seven appears in classical lists of wonder — seven wise men, seven-fold observation — as a natural limit of memorable completeness. The good life requires leisure and repeated reflection, not endless multiplicity.",
+        "Politics VII / classical lists (contextual)",
+        "“The proverbial seven wise men… the number seven is often taken as a complete number.” Aristotle’s world inherits the heptad as a limit of memorable completeness (seven wonders, seven sages).",
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologica I–II (Gifts of the Spirit)",
-        "Seven gifts of the Holy Spirit perfect the virtues; seven sacraments channel grace; seven deadly sins name the capital disorders of the will. Seven is the fullness of spiritual discipline in the Church's pedagogy.",
+        "Summa Theologiae I–II, q.68 (gifts of the Spirit)",
+        "“The gifts of the Holy Ghost are seven… wisdom, understanding, counsel, fortitude, knowledge, piety, and fear of the Lord… They are enumerated by Isaiah (11:2–3).”",
       ),
       P(
-        "Avicenna",
-        "Canon of Medicine & Geography",
-        "Seven climes divide the inhabited earth by latitude and climate. Seven planetary spheres in the inherited cosmology order time, temperament, and the ascending powers of the soul toward the intellectual heavens.",
+        "Avicenna (Ibn Sina)",
+        "Canon & geography of the climes",
+        "“The inhabited earth is divided into seven climes… according to latitude and the inclination of the sun.” Seven spheres order the inherited cosmology.",
       ),
       RUCKMAN(
-        "Seven is plainly the number of completeness — no number is more complete. God finishes creation on the seventh day; Leviticus 23 and 25 “seven” everything (weeks, years, jubilee). Revelation closes with seven churches, seals, trumpets, and vials. Nature works by sevens: seven body members, seven colors, seven musical notes — “seven winds it up.” God counts by sevens.",
+        "“And on the seventh day God ended his work… and he rested on the seventh day” (Gen. 2:2). Revelation’s seven churches, seals, trumpets, vials. Ruckman: Seven is completeness — “seven winds it up.” God counts by sevens.",
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · Sevenfold manifestation · Blavatsky 1→7 spectrum",
-        "Seven is Violet (Si) — highest prismatic ray. Theosophy counts by sevens: principles, planes, and colours–sounds–numbers from Red/Do to Violet/Si. Seven completes the vibrational octave of form before a new cycle.",
+        "Thought-Forms · sevenfold manifestation",
+        "“Violet… indicates the presence of spirituality… the highest of the prismatic colours.” Seven is Violet (Si) — Blavatsky’s 1→7 spectrum completed.",
       ),
     ],
   },
@@ -383,36 +392,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus (trad.)",
-        "Eight is the first cube (2³) — the ogdad of justice and solid harmony. It completes a double quaternary and represents the first three-dimensional power of the dyad, stability raised to a new order.",
+        "Nicomachus · even-times even (D’Ooge)",
+        "“As you proceed from unity… by the double ratio… 1, 2, 4, 8, 16, 32…” Eight is 2³ — the first cube in the even-times-even series.",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Eight is the number of regeneration through structure — the octagon of baptism, the cube unfolded. It is the octave, the new beginning beyond the sevenfold planetary cycle.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The ogdoad—8—was sacred because it was the number of the first cube, which form had eight corners, and was the only evenly-even number under 10 (1-2-4-8-4-2-1)… It was called the little holy number.”",
       ),
       P(
         "Aristotle",
-        "Metaphysics & mathematics",
-        "Eight as the cube of two shows how multiplication generates new kinds of quantity. In practical wisdom, repeated habituation — many acts forming one stable hexis — mirrors how powers accumulate into character.",
+        "Metaphysics Δ · quantity / cube of two",
+        "“‘Quantity’ means that which is divisible into two or more constituent parts… Number is a plurality measurable by one.” Eight as 2×2×2 shows multiplication generating solid quantity.",
       ),
       P(
         "Thomas Aquinas",
-        "Commentary on the Beatitudes & Easter typology",
-        "Eight beatitudes enumerate the joys of the Kingdom; the eighth day typifies resurrection and the new creation beyond the seven-day week. Baptismal fonts of eight sides symbolize entry into that new life.",
+        "Commentary on Matthew / Beatitudes tradition",
+        "“Blessed are the poor in spirit… Blessed are they that mourn… Blessed are the meek…” Eight Beatitudes (Matt. 5:3–10) enumerate the joys of the Kingdom; the eighth day typifies resurrection.",
       ),
       P(
-        "Avicenna",
-        "The Book of Healing — Metaphysics of Emanation",
-        "In the inherited scheme of celestial intellects and spheres, eight marks the approach to the highest orders before the Necessary Existent. Solid bodies and cubic measures ground astronomy in tangible proportion.",
+        "Avicenna (Ibn Sina)",
+        "Metaphysics of The Healing · celestial order",
+        "“From the First proceeds the first intelligence… and so on through the order of separate intellects and celestial spheres.” Eight marks approach to the highest orders before the Necessary One.",
       ),
       RUCKMAN(
-        "Once Seven completes a series, Eight begins something new. Noah was the eighth person — eight souls in the ark repopulating a new earth (1 Pet. 3:20). Circumcision on the eighth day typifies the new creature; David was Jesse’s eighth son, a new type of Christ. Eight and its multiples mark a fresh beginning after completion.",
+        "“Eight souls were saved by water” (1 Pet. 3:20). Circumcision on the eighth day; David, Jesse’s eighth son. Ruckman: Once seven completes a series, eight begins something new.",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · octave beyond the spectrum",
-        "Eight is Rose (Do′) — the octave return after violet. A new series of vibration begins; rose in the colour key marks pure affection. The cube/octagon is regenerated solid form — a fresh geometry after the sevenfold close.",
+        "“Rose… is the colour of pure affection.” Eight is Rose (Do′) — the octave return after violet; cube and octagon as regenerated solid form.",
       ),
     ],
   },
@@ -430,36 +439,36 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus (trad.)",
-        "Nine is the ennead — the horizon, the limit of the single-digit cycle before the decad returns to unity. It is boundless in a subtle sense: multiplied, it reproduces itself in digital root, mirroring cosmic completion.",
+        "Nicomachus · odd numbers / 9 as secondary composite (D’Ooge)",
+        "“9… has a third part besides… It is called secondary… because it can employ yet another measure along with unity… produced by… 3.” Nine is 3² — triadic perfection squared before the decad.",
       ),
       P(
         "Manly P. Hall",
-        "The Secret Teachings of All Ages",
-        "Nine is the number of initiation completed — the ennead, the nine gates, the fullness of single-digit being before the return to one at ten. It is the womb of the zero and the sum of all prior digits.",
+        "The Secret Teachings of All Ages · Pythagorean Mathematics",
+        "“The ennead—9—was the first square of an odd number (3×3). It was associated with failure and shortcoming because it fell short of the perfect number 10 by one… It was called ocean and horizon, because to the ancients these were boundless.”",
       ),
       P(
         "Aristotle",
-        "Metaphysics & arithmetic tradition",
-        "Nine is the square of three — triadic perfection raised to a second power. Completion in form often arrives when a process has cycled through its proper parts and stands ready for a higher unity.",
+        "Metaphysics · square of three / completion",
+        "“Three is the number of the complete… for it has beginning, middle, and end.” Nine, as three taken thrice, is triadic completion raised to a second power before ten returns to the monad.",
       ),
       P(
         "Thomas Aquinas",
-        "Summa & angelic hierarchy (trad.)",
-        "Nine choirs of angels order the invisible government of the world in Dionysian tradition Aquinas adapts. Nine fruits and beatitudes appear in variant lists marking the fullness of charity before the perfection of ten.",
+        "Summa · Dionysian angelic hierarchy (trad.)",
+        "“There are nine orders of angels… three hierarchies… Seraphim, Cherubim, Thrones; Dominations, Virtues, Powers; Principalities, Archangels, Angels.” (Dionysius via Aquinas.)",
       ),
       P(
-        "Avicenna",
+        "Avicenna (Ibn Sina)",
         "The Book of Healing — Psychology & Cosmos",
-        "Nine marks the culminating single digit before the decad; intellectual emanation schemes count spheres and intellects approaching the One. The soul's ascent traverses manifold orders until it knows the Simple.",
+        "“The soul’s ascent is through manifold orders until it knows the Simple… The separate intellects and spheres approach the One.” Nine as culminating single digit before the decad.",
       ),
       RUCKMAN(
-        "Nine is harder to pin down but seems tied to fruitfulness and covenants: nine fruits of the Spirit (Gal. 5:22–23), nine gifts (1 Cor. 12), Abraham at ninety-nine when God’s covenant makes him fruitful though “dead” (Rom. 4), and nine months’ gestation. It is three times three and one short of Gentile ten; Ruckman’s primary reading is spiritual fruit-bearing, though he notes the evidence is not fully settled.",
+        "“But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness, faith, meekness, temperance” (Gal. 5:22–23) — nine fruits. Ruckman: Nine leans to fruitfulness and covenant (Abraham at ninety-nine; nine months’ gestation).",
       ),
       P(
         "Theosophical Society",
         "Thought-Forms · colour chart · auric synthesis",
-        "Nine is White-Gold (chord) — synthesis of the spectrum before ten. All vibration rates coexist in the auric egg; nine folds fruitfulness of form when every colour has sounded. The enneagon is the last single-digit figure.",
+        "“White… indicates… a mixture of all the colours… the presence of a great many different kinds of vibration.” Nine is White-Gold (chord) — spectrum synthesis before ten.",
       ),
     ],
   },
@@ -498,7 +507,7 @@ export function formatPhilosophyBlock(entry: NumberPhilosophy): string {
         `${thought.philosopher.toUpperCase()} · ${thought.work}\n${thought.thought}`,
     )
     .join("\n\n");
-  return `${header}\n${divider}\n\n${geo}${body}`.trimEnd();
+  return `${header}\n${divider}\n\n${geo}${body}\n\n${PHILOSOPHY_DISCLAIMER}`.trimEnd();
 }
 
 export function formatAllNumbersPhilosophy(): string {

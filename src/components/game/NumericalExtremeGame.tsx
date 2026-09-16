@@ -70,6 +70,7 @@ import {
   type GreekMythPassage,
   type RuckmanVerse,
   type NumberPhilosophy,
+  PHILOSOPHY_DISCLAIMER,
   type Point2,
   type VibrationResult,
 } from "@/game/numerical-extreme";
@@ -2851,6 +2852,9 @@ function PhilosophyThoughtsBlock({
       {showGeometry && <GeometryColourCard philosophy={philosophy} />}
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-amber">
         Number {philosophy.number} · {philosophy.sacredName} · {philosophy.geometry.colorName}
+      </p>
+      <p className="rounded-sm border border-amber/30 bg-amber/5 px-2.5 py-2 font-mono text-[10px] leading-relaxed text-amber/90">
+        {PHILOSOPHY_DISCLAIMER}
       </p>
       {philosophy.thoughts.map((t) => (
         <div

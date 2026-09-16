@@ -10,6 +10,7 @@ export type { NumberPhilosophy, PhilosopherThought, SacredGeometry } from "./phi
 export {
   NUMBER_PHILOSOPHY,
   PHILOSOPHER_ORDER,
+  PHILOSOPHY_DISCLAIMER,
   philosophyForNumber,
   formatPhilosophyBlock,
   formatAllNumbersPhilosophy,
