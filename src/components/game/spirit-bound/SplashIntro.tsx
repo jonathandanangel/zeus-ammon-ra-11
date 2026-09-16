@@ -85,10 +85,7 @@ export function SplashIntro({ onDone }: Props) {
         </div>
         <div className="splash-title-wrap">
           <p className="splash-title">THE LEGEND OF TRIANGLES</p>
-          <MinecraftSplash
-            className="mc-splash-intro"
-            text="Rarity of beating game is 1 in 10³⁹!"
-          />
+          <MinecraftSplash className="mc-splash-intro" />
         </div>
         <p className="splash-sub">GREENVALE</p>
       </section>

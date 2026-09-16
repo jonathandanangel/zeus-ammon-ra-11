@@ -9,14 +9,24 @@ import { cn } from "@/lib/utils";
  */
 export const LEGEND_SPLASHES = [
   "Rarity of beating game is 1 in 10³⁹!",
-  "Also try Executive Accumen!",
-  "19 moves · 20s / 25s!",
-  "Only 4 hardest murals exist!",
-  "Diameter of the tree is 19!",
-  "69 extreme trials await!",
-  "Greenvale never sleeps!",
-  "▲ ▲ ▲",
+  "Big secret at the end!",
+  "There's a Dune reference?!",
+  "Improves executive function!",
+  "Very deep!",
+  "Bill cypher?",
+  "You wont believe this!",
+  "Yes its a real game!",
 ] as const;
+
+function randomSplashIndex(exclude?: number): number {
+  const n = LEGEND_SPLASHES.length;
+  if (n <= 1) return 0;
+  let next = Math.floor(Math.random() * n);
+  if (exclude === undefined) return next;
+  // Avoid showing the same line twice in a row.
+  while (next === exclude) next = Math.floor(Math.random() * n);
+  return next;
+}
 
 type Props = {
   className?: string;
@@ -26,12 +36,12 @@ type Props = {
 
 export function MinecraftSplash({ className, text }: Props) {
   const reduced = usePrefersReducedMotion();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => randomSplashIndex());
 
   useEffect(() => {
     if (text || reduced) return;
     const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % LEGEND_SPLASHES.length);
+      setIndex((i) => randomSplashIndex(i));
     }, 4200);
     return () => window.clearInterval(id);
   }, [text, reduced]);
