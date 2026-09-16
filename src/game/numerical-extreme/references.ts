@@ -451,24 +451,38 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         venue: "NUMEROLOGY · 1611 KJV verse blocks · npm run build:kjv-ruckman",
       },
       {
-        title: "Thought-Forms (1901) · Theosophical colour–sound–number",
-        authors: "Annie Besant & C. W. Leadbeater; Theosophical Society; H. P. Blavatsky (colour–ray scale)",
+        title: "Thought-Forms (1901) · The Secret Doctrine · colour–sound–number",
+        authors: "Annie Besant & C. W. Leadbeater; H. P. Blavatsky (Secret Doctrine I–II); Theosophical Society",
         detail:
-          "Quoted Thought-Forms lines (double effect of thought; colour / form / outline; colour keywords) plus prismatic colour / musical note and plate imagery filtered to the typed word’s number.",
-        venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/",
+          "Tradition cards now quote both Thought-Forms (vibration/form/colour) and Secret Doctrine (Power of Numbers, Monad/Duad, Fohat’s five strides & six-to-seventh, Hebdomad/septenary, Unity begetting Numbers), plus prismatic colour / note and plate imagery. Separate Secret Doctrine & Greek Myths search panels unchanged — they already work well.",
+        venue: "NUMEROLOGY · Theosophical Society card · public/numerology/thought-forms/ · public/secret-doctrine/",
+      },
+      {
+        title: "Timaeus · Elements VII Def. 22",
+        authors: "Plato (Timaeus); Euclid (Heath)",
+        detail:
+          "Extra classical sources on tradition cards: Timaeus on four elements, proportional means in cubes/squares, and the perfect year; Euclid’s definition of a perfect number (equal to its own parts) beside Nicomachus on 6 and 28.",
+        venue: "NUMEROLOGY · Aristotle / Pythagoras cards (cross-cited)",
       },
       {
         title: "The Secret Doctrine (Cosmogenesis / Anthropogenesis)",
         authors: "H. P. Blavatsky",
         detail:
-          "Indexed public-domain PDF passages matched to the typed word (and close stems), ranked for occult / numerical co-occurrence with the path digit (septenary, Fohat, Dzyan, etc.).",
+          "Indexed public-domain PDF passages matched to the typed word (and close stems), ranked for occult / numerical co-occurrence with the path digit (septenary, Fohat, Dzyan, etc.). Left as the primary free-text Blavatsky search — working well.",
         venue: "NUMEROLOGY · Secret Doctrine panel · public/secret-doctrine/ · npm run build:secret-doctrine",
+      },
+      {
+        title: "The Greek Myths (1955, revised 1960)",
+        authors: "Robert Graves",
+        detail:
+          "Indexed passages matched to the typed word via exact forms, anagrams/scrambles (same letter signature), and similar letter-count words that share letters — with PDF page citations. Left unchanged — working well.",
+        venue: "NUMEROLOGY · Greek Myths panel · public/greek-myths/",
       },
       {
         title: "A Dictionary of the English Language (1755)",
         authors: "Samuel Johnson; Lexicons of Early Modern English (LEME), University of Toronto (CC BY 4.0)",
         detail:
-          "First-edition headword senses for the typed word (letter-bucket lexicon). Optional UCF high-res facsimile scans when a page could be extracted from the local OneDrive zip.",
+          "First-edition headword senses for the typed word (letter-bucket lexicon). Optional UCF high-res facsimile scans when a page could be extracted from the local OneDrive zip. Definitions left as-is — working well.",
         venue: "NUMEROLOGY · Johnson 1755 panel · public/johnson/lexicon/ · npm run build:johnson",
       },
       {
@@ -484,13 +498,6 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         detail:
           "Permalink search for facsimile browsing; partial UCF TIFF zip used only for on-page facsimile images when extractable.",
         venue: "https://johnsonsdictionaryonline.com",
-      },
-      {
-        title: "The Greek Myths (1955, revised 1960)",
-        authors: "Robert Graves",
-        detail:
-          "Indexed passages matched to the typed word via exact forms, anagrams/scrambles (same letter signature), and similar letter-count words that share letters — with PDF page citations.",
-        venue: "NUMEROLOGY · Greek Myths panel · public/greek-myths/",
       },
       {
         title: "Major Arcana path cards (I–IX)",

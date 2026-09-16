@@ -91,8 +91,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Besant & Leadbeater, Thought-Forms (1901) · How the Vibration Acts",
-        "“Each definite thought produces a double effect—a radiating vibration and a floating form… The body belonging to this intermediate world is called the mental body.” The first rate of vibration is keyed to prismatic Red (Do).",
+        "Blavatsky, The Secret Doctrine I · Power of Numbers · Thought-Forms",
+        "“Number is, as the great writer thought, an Entity, and, at the same time, a Breath emanating from what he called God and what we call the ALL… ‘where naught obtains its form but through the Deity, which is an effect of Number.’” (SD I.) Thought-Forms: each definite thought yields “a radiating vibration and a floating form.” Red (Do).",
       ),
     ],
   },
@@ -138,8 +138,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · How the Vibration Acts",
-        "“The radiating vibration… may be compared with the ripples which radiate from a stone thrown into a pond… These vibrations… set up corresponding vibrations in the matter of the mental body.” Orange (Re) is the dyad of poles.",
+        "Blavatsky, Secret Doctrine · Monad and Duad · Thought-Forms",
+        "Porphyry (cited in SD): the Monad is “that most simple Being, the cause of all unity and the measure of all things.” “But the Duad, although the origin of Evil, or Matter… is still Substance during Manvantara.” (SD.) Thought-Forms: vibrations “set up corresponding vibrations in the matter of the mental body.” Orange (Re).",
       ),
     ],
   },
@@ -185,8 +185,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · The Form and Its Effect",
-        "“Three principles… determine the type of the thought-form: (1) Quality of thought determines colour. (2) Nature of thought determines form. (3) Definiteness of thought determines clearness of outline.” Yellow (Mi).",
+        "Blavatsky, Secret Doctrine · triangles · Thought-Forms",
+        "“Together of pure Spirit and Matter, of the Arupa and the Rupa, of which the Triangles are a Symbol. This double Triangle is a sign of Vishnu, as it is Solomon’s seal…” (SD I.) Thought-Forms: “(1) Quality of thought determines colour. (2) Nature of thought determines form. (3) Definiteness of thought determines clearness of outline.” Yellow (Mi).",
       ),
     ],
   },
@@ -204,8 +204,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Theon of Smyrna / Hall citing the oath",
-        "“By Him who gave to our soul the tetractys, which hath the fountain and root of ever-springing nature.” (Pythagorean oath; Theon of Smyrna.)",
+        "Theon of Smyrna · Pythagorean oath (Hall / Theon)",
+        "“By Him who gave to our soul the tetractys, which hath the fountain and root of ever-springing nature.” The tetractys (1+2+3+4=10) is the oath-figure of the school and the fountain of harmonic ratios 4:3, 3:2, 2:1.",
       ),
       P(
         "Manly P. Hall",
@@ -219,8 +219,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Thomas Aquinas",
-        "Summa Theologiae I–II, q.61 (cardinal virtues)",
-        "“The four cardinal virtues… prudence, justice, fortitude, and temperance… These four are called cardinal, as being the hinges of the moral life.”",
+        "Summa Theologiae I–II, q.61 a.2 (cardinal virtues)",
+        "“The four cardinal virtues… prudence, justice, fortitude, and temperance… These four are called cardinal, as being the hinges of the moral life… All the other moral virtues are in some way reduced to these.”",
       ),
       P(
         "Avicenna (Ibn Sina)",
@@ -232,8 +232,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · Meaning of the Colours",
-        "“Green… seems always to indicate adaptability… In the older books it is often called the colour of sympathy.” Four is Green (Fa) — square and tetrahedron as stable earth-form.",
+        "Plato, Timaeus · Blavatsky SD · Thought-Forms",
+        "Timaeus: “the creation took up the whole of each of the four elements; for the Creator compounded the world out of all the fire and all the water and all the air and all the earth.” SD: Fohat’s “four winged wheels at each corner… for the four holy ones.” Thought-Forms: “Green… adaptability… sympathy.” Green (Fa).",
       ),
     ],
   },
@@ -279,8 +279,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · Devotion plates",
-        "“Blue… indicates religious feeling… Light blue… devotion to a noble ideal.” Five is Blue (Sol); the five-pointed star is man’s measure on the mental plane.",
+        "Blavatsky, Secret Doctrine · five strides · Thought-Forms",
+        "“From a Cosmic point of view, Fohat taking ‘five strides’ refers here to the five upper planes of Consciousness and Being, the sixth and the seventh (counting downwards) being the astral and the terrestrial…” (SD I.) Thought-Forms: “Blue… indicates religious feeling… Light blue… devotion to a noble ideal.” Blue (Sol).",
       ),
     ],
   },
@@ -308,8 +308,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Aristotle",
-        "Euclid, Elements VII Def. 22 (Heath) · Aristotelian school math",
-        "“A perfect number is that which is equal to its own parts.” (Euclid’s definition of the Pythagorean perfect — first realized in six.)",
+        "Euclid, Elements VII Def. 22 (Heath) · Nicomachus I.16",
+        "Euclid: “A perfect number is that which is equal to its own parts.” Nicomachus: “Such numbers are 6 and 28; for 6 has the factors… 3, 2, and 1… and these added together make 6… only one is found among the units, 6.”",
       ),
       P(
         "Thomas Aquinas",
@@ -326,8 +326,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · Music forms / Blavatsky septenary",
-        "“Indigo… seems to show the power of the higher mind… a colour of great power.” Six is Indigo (La); hexagram as two triangles in musical thought-forms.",
+        "Blavatsky, Secret Doctrine · six to the seventh · Thought-Forms",
+        "“FOHAT TRACES SPIRAL LINES TO UNITE THE SIX TO THE SEVENTH — THE CROWN…” “This double Triangle is a sign of Vishnu, as it is Solomon’s seal, and the Sri-Antara of the Brahmins.” (SD I.) Thought-Forms: “Indigo… the power of the higher mind.” Indigo (La).",
       ),
     ],
   },
@@ -355,8 +355,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Aristotle",
-        "Politics VII / classical lists (contextual)",
-        "“The proverbial seven wise men… the number seven is often taken as a complete number.” Aristotle’s world inherits the heptad as a limit of memorable completeness (seven wonders, seven sages).",
+        "Plato, Timaeus · Aristotle’s inheritance of heptadic completeness",
+        "Timaeus (on cosmic time): “the perfect number of time fulfils the perfect year when all the eight revolutions… attain their completion at the same time.” Classical lists (seven sages, seven wonders) treat seven as a limit of memorable completeness Aristotle’s world inherits.",
       ),
       P(
         "Thomas Aquinas",
@@ -373,8 +373,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · sevenfold manifestation",
-        "“Violet… indicates the presence of spirituality… the highest of the prismatic colours.” Seven is Violet (Si) — Blavatsky’s 1→7 spectrum completed.",
+        "Blavatsky, Secret Doctrine · Mysteries of the Hebdomad · Thought-Forms",
+        "“Between the Vedas and the Puranas there is an abyss… like the seventh (atmic) and the first or lowest principle (the physical body) in the Septenary constitution of man.” (SD II.) Hebdomad sections: Tetraktis and heptagon; seven in astronomy and magic. Thought-Forms: “Violet… spirituality… highest of the prismatic colours.” Violet (Si).",
       ),
     ],
   },
@@ -392,8 +392,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
     thoughts: [
       P(
         "Pythagoras",
-        "Nicomachus · even-times even (D’Ooge)",
-        "“As you proceed from unity… by the double ratio… 1, 2, 4, 8, 16, 32…” Eight is 2³ — the first cube in the even-times-even series.",
+        "Nicomachus · even-times even series (D’Ooge)",
+        "“As you proceed from unity, as from a root, by the double ratio to infinity… 1, 2, 4, 8, 16, 32, 64…” Eight is 2³ — “the proof of the perfect evenly-even number is that it can be halved and the halves again halved back to unity.”",
       ),
       P(
         "Manly P. Hall",
@@ -402,8 +402,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Aristotle",
-        "Metaphysics Δ · quantity / cube of two",
-        "“‘Quantity’ means that which is divisible into two or more constituent parts… Number is a plurality measurable by one.” Eight as 2×2×2 shows multiplication generating solid quantity.",
+        "Plato, Timaeus · means in cube and square · Aristotle Met. Δ",
+        "Timaeus: “whenever in any three numbers, whether cube or square, there is a mean, which is to the last term what the first term is to it… they will all of them of necessity… be the same…” Eight as the first cube (2³) grounds solid quantity.",
       ),
       P(
         "Thomas Aquinas",
@@ -420,8 +420,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · octave beyond the spectrum",
-        "“Rose… is the colour of pure affection.” Eight is Rose (Do′) — the octave return after violet; cube and octagon as regenerated solid form.",
+        "Blavatsky, Secret Doctrine · octave after seven · Thought-Forms",
+        "SD’s Hebdomad closes the sevenfold chain; a new cycle begins beyond violet. Thought-Forms: “Rose… is the colour of pure affection.” Eight is Rose (Do′) — octave return; cube and octagon as regenerated solid form.",
       ),
     ],
   },
@@ -467,8 +467,8 @@ export const NUMBER_PHILOSOPHY: Record<number, NumberPhilosophy> = {
       ),
       P(
         "Theosophical Society",
-        "Thought-Forms · colour chart · auric synthesis",
-        "“White… indicates… a mixture of all the colours… the presence of a great many different kinds of vibration.” Nine is White-Gold (chord) — spectrum synthesis before ten.",
+        "Blavatsky, Secret Doctrine · Unity begets Numbers · Thought-Forms",
+        "“God is a Number endowed with motion… As Unity, it begins the Numbers, with which it has nothing in common… The existence of the Number depends on Unity, which, without a single Number, begets them all.” (SD I, Power of Numbers.) Thought-Forms: “White… a mixture of all the colours…” Nine is White-Gold (chord).",
       ),
     ],
   },
