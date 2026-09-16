@@ -13,6 +13,7 @@ export interface TitleScreenProps {
   onHeatTransferIntro: () => void;
   onSpiritBound: () => void;
   onNumericalExtreme: () => void;
+  onVanityApp: () => void;
   onSettings: () => void;
   onValidate: () => void;
 }
@@ -95,6 +96,13 @@ export function TitleScreen(p: TitleScreenProps) {
           onClick={p.onNumericalExtreme}
         >
           NUMERICAL EXTREME
+        </button>
+        <button
+          type="button"
+          className={`${item} vanity-app-menu-item`}
+          onClick={p.onVanityApp}
+        >
+          VANITY APP
         </button>
         <button type="button" className={item} onClick={p.onSettings}>
           Settings

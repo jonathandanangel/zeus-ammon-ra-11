@@ -43,6 +43,7 @@ import { NumericalExtremeGame } from "./NumericalExtremeGame";
 import { SpiritBoundGame } from "./SpiritBoundGame";
 import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
+import { VanityApp } from "./VanityApp";
 import { WorldBackground } from "./WorldBackground";
 
 type Screen =
@@ -61,7 +62,8 @@ type Screen =
   | "hti-review"
   | "ht-chapter-jump"
   | "spirit-bound"
-  | "numerical-extreme";
+  | "numerical-extreme"
+  | "vanity-app";
 type Mode =
   | "campaign"
   | "practice"
@@ -73,7 +75,8 @@ type Mode =
   | "ht-extreme"
   | "ht-intro"
   | "spirit-bound"
-  | "numerical-extreme";
+  | "numerical-extreme"
+  | "vanity-app";
 type Phase = "answering" | "revealed" | "recall";
 type IntermissionGame = "lightcycle" | "maze";
 
@@ -182,6 +185,7 @@ export function AeroGrid() {
         return heatTransferIntroQuestions;
       case "spirit-bound":
       case "numerical-extreme":
+      case "vanity-app":
         return [];
       case "mastery":
         return stableShuffle(allQuestions, "mastery");
@@ -270,7 +274,7 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "numerical-extreme") {
+    if (mode === "numerical-extreme" || mode === "vanity-app") {
       return undefined;
     }
     if (mode === "spirit-bound") {
@@ -770,6 +774,28 @@ export function AeroGrid() {
             setPsychedelicActive(false);
             setScreen("numerical-extreme");
           }}
+          onVanityApp={() => {
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
+            setMode("vanity-app");
+            setReviewIds([]);
+            setLocalIndex(0);
+            setAnswer([]);
+            setPhase("answering");
+            setShowHint(false);
+            setExtremeScore(0);
+            setExtremeCorrectCount(0);
+            setV2Log([]);
+            setHtLog([]);
+            setHtiLog([]);
+            setPendingIntermission(null);
+            setGauntletRecovery(false);
+            setOverloadBurst(0);
+            setPsychedelicActive(false);
+            setScreen("vanity-app");
+          }}
           onSettings={() => setScreen("settings")}
           onValidate={() => setScreen("validate")}
         />
@@ -788,6 +814,8 @@ export function AeroGrid() {
       {screen === "numerical-extreme" && (
         <NumericalExtremeGame onMenu={() => setScreen("title")} />
       )}
+
+      {screen === "vanity-app" && <VanityApp onMenu={() => setScreen("title")} />}
 
       {screen === "settings" && <SettingsPanel onBack={() => setScreen("title")} />}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}
