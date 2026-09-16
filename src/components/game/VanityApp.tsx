@@ -58,6 +58,103 @@ function VanityPrivacyNote({ className }: { className?: string }) {
   );
 }
 
+function VanityProcessInfo({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "space-y-3 rounded-xl border border-cyan/35 bg-black/35 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground",
+        className,
+      )}
+    >
+      <p className="font-bold uppercase tracking-[0.14em] text-cyan">Exact process · what happens</p>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">1. Unlock (credentials)</p>
+        <p>
+          You type your Face++ API key and secret into the form. Those values live only in React
+          component state in this browser tab. This app does{" "}
+          <span className="text-amber">not</span> write them to localStorage, sessionStorage,
+          IndexedDB, cookies, or any ZEUS database. There are no hardcoded keys in the source.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">2. Select images</p>
+        <p>
+          You choose JPG/PNG files from your device. The browser holds{" "}
+          <code className="text-amber">File</code> objects in memory. They are not uploaded to a ZEUS
+          file store.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">3. Local repair (browser only)</p>
+        <p>
+          Each image may be resized/compressed in your browser so it meets Face++ limits (roughly
+          48–4096 px edge, ≤2MB). That repaired blob stays in memory for the next step.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">4. Send one Detect request per image</p>
+        <p>
+          The image is converted to base64 and sent with your key + secret into a TanStack Start
+          server function (<code className="text-amber">faceppDetect</code>). That function immediately
+          POSTs to Face++ Detect (
+          <code className="text-amber">api-us.faceplusplus.com</code> and/or{" "}
+          <code className="text-amber">api-cn.faceplusplus.com</code>), trying URL-encoded base64 first,
+          then multipart fallback. Face++ receives your credentials and the image for that API call.
+          A short pause (~{PAUSE_MS}ms) sits between images.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">5. Scores return · local math</p>
+        <p>
+          Face++ returns beauty / age / gender / emotion attributes. This app keeps those results in
+          React state, then runs IQ-like / ATTR / CAC aggregation in the browser. The on-screen log
+          is also memory-only (capped to recent lines).
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">6. Optional report download</p>
+        <p>
+          Only if you click download does a{" "}
+          <code className="text-amber">FacePP_Batch_Report.txt</code> save to{" "}
+          <span className="text-moon">your</span> computer. ZEUS does not keep a copy of that report.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="font-bold text-moon">7. Lock keys / leave page</p>
+        <p>
+          “Lock keys” clears API key/secret from state and drops batch rows. Closing or refreshing
+          the tab discards the same memory. Nothing is restored on the next visit unless you type
+          credentials again.
+        </p>
+      </div>
+
+      <div className="space-y-2 border-t border-cyan/20 pt-3">
+        <p className="font-bold uppercase tracking-[0.12em] text-amber">Honest limits</p>
+        <ul className="list-disc space-y-1 pl-4">
+          <li>
+            <span className="text-moon">Our app does not persist</span> your photos, keys, or scores.
+          </li>
+          <li>
+            <span className="text-moon">Face++ does receive</span> each Detect request (image + your
+            API credentials). Their retention is governed by Face++ / Megvii — not by this app.
+          </li>
+          <li>
+            Hosting/server logs for the proxy request may exist at the infrastructure layer like any
+            web request; this UI does not implement a save/history feature.
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function VanitySourcesBlurb({ className }: { className?: string }) {
   return (
     <div
@@ -103,6 +200,7 @@ function VanitySourcesBlurb({ className }: { className?: string }) {
 }
 
 export function VanityApp({ onMenu }: VanityAppProps) {
+  const [showProcessInfo, setShowProcessInfo] = React.useState(false);
   const [unlocked, setUnlocked] = React.useState(false);
   const [gate, setGate] = React.useState<GateState>({
     apiKey: "",
@@ -306,6 +404,14 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             <VanitySourcesBlurb className="mt-3 max-w-3xl" />
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={btn}
+              aria-expanded={showProcessInfo}
+              onClick={() => setShowProcessInfo((v) => !v)}
+            >
+              {showProcessInfo ? "Hide info" : "More info"}
+            </button>
             {unlocked && (
               <button type="button" className={btn} onClick={lockCredentials}>
                 Lock keys
@@ -320,6 +426,11 @@ export function VanityApp({ onMenu }: VanityAppProps) {
             </button>
           </div>
         </div>
+        {showProcessInfo && (
+          <div className="border-b border-magenta/20 px-4 py-3">
+            <VanityProcessInfo className="max-w-3xl" />
+          </div>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em]">
           <span className={cn(busy ? "text-amber" : "text-mint")}>{status}</span>
           <span className="text-muted-foreground">
