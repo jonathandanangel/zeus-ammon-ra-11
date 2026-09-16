@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Finale } from "@/components/game/Finale";
+import { WorldBackground } from "@/components/game/WorldBackground";
 import moonPortraitUrl from "@/assets/seus-moon.png";
 import {
   itemImageUrl,
@@ -598,11 +599,26 @@ export function ExtremePuzzle({ onExit }: Props) {
     playSfx("move");
   }
 
-  function shell(children: React.ReactNode, opts?: { apocalypse?: boolean }) {
-    const apocalypse = opts?.apocalypse ?? true;
+  function shell(children: React.ReactNode) {
+    const worldProgress =
+      phase === "play"
+        ? (index + 1) / EXTREME_PUZZLE_ITEM_COUNT
+        : phase === "rocket"
+          ? 1
+          : 0.45;
+    const inferno =
+      phase === "rocket" || (phase === "play" && index >= Math.floor(EXTREME_PUZZLE_ITEM_COUNT / 2));
+
     return (
       <div className="relative min-h-[min(92vh,900px)]">
-        {apocalypse && <ExtremeHalloweenBackdrop />}
+        <WorldBackground
+          progress={worldProgress}
+          scanlines={settings.scanlines}
+          reducedMotion={settings.reducedMotion}
+          bloodMoon
+          psychedelic
+          inferno={inferno}
+        />
         {phase === "hebrew" && (
           <div className="extreme-hebrew-flash" aria-live="polite">
             <div className="flex flex-col items-center gap-4">
@@ -708,7 +724,6 @@ export function ExtremePuzzle({ onExit }: Props) {
           </button>
         </section>
       </>,
-      { apocalypse: false },
     );
   }
 
@@ -787,7 +802,7 @@ export function ExtremePuzzle({ onExit }: Props) {
         </span>
       </header>
 
-      <div className="bg-[#ebebeb] px-2 py-3 sm:px-4">
+      <div className="bg-black px-2 py-3 sm:px-4">
         {imgOk ? (
           <img
             key={itemNumber}
