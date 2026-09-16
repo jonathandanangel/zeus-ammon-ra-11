@@ -52,7 +52,6 @@ import {
   wordToNumerology,
   lookupJohnsonInline,
   loadJohnsonResources,
-  lookupJohnsonFull,
   lookupJohnsonEditions,
   searchSecretDoctrine,
   getRuckmanVersesForNumber,
