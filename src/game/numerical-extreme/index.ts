@@ -134,8 +134,8 @@ export {
   formatPhilosophyBlock,
   formatAllNumbersPhilosophy,
 } from "./numerology";
-export { loadJohnsonResources, lookupJohnsonFull, enrichJohnsonSense } from "./johnson-leme";
-export type { JohnsonResources } from "./johnson-leme";
+export { loadJohnsonResources, lookupJohnsonFull, lookupJohnsonEditions, enrichJohnsonSense } from "./johnson-leme";
+export type { JohnsonResources, JohnsonEditions } from "./johnson-leme";
 export type {
   NumerologyResult,
   NumerologyLetter,

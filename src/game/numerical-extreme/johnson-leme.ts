@@ -1,9 +1,11 @@
-/** LEME Johnson 1755 lexicon + UCF zip facsimile helpers (loaded on demand). */
+/** Johnson 1755 (LEME) + 1773 (4th ed. via JDO/StarDict) lexicons + UCF facsimile helpers. */
 
 import type { JohnsonSense } from "./numerology";
 
-const LEME_SOURCE = "Samuel Johnson, Dictionary of the English Language (1755) · LEME XML";
-const INLINE_SOURCE = "Johnson 1777 federally validated (4th ed. reissue / 1773 revised text)";
+const SOURCE_1755 = "Samuel Johnson, Dictionary of the English Language (1755) · LEME XML";
+const SOURCE_1773 =
+  "Samuel Johnson, Dictionary of the English Language, 4th ed. (1773) · johnsonsdictionaryonline.com / LEME CC BY 4.0";
+const INLINE_SOURCE = "Johnson inline gloss lexicon (fallback)";
 const JDO_BASE = "https://johnsonsdictionaryonline.com/views/search.php?word=";
 
 type LemeBucketEntry = { p: string; s: string[] };
@@ -25,11 +27,17 @@ type HocrEstimates = {
 };
 
 export type JohnsonResources = {
-  buckets: Map<string, Record<string, LemeBucketEntry>>;
+  buckets1755: Map<string, Record<string, LemeBucketEntry>>;
+  buckets1773: Map<string, Record<string, LemeBucketEntry>>;
   pageIndex: PageIndex | null;
   facsimilePages: Set<number>;
   hocrPages: Record<string, number>;
   maxScanPage: number;
+};
+
+export type JohnsonEditions = {
+  e1755: JohnsonSense | null;
+  e1773: JohnsonSense | null;
 };
 
 let resourcesPromise: Promise<JohnsonResources> | null = null;
@@ -51,9 +59,12 @@ async function fetchJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function loadBucket(letter: string): Promise<Record<string, LemeBucketEntry>> {
+async function loadBucket(
+  letter: string,
+  dir: "lexicon" | "lexicon-1773",
+): Promise<Record<string, LemeBucketEntry>> {
   const safe = letter.replace(/[^A-Z']/g, "") || "_";
-  const data = await fetchJson<LemeBucket>(`/johnson/lexicon/${encodeURIComponent(safe)}.json`);
+  const data = await fetchJson<LemeBucket>(`/johnson/${dir}/${encodeURIComponent(safe)}.json`);
   return data.entries;
 }
 
@@ -75,7 +86,8 @@ export async function loadJohnsonResources(): Promise<JohnsonResources> {
       (pageIndex?.pages ? Math.max(...Object.keys(pageIndex.pages).map(Number)) : 0);
 
     return {
-      buckets: new Map(),
+      buckets1755: new Map(),
+      buckets1773: new Map(),
       pageIndex,
       facsimilePages: new Set(manifest.pages ?? []),
       hocrPages: estimates.words ?? {},
@@ -86,21 +98,31 @@ export async function loadJohnsonResources(): Promise<JohnsonResources> {
   return resourcesPromise;
 }
 
-async function bucketFor(resources: JohnsonResources, headword: string): Promise<Record<string, LemeBucketEntry>> {
+async function bucketFor(
+  resources: JohnsonResources,
+  headword: string,
+  edition: "1755" | "1773",
+): Promise<Record<string, LemeBucketEntry>> {
   const key = bucketKey(headword);
-  const cached = resources.buckets.get(key);
+  const map = edition === "1755" ? resources.buckets1755 : resources.buckets1773;
+  const cached = map.get(key);
   if (cached) return cached;
-  const loaded = await loadBucket(key);
-  resources.buckets.set(key, loaded);
-  return loaded;
+  try {
+    const loaded = await loadBucket(key, edition === "1755" ? "lexicon" : "lexicon-1773");
+    map.set(key, loaded);
+    return loaded;
+  } catch {
+    map.set(key, {});
+    return {};
+  }
 }
 
-function lemeToSense(headword: string, entry: LemeBucketEntry): JohnsonSense {
+function toSense(headword: string, entry: LemeBucketEntry, source: string): JohnsonSense {
   return {
     headword,
     partOfSpeech: entry.p,
     senses: entry.s,
-    source: LEME_SOURCE,
+    source,
   };
 }
 
@@ -138,18 +160,63 @@ export function enrichJohnsonSense(
   };
 }
 
+async function lookupEdition(
+  word: string,
+  resources: JohnsonResources,
+  edition: "1755" | "1773",
+): Promise<JohnsonSense | null> {
+  const key = normalizeHeadword(word);
+  if (!key) return null;
+  const bucket = await bucketFor(resources, key, edition);
+  const entry = bucket[key];
+  if (!entry) return null;
+  const source = edition === "1755" ? SOURCE_1755 : SOURCE_1773;
+  return enrichJohnsonSense(toSense(key, entry, source), key, resources);
+}
+
+/** Prefer 1755 for single-entry callers; falls back to 1773 then inline. */
 export async function lookupJohnsonLeme(
   word: string,
   resources: JohnsonResources,
 ): Promise<JohnsonSense | null> {
-  const key = normalizeHeadword(word);
-  if (!key) return null;
+  return (
+    (await lookupEdition(word, resources, "1755")) ??
+    (await lookupEdition(word, resources, "1773"))
+  );
+}
 
-  const bucket = await bucketFor(resources, key);
-  const entry = bucket[key];
-  if (!entry) return null;
+export async function lookupJohnsonEditions(
+  word: string,
+  resources: JohnsonResources | null | undefined,
+  inlineLookup: (word: string) => JohnsonSense | null,
+): Promise<JohnsonEditions> {
+  const key = word.toLowerCase().replace(/[^a-z]/g, "");
+  if (!key) return { e1755: null, e1773: null };
 
-  return enrichJohnsonSense(lemeToSense(key, entry), key, resources);
+  if (!resources) {
+    const inline = inlineLookup(key);
+    return {
+      e1755: inline ? enrichJohnsonSense({ ...inline, source: inline.source || INLINE_SOURCE }, key.toUpperCase(), null) : null,
+      e1773: null,
+    };
+  }
+
+  const [e1755, e1773] = await Promise.all([
+    lookupEdition(key, resources, "1755"),
+    lookupEdition(key, resources, "1773"),
+  ]);
+
+  if (e1755 || e1773) {
+    return { e1755, e1773 };
+  }
+
+  const inline = inlineLookup(key);
+  return {
+    e1755: inline
+      ? enrichJohnsonSense({ ...inline, source: inline.source || INLINE_SOURCE }, key.toUpperCase(), resources)
+      : null,
+    e1773: null,
+  };
 }
 
 export async function lookupJohnsonFull(
@@ -157,15 +224,6 @@ export async function lookupJohnsonFull(
   resources: JohnsonResources | null | undefined,
   inlineLookup: (word: string) => JohnsonSense | null,
 ): Promise<JohnsonSense | null> {
-  const key = word.toLowerCase().replace(/[^a-z]/g, "");
-  if (!key) return null;
-
-  if (resources) {
-    const leme = await lookupJohnsonLeme(key, resources);
-    if (leme) return leme;
-  }
-
-  const inline = inlineLookup(key);
-  if (!inline) return null;
-  return enrichJohnsonSense({ ...inline, source: inline.source || INLINE_SOURCE }, key.toUpperCase(), resources);
+  const editions = await lookupJohnsonEditions(word, resources, inlineLookup);
+  return editions.e1755 ?? editions.e1773;
 }

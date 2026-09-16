@@ -53,6 +53,7 @@ import {
   lookupJohnsonInline,
   loadJohnsonResources,
   lookupJohnsonFull,
+  lookupJohnsonEditions,
   searchSecretDoctrine,
   getRuckmanVersesForNumber,
   THOUGHT_FORM_PLATES,
@@ -2763,16 +2764,12 @@ function JohnsonEntryPanel({
   if (loading) {
     return (
       <Panel title={title} eyebrow={eyebrow}>
-        <p className="font-mono text-[10px] text-muted-foreground">Loading Johnson 1755 lexicon…</p>
+        <p className="font-mono text-[10px] text-muted-foreground">Loading Johnson lexicon…</p>
       </Panel>
     );
   }
   if (!entry) {
-    return (
-      <Panel title={title} eyebrow={eyebrow}>
-        <p className="font-mono text-[10px] text-muted-foreground">No Johnson headword found for this word.</p>
-      </Panel>
-    );
+    return null;
   }
 
   return (
@@ -2793,7 +2790,7 @@ function JohnsonEntryPanel({
           <figure className="overflow-hidden rounded-lg border border-cyan/25 bg-black/50">
             <img
               src={entry.facsimileUrl}
-              alt={`Johnson 1755 facsimile page ${entry.facsimilePage ?? ""}`}
+              alt={`Johnson facsimile page ${entry.facsimilePage ?? ""}`}
               className="max-h-72 w-full object-contain"
               loading="lazy"
             />
@@ -2827,6 +2824,7 @@ function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
   const [johnsonReady, setJohnsonReady] = React.useState(false);
   const [johnsonWordEntry, setJohnsonWordEntry] = React.useState<JohnsonSense | null>(null);
+  const [johnsonWord1773, setJohnsonWord1773] = React.useState<JohnsonSense | null>(null);
   const [secretPassages, setSecretPassages] = React.useState<SecretDoctrinePassage[]>([]);
   const [secretSource, setSecretSource] = React.useState("");
   const [secretLoading, setSecretLoading] = React.useState(false);
@@ -2869,6 +2867,7 @@ function NumerologyPanel() {
   React.useEffect(() => {
     if (!result) {
       setJohnsonWordEntry(null);
+      setJohnsonWord1773(null);
       setSecretPassages([]);
       setSecretSource("");
       setSecretLoading(false);
@@ -2883,11 +2882,14 @@ function NumerologyPanel() {
 
     if (!resources) {
       setJohnsonWordEntry(result.johnsonWord);
+      setJohnsonWord1773(null);
     } else {
       setJohnsonWordEntry(null);
-      lookupJohnsonFull(wordKey, resources, lookupJohnsonInline).then((wordEntry) => {
+      setJohnsonWord1773(null);
+      lookupJohnsonEditions(wordKey, resources, lookupJohnsonInline).then(({ e1755, e1773 }) => {
         if (cancelled) return;
-        setJohnsonWordEntry(wordEntry ?? result.johnsonWord);
+        setJohnsonWordEntry(e1755 ?? result.johnsonWord);
+        setJohnsonWord1773(e1773);
       });
     }
 
@@ -2927,6 +2929,7 @@ function NumerologyPanel() {
     downloadJson(`numerology-${result.normalized || "word"}.json`, {
       ...result,
       johnsonWord: johnsonWordEntry ?? result.johnsonWord,
+      johnsonWord1773,
       secretDoctrine: secretPassages,
       ruckmanKjv: ruckmanVerses,
       report: formatNumerologyReport(result),
@@ -2940,7 +2943,7 @@ function NumerologyPanel() {
         <Panel title="Word → number" eyebrow="NUMEROLOGY · path + tarot + philosophy + Johnson">
           <div className="space-y-3">
             <p className="rounded-lg border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
-              Samuel Johnson&apos;s 1755 Dictionary defines your typed word when found. H. P.
+              Samuel Johnson 1755 and 1773 (4th ed.) define your typed word when found. H. P.
               Blavatsky&apos;s Secret Doctrine adds matching passages (same or close word), ranked
               for occult / numerical relevance to your path number.
             </p>
@@ -3009,11 +3012,29 @@ function NumerologyPanel() {
 
         {result && (
           <>
+            {!johnsonReady && (
+              <Panel title={`“${result.normalized}” in Johnson`} eyebrow="1755 · 1773">
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  Loading Johnson 1755 and 1773 lexicons…
+                </p>
+              </Panel>
+            )}
+            {johnsonReady && !johnsonWordEntry && !johnsonWord1773 && (
+              <Panel title={`“${result.normalized}” in Johnson`} eyebrow="1755 · 1773">
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  No Johnson headword found for this word in 1755 or 1773.
+                </p>
+              </Panel>
+            )}
             <JohnsonEntryPanel
-              title={`“${result.normalized}” in Johnson`}
-              eyebrow="1755 · your word"
+              title={`“${result.normalized}” · 1755`}
+              eyebrow="first edition · LEME"
               entry={johnsonWordEntry}
-              loading={!johnsonReady}
+            />
+            <JohnsonEntryPanel
+              title={`“${result.normalized}” · 1773`}
+              eyebrow="4th edition · JDO / LEME"
+              entry={johnsonWord1773}
             />
             <SecretDoctrinePanel
               word={result.normalized}
