@@ -146,7 +146,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Core path",
       title: "Flight Dynamics Trivia",
       blurb:
-        "333 aerodynamics questions across 67 learning sets. Campaign, practice, and resume — neon arcade science.",
+        "To help you remember everything in fluid mechanics and begin thinking about aerodynamics and flight and control.",
       accentClass: "from-cyan/25 via-transparent to-magenta/20 border-cyan/40",
       buttonClass:
         "border-cyan/50 text-cyan hover:bg-cyan/20 hover:text-moon shadow-[0_0_24px_rgba(34,211,238,0.15)]",
@@ -161,17 +161,16 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Labs",
       title: "High-Speed & Extreme Aero",
       blurb:
-        "Compressible flow drills and the magenta / fuchsia extreme briefings — same deep void board when you enter.",
+        "Extremely difficult on purpose meant to expand memory while increasing learning rate.",
       accentClass: "from-magenta/30 via-transparent to-fuchsia-500/20 border-magenta/45",
       buttonClass:
         "border-magenta/55 text-magenta hover:bg-magenta/20 extreme-menu-item shadow-[0_0_24px_rgba(236,72,153,0.18)]",
       actions: [
         { label: "High-Speed Lab", onClick: p.onHighSpeed },
-        { label: "Aerodynamics Extreme", onClick: p.onExtreme, sub: "Magenta briefing path" },
+        { label: "Aerodynamics Extreme", onClick: p.onExtreme },
         {
           label: "Aerodynamics Extreme V2",
           onClick: p.onExtremeV2,
-          sub: "Fuchsia overload track",
           buttonClass:
             "border-[#e879f9]/65 text-[#e879f9] hover:bg-[#e879f9]/15 extreme-v2-menu-item shadow-[0_0_24px_rgba(232,121,249,0.22)]",
         },
@@ -182,7 +181,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Thermal",
       title: "Heat Transfer",
       blurb:
-        "Intro chapters and the Extreme Bananza — orange to crimson neon for conduction, convection, and chaos.",
+        "Music is Das Armageddon (2026) by キ aerzengel. Game is extremely hard meant to increase learning rate rapidly for general agency related questions for heat transfer and thermodynamics.",
       accentClass: "from-[#ff8c1a]/25 via-transparent to-[#ff2a2a]/25 border-[#ff8c1a]/55",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff2a2a] hover:bg-[#ff2a2a]/15 ht-extreme-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
@@ -191,7 +190,6 @@ export function TitleScreen(p: TitleScreenProps) {
         {
           label: "Heat Transfer Extreme Bananza",
           onClick: p.onHeatTransferExtreme,
-          sub: "Crimson shell",
         },
       ],
     },
@@ -200,7 +198,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Story world",
       title: "The Legend of Triangles",
       blurb:
-        "Pixel quest through Greenvale — peg trials, doctrine scraps, and Executive Accumen. Cyan–magenta spirit chrome.",
+        "Game is real and thought was put into it. Has a story line and key ideas. Its very deep.",
       accentClass: "from-[#39ff14]/20 via-transparent to-[#7CFC00]/15 border-[#39ff14]/75",
       buttonClass:
         "border-[#90EE90]/70 text-[#b8f5b8] hover:bg-[#90EE90]/15 shadow-[0_0_24px_rgba(144,238,144,0.22)]",
@@ -211,17 +209,13 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Instrument benches",
       title: "Numerical Extreme & Vanity",
       blurb:
-        "Numerology, sacred geometry, Johnson, and the Face++ vanity bench — mechanistic tools, session-only keys.",
+        "Brute force definitions, run various math calculations same original functionality, do heat transfer testing, access official Samuel Johnson Dictionary, engineering economy, component design usability, and various scientific tools from MATLAB and Octave.",
       accentClass: "from-[#ff2a2a]/25 via-transparent to-[#ff4d6d]/20 border-[#ff2a2a]/70",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff4d6d] hover:bg-[#ff2a2a]/15 numerical-extreme-menu-item vanity-app-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
       actions: [
         { label: "Numerical Extreme", onClick: p.onNumericalExtreme },
-        {
-          label: "Vanity App",
-          onClick: p.onVanityApp,
-          sub: "Bring your Face++ keys",
-        },
+        { label: "Vanity App", onClick: p.onVanityApp },
       ],
     },
     {
@@ -229,7 +223,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "System",
       title: "Settings & validation",
       blurb:
-        "Photosensitivity, reduced motion, audio, question-bank checks, and the six-detector AI bench.",
+        "AI detector works very well can check the text here. Settings is mainly to toggle on and off music and sound. The text here might be AI generated especially citations in references page, but all sources were used and studied.",
       accentClass: "from-moon/15 via-transparent to-cyan/10 border-border",
       buttonClass: "border-cyan/40 text-cyan hover:bg-cyan/15",
       actions: [
@@ -238,7 +232,6 @@ export function TitleScreen(p: TitleScreenProps) {
         {
           label: "AI Detector",
           onClick: p.onAiDetector,
-          sub: "Multi-scan · bring your keys",
           buttonClass:
             "border-cyan/55 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(34,211,238,0.22)]",
         },
@@ -250,7 +243,7 @@ export function TitleScreen(p: TitleScreenProps) {
     return (
       <button
         type="button"
-        aria-label="Tap to begin ZEUS AMMON-RA 11"
+        aria-label="Insert coin. ZEUS AMMON-RA 11"
         onClick={enterLanding}
         className={cn(
           "zeus-intro fixed inset-0 z-[80] flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden border-0 bg-black p-0 text-center",
@@ -267,13 +260,13 @@ export function TitleScreen(p: TitleScreenProps) {
         <div className="zeus-intro-veil" aria-hidden />
         <div className="relative z-10 flex max-w-4xl flex-col items-center px-6">
           <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-magenta sm:text-xs">
-            Flight Dynamics Trivia
+            Philosophy, Myths, Math, and More!
           </p>
           <h1 className="zeus-title-electric mt-3 font-display text-4xl leading-tight sm:text-6xl md:text-7xl">
             ZEUS AMMON-RA 11
           </h1>
           <p className="mt-4 font-mono text-xs tracking-[0.35em] text-moon/80 sm:text-sm">
-            Tap to begin
+            Insert coin.
           </p>
         </div>
       </button>
@@ -301,7 +294,7 @@ export function TitleScreen(p: TitleScreenProps) {
         <div className="relative z-10 flex max-w-3xl flex-col items-center">
           <p className="font-mono text-xs uppercase tracking-[0.4em] text-magenta">ZEUS AMMON-RA 11</p>
           <h2 className="zeus-title-electric mt-3 font-display text-3xl sm:text-5xl">
-            Choose your path
+            The narrow golden path
           </h2>
           <p className="mt-4 max-w-lg font-mono text-sm leading-relaxed text-muted-foreground">
             Scroll for neon-coded modes — trivia, labs, heat, story, and tools. Entering a mode keeps
@@ -315,11 +308,10 @@ export function TitleScreen(p: TitleScreenProps) {
               document.getElementById("zeus-modes")?.scrollIntoView({ behavior: "smooth", block: "start" })
             }
           >
-            Scroll down ↓
+            Rise ↓
           </button>
           <p className="mt-10 max-w-md font-mono text-[11px] leading-relaxed text-muted-foreground">
-            Photosensitivity notice: this game uses neon flashes and light trails. Reduced-motion mode
-            is available in Settings.
+            Very bright and vibrant be warned.
           </p>
           <div className="mt-4 flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <span>WOZKAF</span>
@@ -374,8 +366,7 @@ export function TitleScreen(p: TitleScreenProps) {
         ))}
 
         <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Photosensitivity notice: this game uses neon flashes and light trails. Reduced-motion mode is
-          available in Settings.
+          Very bright and vibrant be warned.
         </p>
         <div className="flex w-full max-w-sm justify-between self-center px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <span>WOZKAF</span>
