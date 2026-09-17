@@ -2190,6 +2190,90 @@
     0 0 110px rgba(0, 160, 255, 0.28);
 }
 
+/* Topic action buttons — NX-toolbox style light-up, softer than subject headers */
+.zeus-topic-btn {
+  --zeus-btn: #25d9ff;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--zeus-btn) 28%, transparent),
+    inset 0 0 10px color-mix(in srgb, #ffffff 12%, transparent);
+  animation: zeus-topic-btn-idle 4.8s ease-in-out infinite;
+}
+
+.zeus-topic-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    color-mix(in srgb, var(--zeus-btn) 28%, transparent) 50%,
+    transparent 68%
+  );
+  transform: translateX(-130%);
+  animation: zeus-topic-btn-sweep 7s ease-in-out infinite;
+}
+
+.zeus-topic-btn-label {
+  text-shadow:
+    0 0 8px color-mix(in srgb, var(--zeus-btn) 55%, transparent),
+    0 0 18px color-mix(in srgb, var(--zeus-btn) 30%, transparent);
+}
+
+.zeus-topic-btn:hover {
+  transform: translateY(-1px);
+  background-color: color-mix(in srgb, var(--zeus-btn) 16%, rgba(0, 0, 0, 0.45)) !important;
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--zeus-btn) 48%, transparent),
+    0 0 48px color-mix(in srgb, var(--zeus-btn) 22%, transparent),
+    inset 0 0 16px color-mix(in srgb, #ffffff 18%, transparent);
+}
+
+.zeus-topic-btn:hover::before {
+  animation-duration: 2.4s;
+}
+
+.zeus-topic-btn--aero {
+  --zeus-btn: #c4b5fd;
+}
+.zeus-topic-btn--fire {
+  --zeus-btn: #ff6b2a;
+}
+.zeus-topic-btn--story {
+  --zeus-btn: #7CFC00;
+}
+.zeus-topic-btn--tools {
+  --zeus-btn: #60a5fa;
+}
+.zeus-topic-btn--system {
+  --zeus-btn: #25d9ff;
+}
+
+@keyframes zeus-topic-btn-sweep {
+  0%, 62% { transform: translateX(-130%); }
+  100% { transform: translateX(130%); }
+}
+
+@keyframes zeus-topic-btn-idle {
+  0%, 100% {
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--zeus-btn) 24%, transparent),
+      inset 0 0 8px color-mix(in srgb, #ffffff 10%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 20px color-mix(in srgb, var(--zeus-btn) 40%, transparent),
+      inset 0 0 14px color-mix(in srgb, #ffffff 16%, transparent);
+  }
+}
+
 .zeus-intro--leaving {
   opacity: 0;
   transform: scale(1.04);
@@ -2385,8 +2469,17 @@
   .zeus-hero-brain,
   .zeus-landing,
   .zeus-scroll-hint,
-  .zeus-intro {
+  .zeus-intro,
+  .zeus-hub-panel,
+  .zeus-topic-btn,
+  .zeus-topic-btn::before {
     animation: none;
+  }
+  .zeus-intro-brain,
+  .zeus-hero-brain,
+  .zeus-landing,
+  .zeus-scroll-hint,
+  .zeus-intro {
     transition: none;
   }
 

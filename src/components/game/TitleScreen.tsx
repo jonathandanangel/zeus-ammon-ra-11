@@ -375,6 +375,7 @@ export function TitleScreen(p: TitleScreenProps) {
             <div
               className={cn(
                 "zeus-title-topic-panel relative z-10 flex min-h-[100dvh] w-full flex-col justify-center px-5 py-14 sm:px-10",
+                section.id === "system" && "pb-28",
               )}
             >
               <div className="mx-auto w-full max-w-5xl">
@@ -399,31 +400,34 @@ export function TitleScreen(p: TitleScreenProps) {
                         type="button"
                         onClick={action.onClick}
                         className={cn(
-                          "rounded-sm border bg-black/25 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em] transition-colors",
+                          "zeus-topic-btn rounded-sm border bg-black/30 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em]",
+                          `zeus-topic-btn--${section.glow}`,
                           action.buttonClass ?? section.buttonClass,
                         )}
                       >
-                        {action.label}
+                        <span className="zeus-topic-btn-label relative z-[1]">
+                          {action.label}
+                        </span>
                         {action.sub && (
-                          <span className="mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
+                          <span className="relative z-[1] mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
                             {action.sub}
                           </span>
                         )}
                       </button>
                     ))}
                 </div>
-                {section.id === "system" ? (
-                  <div className="mt-10 max-w-md space-y-4 text-center sm:max-w-none">
-                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                      Very bright and vibrant be warned.
-                    </p>
-                    <div className="mx-auto flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      <span>WOZKAF</span>
-                      <span>Jonathan Angel</span>
-                    </div>
-                  </div>
-                ) : null}
               </div>
+              {section.id === "system" ? (
+                <div className="pointer-events-none absolute inset-x-0 bottom-10 z-20 flex w-full flex-col items-center px-5 text-center">
+                  <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    Very bright and vibrant be warned.
+                  </p>
+                  <div className="mt-4 flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <span>WOZKAF</span>
+                    <span>Jonathan Angel</span>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
         ))}
