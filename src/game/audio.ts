@@ -1,4 +1,16 @@
 import type { AudioGenre } from "./types";
+import htBananzaBedAsset from "@/assets/ht-bananza-bed.mp3.asset.json";
+import htBananzaPortalAsset from "@/assets/ht-bananza-portal.mp3.asset.json";
+import htPortalBedAsset from "@/assets/ht-portal-bed.mp3.asset.json";
+import titleArmageddonAsset from "@/assets/title-armageddon.mp3.asset.json";
+import titlePortalAsset from "@/assets/title-portal.mp3.asset.json";
+
+const HT_BANANZA_BED_URL = htBananzaBedAsset.url;
+const HT_BANANZA_PORTAL_URL = htBananzaPortalAsset.url;
+const HT_PORTAL_BED_URL = htPortalBedAsset.url;
+const TITLE_ARMAGEDDON_URL = titleArmageddonAsset.url;
+const TITLE_PORTAL_URL = titlePortalAsset.url;
+const TITLE_CRYSTAL_VISTA_URL = "/audio/title-crystal-vista.mp3";
 
 export type SoundName =
   | "hover"
@@ -91,21 +103,18 @@ const BANANZA_WIND_LEVELS: { bpm: number; turbulence: number }[] = [
 ];
 
 const HT_BED_URL = {
-  bananza: "/audio/ht-bananza-bed.mp3",
-  intro: "/audio/ht-portal-bed.mp3",
+  bananza: HT_BANANZA_BED_URL,
+  intro: HT_PORTAL_BED_URL,
 } as const;
 
 /** Bananza: Armageddon (from 34:20) → Portal OST → repeat. */
-const BANANZA_PLAYLIST = [
-  "/audio/ht-bananza-bed.mp3",
-  "/audio/ht-bananza-portal.mp3",
-] as const;
+const BANANZA_PLAYLIST = [HT_BANANZA_BED_URL, HT_BANANZA_PORTAL_URL] as const;
 
 /** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats. */
 const TITLE_PLAYLIST = [
-  "/audio/title-crystal-vista.mp3",
-  "/audio/title-armageddon.mp3",
-  "/audio/title-portal.mp3",
+  TITLE_CRYSTAL_VISTA_URL,
+  TITLE_ARMAGEDDON_URL,
+  TITLE_PORTAL_URL,
 ] as const;
 
 /** Album / track credits shown in Heat Transfer Extreme (and title) for the active bed. */
@@ -120,7 +129,7 @@ export type MusicAlbumCredit = {
 };
 
 export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
-  "/audio/ht-bananza-bed.mp3": {
+  [HT_BANANZA_BED_URL]: {
     id: "das-armageddon",
     albumTitle: "Das Armageddon",
     trackTitle: "Das Armageddon",
@@ -129,7 +138,7 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
     coverUrl: "/audio/albums/das-armageddon.jpg",
     related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
   },
-  "/audio/title-armageddon.mp3": {
+  [TITLE_ARMAGEDDON_URL]: {
     id: "das-armageddon",
     albumTitle: "Das Armageddon",
     trackTitle: "Das Armageddon",
@@ -138,28 +147,28 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
     coverUrl: "/audio/albums/das-armageddon.jpg",
     related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
   },
-  "/audio/title-crystal-vista.mp3": {
+  [TITLE_CRYSTAL_VISTA_URL]: {
     id: "crystal-vista",
     albumTitle: "Crystal Vista",
     trackTitle: "Crystal Vista",
     artist: "Iasos",
     year: "1981",
   },
-  "/audio/ht-bananza-portal.mp3": {
+  [HT_BANANZA_PORTAL_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
     artist: "Valve",
     year: "2011",
   },
-  "/audio/ht-portal-bed.mp3": {
+  [HT_PORTAL_BED_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
     artist: "Valve",
     year: "2011",
   },
-  "/audio/title-portal.mp3": {
+  [TITLE_PORTAL_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
@@ -169,8 +178,8 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
 };
 
 export const FEATURED_HEAT_ALBUMS: MusicAlbumCredit[] = [
-  MUSIC_ALBUM_BY_URL["/audio/title-crystal-vista.mp3"]!,
-  MUSIC_ALBUM_BY_URL["/audio/title-armageddon.mp3"]!,
+  MUSIC_ALBUM_BY_URL[TITLE_CRYSTAL_VISTA_URL]!,
+  MUSIC_ALBUM_BY_URL[TITLE_ARMAGEDDON_URL]!,
 ];
 
 type BedListener = (credit: MusicAlbumCredit | null) => void;

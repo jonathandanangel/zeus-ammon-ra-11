@@ -2,7 +2,15 @@
  * Server-side Akinator (aki-api) session helpers.
  * https://github.com/jgoralcz/aki-api
  */
-import { Aki, answers, regions, type region } from "aki-api";
+import type { Aki as AkiClass, answers, region } from "aki-api";
+
+type Aki = InstanceType<typeof AkiClass>;
+
+/** aki-api is Node-only; load it lazily so it never enters the SSR/client module graph. */
+async function loadAki(): Promise<typeof AkiClass> {
+  const mod = await import("aki-api");
+  return mod.Aki;
+}
 
 export const AKI_CREDIT = "Powered by Akinator via aki-api (jgoralcz/aki-api)";
 
@@ -52,10 +60,10 @@ const EMPTY: AkiClientState = {
 };
 
 function isRegion(v: unknown): v is region {
-  return typeof v === "string" && (regions as readonly string[]).includes(v);
+  return typeof v === "string" && v.length > 0;
 }
 
-function snapshot(aki: InstanceType<typeof Aki>): AkiSessionState {
+function snapshot(aki: Aki): AkiSessionState {
   return {
     region: aki.region,
     childMode: !!aki.childMode,
@@ -67,7 +75,7 @@ function snapshot(aki: InstanceType<typeof Aki>): AkiSessionState {
   };
 }
 
-function attachBrowserHeaders(aki: InstanceType<typeof Aki>) {
+function attachBrowserHeaders(aki: Aki) {
   aki.config = {
     ...(aki.config ?? {}),
     headers: {
@@ -82,7 +90,8 @@ function attachBrowserHeaders(aki: InstanceType<typeof Aki>) {
   };
 }
 
-function hydrate(state: AkiSessionState): InstanceType<typeof Aki> {
+async function hydrate(state: AkiSessionState): Promise<Aki> {
+  const Aki = await loadAki();
   const aki = new Aki({ region: state.region, childMode: state.childMode });
   attachBrowserHeaders(aki);
   aki.session = state.session;
@@ -104,7 +113,7 @@ function isGuess(result: unknown): result is {
 }
 
 function toClient(
-  aki: InstanceType<typeof Aki>,
+  aki: Aki,
   result: unknown,
   forceGuess = false,
 ): AkiClientState {
@@ -180,6 +189,7 @@ export async function akinatorStart(input: {
   try {
     const region = isRegion(input.region) ? input.region : "en";
     const childMode = input.childMode === true;
+    const Aki = await loadAki();
     const aki = new Aki({ region, childMode });
     attachBrowserHeaders(aki);
     await aki.start();
@@ -202,7 +212,7 @@ export async function akinatorAnswer(input: {
     if (![0, 1, 2, 3, 4].includes(answerNum)) {
       return { ...EMPTY, errorMessage: "Invalid answer id (use 0–4)." };
     }
-    const aki = hydrate(session);
+    const aki = await hydrate(session);
     const result = await aki.step(answerNum as answers);
     if (result instanceof Error) throw result;
     return toClient(aki, result);
@@ -217,7 +227,7 @@ export async function akinatorBack(input: { session?: unknown }): Promise<AkiCli
     if (!session?.session || !session.signature || !isRegion(session.region)) {
       return { ...EMPTY, errorMessage: "Missing Akinator session. Start a new round." };
     }
-    const aki = hydrate(session);
+    const aki = await hydrate(session);
     const result = await aki.back();
     if (result instanceof Error) throw result;
     return toClient(aki, result);
@@ -232,7 +242,7 @@ export async function akinatorContinue(input: { session?: unknown }): Promise<Ak
     if (!session?.session || !session.signature || !isRegion(session.region)) {
       return { ...EMPTY, errorMessage: "Missing Akinator session. Start a new round." };
     }
-    const aki = hydrate(session);
+    const aki = await hydrate(session);
     const result = await aki.continue();
     if (result instanceof Error) throw result;
     return toClient(aki, result);

@@ -26,7 +26,7 @@ const CREDIT =
 function envKey(): string {
   const fromProcess =
     typeof process !== "undefined"
-      ? (process.env.ANU_QRNG_API_KEY ?? process.env.QRNG_API_KEY ?? "")
+      ? (process.env['ANU_QRNG_API_KEY'] ?? process.env['QRNG_API_KEY'] ?? "")
       : "";
   return fromProcess.trim();
 }

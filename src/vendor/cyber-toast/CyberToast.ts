@@ -58,7 +58,7 @@ export class CyberToast {
 
     const toast = document.createElement("div") as ToastEl;
     toast.className = `cyber-toast ${type}`;
-    toast.dataset.dismissed = "false";
+    toast.dataset['dismissed'] = "false";
     toast.setAttribute("role", "status");
 
     const header = type === "error" ? "[CRITICAL ERROR]" : "[SYSTEM MESSAGE]";
@@ -101,14 +101,14 @@ export class CyberToast {
     toast.onclick = () => this.dismiss(toast);
 
     toast.onmouseenter = () => {
-      if (toast.dataset.dismissed === "true") return;
+      if (toast.dataset['dismissed'] === "true") return;
       clearTimeout(toast._dismissTimer);
       toast._remainingTime = (toast._remainingTime ?? 0) - (performance.now() - (toast._activeStart ?? performance.now()));
       toast.classList.add("paused");
     };
 
     toast.onmouseleave = () => {
-      if (toast.dataset.dismissed === "true") return;
+      if (toast.dataset['dismissed'] === "true") return;
       toast.classList.remove("paused");
       toast._activeStart = performance.now();
       toast._dismissTimer = setTimeout(() => this.dismiss(toast), Math.max(0, toast._remainingTime ?? 0));
@@ -141,8 +141,8 @@ export class CyberToast {
   }
 
   dismiss(toastElement: ToastEl | null) {
-    if (!toastElement || toastElement.dataset.dismissed === "true") return;
-    toastElement.dataset.dismissed = "true";
+    if (!toastElement || toastElement.dataset['dismissed'] === "true") return;
+    toastElement.dataset['dismissed'] = "true";
     clearTimeout(toastElement._dismissTimer);
     toastElement.classList.remove("visible", "paused");
     toastElement.classList.add("exiting");
