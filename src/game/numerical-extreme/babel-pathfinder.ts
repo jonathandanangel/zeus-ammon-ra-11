@@ -1499,39 +1499,57 @@ export function generateBabelBooks(input: {
 }
 
 /**
- * Background polish: re-locate leaf coherent islands using Writing IQ + full free
- * AI-detector suite (prefer AI &lt; 10%). Silent — do not show scores in UI.
+ * Background polish: re-locate leaf coherent islands using Writing IQ + AI checks
+ * (prefer AI &lt; 10%). Silent — do not show scores in UI.
+ * `light: true` skips neural models and only polishes the first leaf (typing/scroll safe).
  */
 export async function quietlyPolishBabelBooks(
   books: BabelGeneratedBook[],
+  opts?: { light?: boolean },
 ): Promise<BabelGeneratedBook[]> {
   if (!books.length) return books;
+  const light = opts?.light !== false;
   const out: BabelGeneratedBook[] = [];
+  const booksToTouch = light ? books.slice(0, 1) : books;
 
-  for (const book of books) {
-    // Full workable suite is expensive — polish first volume’s top leaves deeply,
-    // remaining leaves with stylometric-only (skipNeural).
-    const pages: BabelBookPage[] = [];
-    for (let i = 0; i < book.pages.length; i += 1) {
-      const leaf = book.pages[i]!;
-      const parts = [leaf.title.replace(/^\d+%\s*·\s*/, ""), leaf.excerpt, ...leaf.highlight.map((h) => h.word)];
-      const candidates = babelProseCandidates(parts);
-      // Pad with readable body excerpt so Writing IQ / detectors have enough words
+  const yieldMain = () =>
+    new Promise<void>((resolve) => {
+      const ric = (
+        window as Window & { requestIdleCallback?: (cb: () => void) => number }
+      ).requestIdleCallback;
+      if (ric) ric(() => resolve());
+      else window.setTimeout(() => resolve(), 0);
+    });
+
+  for (const book of booksToTouch) {
+    const pages: BabelBookPage[] = [...book.pages];
+    const leafLimit = light ? Math.min(1, pages.length) : Math.min(3, pages.length);
+
+    for (let i = 0; i < leafLimit; i += 1) {
+      await yieldMain();
+      const leaf = pages[i]!;
+      const parts = [
+        leaf.title.replace(/^\d+%\s*·\s*/, ""),
+        leaf.excerpt,
+        ...leaf.highlight.map((h) => h.word).slice(0, 6),
+      ];
+      const candidates = babelProseCandidates(parts).slice(0, 3);
       const bodyPad = leaf.bodyText
         .split("\n")
         .filter((l) => l.trim().length > 40 && !l.startsWith("["))
-        .slice(0, 4)
+        .slice(0, 3)
         .join(" ");
       const padded = candidates.map((c) => `${c} ${bodyPad}`.trim());
 
       let coherent = candidates[0] ?? leaf.excerpt;
       try {
         coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
-          skipNeural: i > 2 || out.length > 0,
-          maxCandidates: i === 0 && out.length === 0 ? 3 : 2,
+          skipNeural: true,
+          localOnly: light,
+          maxCandidates: light ? 2 : 3,
         });
       } catch {
-        coherent = pickBestRelevantProse(parts, 6).prose || leaf.excerpt;
+        coherent = pickBestRelevantProse(parts, 4).prose || leaf.excerpt;
       }
 
       const woven = weaveBabelPageText(
@@ -1546,14 +1564,15 @@ export async function quietlyPolishBabelBooks(
         [book.seedWord, ...leaf.highlight.map((h) => h.word)],
         coherent.slice(0, 200),
       );
-      pages.push({
-        ...leaf,
-        page,
-        excerpt: leaf.excerpt,
-      });
+      pages[i] = { ...leaf, page, excerpt: leaf.excerpt };
     }
 
     out.push({ ...book, pages });
+  }
+
+  // Keep remaining books untouched
+  for (let i = booksToTouch.length; i < books.length; i += 1) {
+    out.push(books[i]!);
   }
 
   return out;

@@ -114,12 +114,12 @@ function rankScore(writingIq: number, aiPercent: number): number {
  */
 export async function silentlyScoreBabelProse(
   text: string,
-  opts?: { skipNeural?: boolean },
+  opts?: { skipNeural?: boolean; localOnly?: boolean },
 ): Promise<SilentBabelProseScore> {
   const sample = text.trim();
   let writingIq = localWritingIqScore(sample);
 
-  if (writingIqWordCount(sample) >= 50) {
+  if (!opts?.localOnly && writingIqWordCount(sample) >= 50) {
     try {
       const iq = await estimateWritingIqClient(sample);
       if (iq.ok && iq.iq != null) writingIq = iq.iq;
@@ -128,17 +128,18 @@ export async function silentlyScoreBabelProse(
     }
   }
 
-  let aiPercent = 55;
-  try {
-    const { consensus } = await runFreeEnsemble(sample, undefined, {
-      skipNeural: opts?.skipNeural ?? false,
-    });
-    if (consensus.scanned > 0) {
-      aiPercent = consensus.avgAiScore;
+  let aiPercent = Math.max(8, Math.min(55, 160 - writingIq));
+  if (!opts?.localOnly) {
+    try {
+      const { consensus } = await runFreeEnsemble(sample, undefined, {
+        skipNeural: opts?.skipNeural ?? true,
+      });
+      if (consensus.scanned > 0) {
+        aiPercent = consensus.avgAiScore;
+      }
+    } catch {
+      // keep heuristic
     }
-  } catch {
-    // soft fallback: local stylometric lean from writing quirks
-    aiPercent = Math.max(8, Math.min(70, 160 - writingIq));
   }
 
   return {
@@ -155,13 +156,16 @@ export async function silentlyScoreBabelProse(
  */
 export async function silentlyPickBestBabelProse(
   candidates: string[],
-  opts?: { skipNeural?: boolean; maxCandidates?: number },
+  opts?: { skipNeural?: boolean; maxCandidates?: number; localOnly?: boolean },
 ): Promise<string> {
   const cleaned = [...new Set(candidates.map((c) => c.trim()).filter((c) => c.length >= 12))];
   if (!cleaned.length) return "";
   if (cleaned.length === 1) return cleaned[0]!;
 
-  // Pre-filter by local IQ so we don't run full neural on every permutation
+  if (opts?.localOnly) {
+    return pickBestRelevantProse(cleaned, opts.maxCandidates ?? 4).prose || cleaned[0]!;
+  }
+
   const pre = cleaned
     .map((text) => ({ text, local: localWritingIqScore(text) }))
     .sort((a, b) => b.local - a.local)

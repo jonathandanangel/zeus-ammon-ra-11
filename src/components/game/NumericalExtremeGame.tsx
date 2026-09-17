@@ -3027,6 +3027,7 @@ function RelevantThoughtForms({
     : `Path ${bundle.number}`;
 
   return (
+    <div className="space-y-3" style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
     <Panel
       title="Thought-Forms · for this number"
       eyebrow={`Theosophy · ${colorName} · ${bundle.musicalNote} · vibration → form`}
@@ -3050,7 +3051,8 @@ function RelevantThoughtForms({
             src={primary.src}
             alt={`${primary.fig} · ${primary.emotion}`}
             className="mx-auto h-auto w-full max-w-3xl object-contain"
-            loading="eager"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         <figcaption className="space-y-1 border-t border-cyan/20 px-3 py-2.5">
@@ -3075,7 +3077,7 @@ function RelevantThoughtForms({
             src={key.src}
             alt={key.title}
             className="mx-auto h-auto w-full max-w-4xl object-contain"
-            loading="eager"
+            loading="lazy"
             decoding="async"
             onError={(e) => {
               const img = e.currentTarget;
@@ -3196,6 +3198,7 @@ function RelevantThoughtForms({
         ))}
       </div>
     </Panel>
+    </div>
   );
 }
 
@@ -3494,6 +3497,8 @@ function JohnsonEntryPanel({
 
 function NumerologyPanel() {
   const [word, setWord] = React.useState("abc");
+  /** Debounced commit — keeps typing/scrolling smooth while heavy lookups settle. */
+  const [queryWord, setQueryWord] = React.useState("abc");
   const [johnsonReady, setJohnsonReady] = React.useState(false);
   const [johnsonWordEntry, setJohnsonWordEntry] = React.useState<JohnsonSense | null>(null);
   const [johnsonWord1773, setJohnsonWord1773] = React.useState<JohnsonSense | null>(null);
@@ -3508,8 +3513,13 @@ function NumerologyPanel() {
   const johnsonResourcesRef = React.useRef<Awaited<ReturnType<typeof loadJohnsonResources>> | null>(null);
   const compute = React.useContext(NumericalComputeContext);
 
+  React.useEffect(() => {
+    const handle = window.setTimeout(() => setQueryWord(word), 450);
+    return () => window.clearTimeout(handle);
+  }, [word]);
+
   const { result, error } = React.useMemo(() => {
-    const trimmed = word.trim();
+    const trimmed = queryWord.trim();
     if (!trimmed) {
       return { result: null as NumerologyResult | null, error: "" };
     }
@@ -3521,7 +3531,7 @@ function NumerologyPanel() {
         error: caught instanceof Error ? caught.message : "Numerology failed.",
       };
     }
-  }, [word]);
+  }, [queryWord]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -3859,7 +3869,12 @@ function NumerologyPanel() {
             secretPassages={secretPassages}
             mythPassages={mythPassages}
             ruckmanVerses={ruckmanVerses}
-            sourcesReady={johnsonReady && !secretLoading && !mythLoading}
+            sourcesReady={
+              johnsonReady &&
+              !secretLoading &&
+              !mythLoading &&
+              queryWord.trim() === word.trim()
+            }
           />
         </>
       )}

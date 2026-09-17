@@ -557,7 +557,7 @@ class AudioManager {
   private scheduleBabelTick() {
     if (!this.babelActive || !this.ctx) return;
     this.playBabelAmbienceStep();
-    this.babelTimer = window.setTimeout(() => this.scheduleBabelTick(), 780);
+    this.babelTimer = window.setTimeout(() => this.scheduleBabelTick(), 2200);
   }
 
   /** Soft air currents + distant spirit-like sine whispers in the archive. */
@@ -568,16 +568,12 @@ class AudioManager {
     const now = ctx.currentTime;
     const intensity = Math.max(0.45, this.intensity);
 
-    // Continuous air / hexagon draft
-    if (this.babelStep % 2 === 0) {
-      this.noiseBurst(0.95, 280 + (this.babelStep % 5) * 70, 0.045 * intensity, bus);
-    }
-    if (this.babelStep % 3 === 1) {
-      this.noiseBurst(0.55, 1100 + Math.random() * 900, 0.028 * intensity, bus);
+    // Sparse air — avoid allocating noise buffers every tick (scroll jank)
+    if (this.babelStep % 3 === 0) {
+      this.noiseBurst(0.7, 320 + (this.babelStep % 5) * 60, 0.032 * intensity, bus);
     }
 
-    // Spirit whispers: thin rising/falling sine clusters
-    if (this.babelStep % 4 === 2) {
+    if (this.babelStep % 5 === 2) {
       const base = 620 + (this.babelStep % 7) * 37;
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
@@ -589,19 +585,11 @@ class AudioManager {
       f.frequency.value = base * 1.2;
       f.Q.value = 6;
       g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.035 * intensity, now + 0.12);
+      g.gain.linearRampToValueAtTime(0.028 * intensity, now + 0.12);
       g.gain.exponentialRampToValueAtTime(0.0005, now + 1.1);
       osc.connect(f).connect(g).connect(bus);
       osc.start(now);
       osc.stop(now + 1.15);
-    }
-    if (this.babelStep % 5 === 0) {
-      this.blip(
-        [196, 247, 311].map((f) => f * (0.95 + Math.random() * 0.08)),
-        0.55,
-        "triangle",
-        0.04 * intensity,
-      );
     }
     this.babelStep += 1;
   }

@@ -805,14 +805,15 @@ export function BabelSecretPanel({
   const [artIdx, setArtIdx] = React.useState(0);
   const [bookIdx, setBookIdx] = React.useState(0);
   const [pageIdx, setPageIdx] = React.useState(0);
-  const [showFinds, setShowFinds] = React.useState(true);
+  const [showFinds, setShowFinds] = React.useState(false);
   const [begun, setBegun] = React.useState(false);
   const [grimoireUrl, setGrimoireUrl] = React.useState(RETRO_GRIMOIRE_SRC);
 
   const [books, setBooks] = React.useState<BabelGeneratedBook[]>([]);
 
   const report: BabelLibraryReport | null = React.useMemo(() => {
-    if (!sourcesReady) return null;
+    // Defer heavy locate until the grimoire is opened — keeps typing/scrolling smooth.
+    if (!sourcesReady || !begun) return null;
     return searchBabelSecrets({
       result,
       johnsonWord,
@@ -820,9 +821,10 @@ export function BabelSecretPanel({
       secretPassages,
       mythPassages,
       ruckmanVerses,
-      limit: 14,
+      limit: 10,
     });
   }, [
+    begun,
     sourcesReady,
     result,
     johnsonWord,
@@ -833,8 +835,8 @@ export function BabelSecretPanel({
   ]);
 
   React.useEffect(() => {
-    if (!sourcesReady) {
-      setBooks([]);
+    if (!sourcesReady || !begun) {
+      if (!begun) setBooks([]);
       return;
     }
     const base = generateBabelBooks({
@@ -844,22 +846,28 @@ export function BabelSecretPanel({
       secretPassages,
       mythPassages,
       ruckmanVerses,
-      maxBooks: 3,
+      maxBooks: 2,
     });
     setBooks(base);
 
-    // Background: full workable Writing-IQ + AI-detector suite (prefer AI < 10%).
-    // Silent — no UI chrome for scores.
+    // Idle local polish only (no network / neural) — typing & scroll stay smooth.
     let cancelled = false;
-    void quietlyPolishBabelBooks(base).then((polished) => {
-      if (!cancelled && polished.length) setBooks(polished);
-    });
+    const run = () => {
+      if (cancelled) return;
+      void quietlyPolishBabelBooks(base, { light: true }).then((polished) => {
+        if (!cancelled && polished.length) setBooks(polished);
+      });
+    };
+    const idleId = window.setTimeout(run, 900);
     return () => {
       cancelled = true;
+      window.clearTimeout(idleId);
     };
   }, [
+    begun,
     sourcesReady,
-    result,
+    result.number,
+    result.normalized,
     johnsonWord,
     johnsonWord1773,
     secretPassages,
@@ -882,6 +890,7 @@ export function BabelSecretPanel({
   }, []);
 
   React.useEffect(() => {
+    if (!begun) return;
     let cancelled = false;
     const snippet = [
       result.normalized,
@@ -889,25 +898,29 @@ export function BabelSecretPanel({
       ...(secretPassages[0]?.matched.slice(0, 2) ?? []),
       ...(mythPassages[0]?.matched.slice(0, 2) ?? []),
     ].join(" ");
-    void composeGrimoireWithBabelText({
-      seedWord: result.normalized,
-      pathNumber: result.number,
-      colorHex: result.philosophy.geometry.hex,
-      colorName: result.philosophy.geometry.colorName,
-      babelSnippet: snippet,
-    }).then((url) => {
-      if (!cancelled) setGrimoireUrl(url);
-    });
+    const run = () => {
+      void composeGrimoireWithBabelText({
+        seedWord: result.normalized,
+        pathNumber: result.number,
+        colorHex: result.philosophy.geometry.hex,
+        colorName: result.philosophy.geometry.colorName,
+        babelSnippet: snippet,
+      }).then((url) => {
+        if (!cancelled) setGrimoireUrl(url);
+      });
+    };
+    const t = window.setTimeout(run, 120);
     return () => {
       cancelled = true;
+      window.clearTimeout(t);
     };
-  }, [result, secretPassages, mythPassages]);
+  }, [begun, result, secretPassages, mythPassages]);
 
   const activeBook = books[bookIdx] ?? null;
   const hero = BABEL_ARTWORK[artIdx] ?? BABEL_ARTWORK[0]!;
 
   const bookImages: BabelLocatedImage[] = React.useMemo(() => {
-    if (!activeBook) return [];
+    if (!begun || !activeBook) return [];
     const located = locateBabelImages({
       seedWord: activeBook.seedWord,
       pathNumber: activeBook.pathNumber,
@@ -917,8 +930,8 @@ export function BabelSecretPanel({
       combination: activeBook.combination,
       spineTitles: [
         activeBook.seedWord,
-        ...activeBook.combination,
-        ...activeBook.pages.slice(0, 6).map((p) => p.title.replace(/^.*·\s*/, "")),
+        ...activeBook.combination.slice(0, 4),
+        ...activeBook.pages.slice(0, 3).map((p) => p.title.replace(/^.*·\s*/, "")),
       ],
       sourceHits: {
         johnson: johnsonWord || johnsonWord1773 ? 2 : 0,
@@ -931,6 +944,7 @@ export function BabelSecretPanel({
       img.style === "grimoire" ? { ...img, dataUrl: grimoireUrl } : img,
     );
   }, [
+    begun,
     activeBook,
     grimoireUrl,
     johnsonWord,
