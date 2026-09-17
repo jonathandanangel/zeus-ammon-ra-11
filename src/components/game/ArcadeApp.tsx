@@ -23,25 +23,25 @@ const GAMES: Array<{
 }> = [
   {
     id: "grid-run",
-    label: "MEMORY EXTREME LIGHT CYCLE",
+    label: "EXTREME LIGHT CYCLE",
     blurb: "Light-cycle duel from the trivia intermissions.",
     scoreLabel: "High score",
   },
   {
     id: "neon-maze",
-    label: "MEMORY EXTREME PACMAN",
+    label: "EXTREME PACMAN",
     blurb: "Clear pellets, dodge ghost programs — the trivia Pac-Man run.",
     scoreLabel: "High score",
   },
   {
     id: "electric-recall",
-    label: "MEMORY EXTREME RECALL",
+    label: "EXTREME RECALL",
     blurb: "Repeat the flashed pad sequence. Longer is harder.",
     scoreLabel: "High score",
   },
   {
     id: "memory-gauntlet",
-    label: "MEMORY EXTREME GAUNTLET",
+    label: "EXTREME GAUNTLET",
     blurb: "Three-stage Extreme recall: grid, scatter, path lasers.",
     scoreLabel: "High score",
   },
