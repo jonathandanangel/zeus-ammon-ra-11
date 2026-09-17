@@ -21,6 +21,12 @@ import type { GreekMythPassage } from "./greek-myths";
 import type { RuckmanVerse } from "./ruckman-kjv";
 import { thoughtFormBundleForNumber } from "./thought-forms";
 import { expandPhraseWithBabelGlossary, expandWithBabelGlossary } from "./babel-library-companion";
+import {
+  babelProseCandidates,
+  orderTokensForWritingIq,
+  pickBestRelevantProse,
+  silentlyPickBestBabelProse,
+} from "./babel-writing-iq";
 
 /** Basile / Borges library alphabet — 29 glyphs. */
 export const BABEL_ALPHABET = "abcdefghijklmnopqrstuvwxyz, .";
@@ -906,7 +912,7 @@ function combinationTokens(result: NumerologyResult, extras: string[]): string[]
   ]
     .map((w) => normalizeWord(w))
     .filter((w) => w.length >= 3);
-  return [...new Set(base)].slice(0, 16);
+  return orderTokensForWritingIq([...new Set(base)]).slice(0, 16);
 }
 
 type ChapterDraft = {
@@ -1380,8 +1386,11 @@ export function generateBabelBooks(input: {
     const total = drafts.length;
 
     for (const [index, ch] of drafts.entries()) {
-      // Library of Babel idea: coherence % = how much foundational signal vs noise
-      const coherentBlock = `${ch.title}. ${ch.excerpt}. ${ch.phrase}`;
+      // Silent local preference: denser prose combination for the coherent island
+      const coherentBlock = pickBestRelevantProse(
+        [ch.title, ch.excerpt, ch.phrase],
+        8,
+      ).prose || `${ch.title}. ${ch.excerpt}. ${ch.phrase}`;
       const woven = weaveBabelPageText(
         coherentBlock,
         result.number,
@@ -1487,4 +1496,65 @@ export function generateBabelBooks(input: {
   }
 
   return books;
+}
+
+/**
+ * Background polish: re-locate leaf coherent islands using Writing IQ + full free
+ * AI-detector suite (prefer AI &lt; 10%). Silent — do not show scores in UI.
+ */
+export async function quietlyPolishBabelBooks(
+  books: BabelGeneratedBook[],
+): Promise<BabelGeneratedBook[]> {
+  if (!books.length) return books;
+  const out: BabelGeneratedBook[] = [];
+
+  for (const book of books) {
+    // Full workable suite is expensive — polish first volume’s top leaves deeply,
+    // remaining leaves with stylometric-only (skipNeural).
+    const pages: BabelBookPage[] = [];
+    for (let i = 0; i < book.pages.length; i += 1) {
+      const leaf = book.pages[i]!;
+      const parts = [leaf.title.replace(/^\d+%\s*·\s*/, ""), leaf.excerpt, ...leaf.highlight.map((h) => h.word)];
+      const candidates = babelProseCandidates(parts);
+      // Pad with readable body excerpt so Writing IQ / detectors have enough words
+      const bodyPad = leaf.bodyText
+        .split("\n")
+        .filter((l) => l.trim().length > 40 && !l.startsWith("["))
+        .slice(0, 4)
+        .join(" ");
+      const padded = candidates.map((c) => `${c} ${bodyPad}`.trim());
+
+      let coherent = candidates[0] ?? leaf.excerpt;
+      try {
+        coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
+          skipNeural: i > 2 || out.length > 0,
+          maxCandidates: i === 0 && out.length === 0 ? 3 : 2,
+        });
+      } catch {
+        coherent = pickBestRelevantProse(parts, 6).prose || leaf.excerpt;
+      }
+
+      const woven = weaveBabelPageText(
+        coherent,
+        book.pathNumber,
+        `${book.id}-polish-${i}`,
+        leaf.accuracy,
+      );
+      const page = pageFromWovenText(
+        woven,
+        book.pathNumber,
+        [book.seedWord, ...leaf.highlight.map((h) => h.word)],
+        coherent.slice(0, 200),
+      );
+      pages.push({
+        ...leaf,
+        page,
+        excerpt: leaf.excerpt,
+      });
+    }
+
+    out.push({ ...book, pages });
+  }
+
+  return out;
 }

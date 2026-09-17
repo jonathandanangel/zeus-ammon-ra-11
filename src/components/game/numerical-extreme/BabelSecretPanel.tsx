@@ -16,10 +16,13 @@ import {
   babeliaLocateFromImageData,
   babeliaRandom,
   babeliaStep,
+  isOfficialBabeliaLocationLength,
+  officialBabeliaBookmarkUrl,
   composeGrimoireWithBabelText,
   downloadDataUrl,
   formatBabelFindReport,
   generateBabelBooks,
+  quietlyPolishBabelBooks,
   locateBabelImages,
   searchBabelSecrets,
   toBabelCaption,
@@ -36,6 +39,7 @@ import {
 } from "@/game/numerical-extreme";
 import { downloadJson } from "@/game/numerical-extreme";
 import { TextInput } from "@/components/game/numerical-extreme/ui";
+import { audio } from "@/game/audio";
 
 /** Amber highlight — same convention as Greek Myths / Secret Doctrine panels. */
 function highlightAmber(text: string, matched: string[]): React.ReactNode {
@@ -206,7 +210,10 @@ function BookReader({
             <button
               key={p.index}
               type="button"
-              onClick={() => onPage(i)}
+              onClick={() => {
+                audio.play("babel-air", 1);
+                onPage(i);
+              }}
               title={`${p.accuracy}% coherence · ${p.title}`}
               className={`h-2 flex-1 min-w-[8px] rounded-sm transition ${
                 i === pageIdx ? "ring-1 ring-amber" : ""
@@ -359,7 +366,10 @@ function BookReader({
         <GhostButton
           type="button"
           disabled={pageIdx <= 0}
-          onClick={() => onPage(Math.max(0, pageIdx - 1))}
+          onClick={() => {
+            audio.play("babel-air", 0);
+            onPage(Math.max(0, pageIdx - 1));
+          }}
         >
           Prev leaf
         </GhostButton>
@@ -369,7 +379,10 @@ function BookReader({
         <GhostButton
           type="button"
           disabled={pageIdx >= book.pages.length - 1}
-          onClick={() => onPage(Math.min(book.pages.length - 1, pageIdx + 1))}
+          onClick={() => {
+            audio.play("babel-air", 2);
+            onPage(Math.min(book.pages.length - 1, pageIdx + 1));
+          }}
         >
           Next leaf
         </GhostButton>
@@ -560,17 +573,24 @@ function BabeliaArchiveBrowser({
   );
 
   const [plate, setPlate] = React.useState<BabeliaPlate | null>(null);
-  const [seekDraft, setSeekDraft] = React.useState("");
+  const [seekFull, setSeekFull] = React.useState("");
   const [tierIdx, setTierIdx] = React.useState(0);
 
   React.useEffect(() => {
     setTierIdx(0);
     setPlate(hierarchy[0] ?? babeliaRandom());
-    setSeekDraft(hierarchy[0]?.location ?? "");
+    setSeekFull(hierarchy[0]?.location ?? "");
   }, [hierarchy]);
 
   const active = plate ?? hierarchy[0];
   if (!active) return null;
+
+  const seekDigits = seekFull.replace(/\D/g, "");
+  const officialPaste = isOfficialBabeliaLocationLength(seekDigits.length);
+  const seekDisplay =
+    seekDigits.length > 220
+      ? `${seekDigits.slice(0, 48)}… (${seekDigits.length} digits) …${seekDigits.slice(-48)}`
+      : seekDigits;
 
   return (
     <Panel
@@ -588,11 +608,11 @@ function BabeliaArchiveBrowser({
           >
             babelia slideshow
           </a>
-          . Pasting digits <span className="text-cyan">does work</span> here: same seed → same ZEUS
-          plate (deterministic). It will <span className="text-moon">not</span> match Basile’s
-          pixels — we use a scaled twin (160×104 + local PRNG), not their GMP generator. Real
-          Babelia locations are ~960,000 digits; a ~120-digit paste is only a stub for the official
-          site (click their truncated “babelia #” to copy the full string).
+          . You do <span className="text-cyan">not</span> need to zoom — colorful static{" "}
+          <span className="text-moon">is</span> ordinary archive noise on the ZEUS twin. Pasting a
+          real Babelia location (~960k digits) will not redraw Basile’s image here (different
+          algorithm). Use <span className="text-cyan">Open on official Babelia</span> for the true
+          plate.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -601,7 +621,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaRandom();
               setPlate(next);
-              setSeekDraft(next.location);
+              setSeekFull(next.location);
             }}
           >
             Random
@@ -611,7 +631,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaStep(active.location, -1);
               setPlate(next);
-              setSeekDraft(next.location);
+              setSeekFull(next.location);
             }}
           >
             Prev location
@@ -621,7 +641,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaStep(active.location, 1);
               setPlate(next);
-              setSeekDraft(next.location);
+              setSeekFull(next.location);
             }}
           >
             Next location
@@ -646,10 +666,22 @@ function BabeliaArchiveBrowser({
 
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-[220px] flex-1 font-mono text-[10px] text-muted-foreground">
-            Seek location (ZEUS twin · full digits)
+            Seek location (paste digits · ZEUS twin)
             <TextInput
-              value={seekDraft}
-              onChange={(e) => setSeekDraft(e.target.value.replace(/[^\d]/g, ""))}
+              value={seekDisplay}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d.]/g, "");
+                // Ignore display ellipsis edits; accept new pastes / short IDs only
+                if (raw.includes("…") || /\(\d+ digits\)/.test(e.target.value)) return;
+                setSeekFull(e.target.value.replace(/\D/g, ""));
+              }}
+              onPaste={(e) => {
+                const text = e.clipboardData.getData("text").replace(/\D/g, "");
+                if (text.length > 0) {
+                  e.preventDefault();
+                  setSeekFull(text);
+                }
+              }}
               spellCheck={false}
               className="mt-1"
               placeholder="paste location digits…"
@@ -658,23 +690,32 @@ function BabeliaArchiveBrowser({
           <GhostButton
             type="button"
             onClick={() => {
-              const digits = seekDraft.replace(/\D/g, "") || "1";
+              const digits = seekDigits || "1";
               const next = babeliaFromLocation(digits, 0);
               setPlate(next);
-              setSeekDraft(next.location);
+              setSeekFull(next.location);
             }}
           >
-            Seek
+            Seek twin
           </GhostButton>
           <a
-            className="inline-flex items-center font-mono text-[9px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
-            href={`https://babelia.libraryofbabel.info/imagebookmark2.cgi?babelia_${seekDraft.replace(/\D/g, "") || "1"}`}
+            className="inline-flex items-center rounded-sm border border-amber/50 bg-amber/15 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-amber hover:bg-amber/25"
+            href={officialBabeliaBookmarkUrl(seekDigits || "1")}
             target="_blank"
             rel="noreferrer"
           >
-            Try digits on official Babelia ↗
+            Open on official Babelia ↗
           </a>
         </div>
+
+        {officialPaste && (
+          <p className="rounded-sm border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
+            Loaded official-length ID ({seekDigits.length.toLocaleString()} digits). Twin Seek =
+            colorful static (expected). For the real image of this location, use{" "}
+            <span className="text-cyan">Open on official Babelia</span> — no zoom will fix the twin
+            plate.
+          </p>
+        )}
 
         <figure className="overflow-hidden rounded-sm border border-cyan/30 bg-black/60">
           <img
@@ -686,8 +727,8 @@ function BabeliaArchiveBrowser({
           <figcaption className="space-y-1 border-t border-cyan/20 px-3 py-2 font-mono text-[10px]">
             <p className="text-cyan">{active.shortId}</p>
             <p className="break-all text-[8px] text-muted-foreground">
-              {active.location.length} digits · {active.location.slice(0, 180)}
-              {active.location.length > 180 ? "…" : ""}
+              {active.location.length.toLocaleString()} digits · {active.location.slice(0, 120)}
+              {active.location.length > 120 ? "…" : ""}
             </p>
             <p className="text-amber">
               coherence {active.coherence}% · {active.note}
@@ -714,7 +755,7 @@ function BabeliaArchiveBrowser({
                 onClick={() => {
                   setTierIdx(i);
                   setPlate(p);
-                  setSeekDraft(p.location);
+                  setSeekFull(p.location);
                 }}
                 className={`flex w-full gap-3 overflow-hidden rounded-sm border text-left transition ${
                   tierIdx === i ? "border-amber/60 bg-amber/10" : "border-cyan/20 bg-black/40"
@@ -768,6 +809,8 @@ export function BabelSecretPanel({
   const [begun, setBegun] = React.useState(false);
   const [grimoireUrl, setGrimoireUrl] = React.useState(RETRO_GRIMOIRE_SRC);
 
+  const [books, setBooks] = React.useState<BabelGeneratedBook[]>([]);
+
   const report: BabelLibraryReport | null = React.useMemo(() => {
     if (!sourcesReady) return null;
     return searchBabelSecrets({
@@ -789,9 +832,12 @@ export function BabelSecretPanel({
     ruckmanVerses,
   ]);
 
-  const books: BabelGeneratedBook[] = React.useMemo(() => {
-    if (!sourcesReady) return [];
-    return generateBabelBooks({
+  React.useEffect(() => {
+    if (!sourcesReady) {
+      setBooks([]);
+      return;
+    }
+    const base = generateBabelBooks({
       result,
       johnsonWord,
       johnsonWord1773,
@@ -800,6 +846,17 @@ export function BabelSecretPanel({
       ruckmanVerses,
       maxBooks: 3,
     });
+    setBooks(base);
+
+    // Background: full workable Writing-IQ + AI-detector suite (prefer AI < 10%).
+    // Silent — no UI chrome for scores.
+    let cancelled = false;
+    void quietlyPolishBabelBooks(base).then((polished) => {
+      if (!cancelled && polished.length) setBooks(polished);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [
     sourcesReady,
     result,
@@ -815,7 +872,14 @@ export function BabelSecretPanel({
     setPageIdx(0);
     setBegun(false);
     setArtIdx(0);
+    audio.stopBabelAmbience();
   }, [result.number, result.normalized]);
+
+  React.useEffect(() => {
+    return () => {
+      audio.stopBabelAmbience();
+    };
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -922,7 +986,10 @@ export function BabelSecretPanel({
           </p>
           <button
             type="button"
-            onClick={() => setBegun(true)}
+            onClick={() => {
+              audio.openBabelGrimoire();
+              setBegun(true);
+            }}
             className="group relative max-w-sm overflow-hidden rounded-sm border-2 border-amber/60 bg-black/70 p-2 transition hover:border-amber hover:shadow-[0_0_32px_rgba(251,191,36,0.25)] focus:outline-none focus:ring-2 focus:ring-amber/50"
             aria-label="Press the grimoire to begin the Babel Secret Library"
           >
@@ -944,6 +1011,7 @@ export function BabelSecretPanel({
           </button>
           <p className="font-mono text-[9px] text-muted-foreground">
             Hierarchy after open: grimoire → folio → babelia → hexagon → shelf (likelihood %).
+            Opening plays air + spirit archive tones (mute in Settings if needed).
           </p>
         </div>
       </Panel>
@@ -957,7 +1025,13 @@ export function BabelSecretPanel({
         eyebrow="NUMEROLOGY · locate · do not invent · amber = source matches"
         action={
           <div className="flex flex-wrap gap-1.5">
-            <GhostButton type="button" onClick={() => setBegun(false)}>
+            <GhostButton
+              type="button"
+              onClick={() => {
+                audio.closeBabelGrimoire();
+                setBegun(false);
+              }}
+            >
               Close grimoire
             </GhostButton>
             <RunButton type="button" onClick={downloadAll}>

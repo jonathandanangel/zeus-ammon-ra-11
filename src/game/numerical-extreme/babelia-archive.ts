@@ -56,11 +56,29 @@ function temper(x: number): number {
   return x >>> 0;
 }
 
-/** Expand location BigInt into a pixel PRNG state. */
-function locationToState(loc: bigint): number {
+/** Expand location into a 32-bit PRNG state (fast even for ~1M-digit official IDs). */
+function locationToState(loc: bigint | string): number {
+  if (typeof loc === "string") {
+    // Chunk hash — avoid O(digits) BigInt division on official Babelia pastes
+    let s = 2166136261;
+    const step = Math.max(1, Math.floor(loc.length / 4096));
+    for (let i = 0; i < loc.length; i += step) {
+      const chunk = loc.slice(i, i + 16);
+      for (let j = 0; j < chunk.length; j += 1) {
+        s = Math.imul(s ^ chunk.charCodeAt(j), 16777619);
+      }
+      s = temper(s >>> 0);
+    }
+    // mix length + head/tail so short vs long IDs diverge
+    s ^= loc.length >>> 0;
+    s = temper(s >>> 0);
+    const head = loc.slice(0, 24);
+    const tail = loc.slice(-24);
+    for (const ch of head + tail) s = Math.imul(s ^ ch.charCodeAt(0), 16777619);
+    return temper(s >>> 0) || 1;
+  }
   const mod = 0x100000000n;
   let n = loc < 0n ? -loc : loc;
-  // fold high digits into 32-bit
   let s = 0;
   while (n > 0n) {
     s = temper((s ^ Number(n % mod)) >>> 0);
@@ -68,6 +86,17 @@ function locationToState(loc: bigint): number {
   }
   return s || 1;
 }
+
+/** Official Babelia locations are ~960k digits; shorter IDs are ZEUS twin / stubs. */
+export function isOfficialBabeliaLocationLength(digitCount: number): boolean {
+  return digitCount >= 100_000;
+}
+
+export function officialBabeliaBookmarkUrl(digits: string): string {
+  const d = digits.replace(/\D/g, "") || "1";
+  return `https://babelia.libraryofbabel.info/imagebookmark2.cgi?babelia_${d}`;
+}
+
 
 export function quantize12bit(r: number, g: number, b: number): number {
   const R = Math.min(15, Math.max(0, Math.round(r / 17)));
@@ -117,37 +146,42 @@ function canvasFromIndices(indices: Uint16Array): string {
 }
 
 /**
- * Location → image (Basile forward direction).
- * Same location always regenerates the same plate.
+ * Location → image (educational twin).
+ * Same digit string always regenerates the same ZEUS plate — not Basile’s pixels.
+ * Ordinary archive noise looks like colorful static; that is expected, not a zoom bug.
  */
 export function babeliaFromLocation(locationRaw: string | bigint, coherence = 0): BabeliaPlate {
-  let loc: bigint;
-  if (typeof locationRaw === "bigint") loc = locationRaw < 0n ? -locationRaw : locationRaw;
-  else {
-    const digits = locationRaw.replace(/\D/g, "") || "1";
-    loc = BigInt(digits);
+  let digits: string;
+  if (typeof locationRaw === "bigint") {
+    const n = locationRaw < 0n ? -locationRaw : locationRaw;
+    digits = (n === 0n ? 1n : n).toString(10);
+  } else {
+    digits = locationRaw.replace(/\D/g, "") || "1";
+    if (/^0+$/.test(digits)) digits = "1";
   }
-  if (loc === 0n) loc = 1n;
 
-  let state = locationToState(loc);
-  const indices = new Uint16Array(BABELIA_PIXELS);
-  for (let i = 0; i < BABELIA_PIXELS; i += 1) {
+  const officialLen = isOfficialBabeliaLocationLength(digits.length);
+  let state = locationToState(digits);
+  const indices = Uint16Array.from({ length: BABELIA_PIXELS }, () => {
     state = lcgNext(state);
-    indices[i] = temper(state) % BABELIA_PALETTE;
-  }
+    return temper(state) % BABELIA_PALETTE;
+  });
 
-  const location = loc.toString(10);
+  const note =
+    coherence > 0
+      ? `Located plate · ${coherence}% planted signal (path/search) among archive noise.`
+      : officialLen
+        ? `Official-length location (${digits.length} digits). ZEUS twin shows archive-noise static — not Basile’s image. Open on babelia.libraryofbabel.info to see the true plate (no zoom needed here).`
+        : "Programmatic ZEUS twin plate from location — often looks like static (ordinary archive noise). Same idea as Babelia; different algorithm.";
+
   return {
-    shortId: shortIdFromLocation(location),
-    location,
+    shortId: shortIdFromLocation(digits),
+    location: digits,
     width: BABELIA_W * 4,
     height: BABELIA_H * 4,
     dataUrl: canvasFromIndices(indices),
     coherence,
-    note:
-      coherence > 0
-        ? `Located plate · ${coherence}% planted signal (path/search) among archive noise.`
-        : "Programmatic plate from location number — nothing stored on disk (Babelia idea).",
+    note,
   };
 }
 
@@ -189,6 +223,16 @@ export function babeliaRandom(): BabeliaPlate {
 /** Step slideshow ±1 from a location (adjacent IDs — not necessarily similar visuals). */
 export function babeliaStep(location: string, delta: number): BabeliaPlate {
   const digits = location.replace(/\D/g, "") || "1";
+  // Official-length IDs: only bump the trailing limb so we never BigInt ~1M digits.
+  if (digits.length > 200) {
+    const keep = digits.slice(0, -18);
+    const limb = BigInt(digits.slice(-18) || "0") + BigInt(delta);
+    const limbStr =
+      limb < 0n
+        ? (10n ** 18n + (limb % 10n ** 18n)).toString().padStart(18, "0").slice(-18)
+        : limb.toString().padStart(18, "0").slice(-18);
+    return babeliaFromLocation(`${keep}${limbStr}`.replace(/^0+/, "") || "1", 0);
+  }
   let loc = BigInt(digits) + BigInt(delta);
   if (loc < 1n) loc = 1n;
   return babeliaFromLocation(loc, 0);

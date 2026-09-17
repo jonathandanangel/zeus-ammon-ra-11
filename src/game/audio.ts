@@ -35,7 +35,11 @@ export type SoundName =
   | "numeric-tab"
   | "numeric-run"
   | "numeric-result"
-  | "numeric-error";
+  | "numeric-error"
+  | "babel-open"
+  | "babel-spirit"
+  | "babel-air"
+  | "babel-close";
 
 export interface AudioSettings {
   master: number;
@@ -201,6 +205,9 @@ class AudioManager {
   private thermalTimer: number | null = null;
   private thermalActive = false;
   private thermalStep = 0;
+  private babelTimer: number | null = null;
+  private babelActive = false;
+  private babelStep = 0;
   settings: AudioSettings = { master: 0.7, music: 0.5, effects: 0.8, muted: false };
 
   get ready() {
@@ -511,6 +518,139 @@ class AudioManager {
       window.clearTimeout(this.thermalTimer);
       this.thermalTimer = null;
     }
+  }
+
+  /**
+   * Library of Babel grimoire: book-open whoosh + air + faint spirit tones,
+   * then soft hexagon-archive ambience while the volume is open.
+   */
+  openBabelGrimoire() {
+    this.init();
+    if (!this.ctx || this.settings.muted) return;
+    this.resume();
+    this.play("babel-open");
+    this.startBabelAmbience();
+  }
+
+  closeBabelGrimoire() {
+    this.play("babel-close");
+    this.stopBabelAmbience();
+  }
+
+  startBabelAmbience() {
+    this.init();
+    if (!this.ctx || this.babelActive || this.settings.muted) return;
+    this.resume();
+    this.babelActive = true;
+    this.babelStep = 0;
+    this.scheduleBabelTick();
+  }
+
+  stopBabelAmbience() {
+    this.babelActive = false;
+    if (this.babelTimer !== null) {
+      window.clearTimeout(this.babelTimer);
+      this.babelTimer = null;
+    }
+  }
+
+  private scheduleBabelTick() {
+    if (!this.babelActive || !this.ctx) return;
+    this.playBabelAmbienceStep();
+    this.babelTimer = window.setTimeout(() => this.scheduleBabelTick(), 780);
+  }
+
+  /** Soft air currents + distant spirit-like sine whispers in the archive. */
+  private playBabelAmbienceStep() {
+    const ctx = this.ctx;
+    const bus = this.fxGain;
+    if (!ctx || !bus || !this.babelActive || this.settings.muted) return;
+    const now = ctx.currentTime;
+    const intensity = Math.max(0.45, this.intensity);
+
+    // Continuous air / hexagon draft
+    if (this.babelStep % 2 === 0) {
+      this.noiseBurst(0.95, 280 + (this.babelStep % 5) * 70, 0.045 * intensity, bus);
+    }
+    if (this.babelStep % 3 === 1) {
+      this.noiseBurst(0.55, 1100 + Math.random() * 900, 0.028 * intensity, bus);
+    }
+
+    // Spirit whispers: thin rising/falling sine clusters
+    if (this.babelStep % 4 === 2) {
+      const base = 620 + (this.babelStep % 7) * 37;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      const f = ctx.createBiquadFilter();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(base, now);
+      osc.frequency.linearRampToValueAtTime(base * (0.82 + Math.random() * 0.35), now + 0.9);
+      f.type = "bandpass";
+      f.frequency.value = base * 1.2;
+      f.Q.value = 6;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.035 * intensity, now + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.0005, now + 1.1);
+      osc.connect(f).connect(g).connect(bus);
+      osc.start(now);
+      osc.stop(now + 1.15);
+    }
+    if (this.babelStep % 5 === 0) {
+      this.blip(
+        [196, 247, 311].map((f) => f * (0.95 + Math.random() * 0.08)),
+        0.55,
+        "triangle",
+        0.04 * intensity,
+      );
+    }
+    this.babelStep += 1;
+  }
+
+  /** One-shot: page turn air + spirit chord when opening the grimoire. */
+  private playBabelOpenBurst() {
+    const ctx = this.ctx;
+    const bus = this.fxGain;
+    if (!ctx || !bus) return;
+    const now = ctx.currentTime;
+    const intensity = Math.max(0.5, this.intensity);
+
+    // Air rushing into the hexagon
+    this.noiseBurst(1.35, 380, 0.16 * intensity, bus);
+    this.noiseBurst(0.85, 1600, 0.09 * intensity, bus);
+    this.noiseBurst(0.45, 4200, 0.05 * intensity, bus);
+
+    // Low archive drone
+    const drone = ctx.createOscillator();
+    const dg = ctx.createGain();
+    drone.type = "sine";
+    drone.frequency.setValueAtTime(55, now);
+    drone.frequency.linearRampToValueAtTime(72, now + 1.8);
+    dg.gain.setValueAtTime(0, now);
+    dg.gain.linearRampToValueAtTime(0.07 * intensity, now + 0.2);
+    dg.gain.exponentialRampToValueAtTime(0.0005, now + 2.2);
+    drone.connect(dg).connect(bus);
+    drone.start(now);
+    drone.stop(now + 2.3);
+
+    // Spirit voices — staggered high sines
+    const spiritFreqs = [523, 659, 784, 988, 1175];
+    spiritFreqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      osc.type = "sine";
+      const start = now + 0.12 + i * 0.11;
+      osc.frequency.setValueAtTime(f * 0.92, start);
+      osc.frequency.exponentialRampToValueAtTime(f * 1.08, start + 0.7);
+      filter.type = "lowpass";
+      filter.frequency.value = 2400;
+      g.gain.setValueAtTime(0, start);
+      g.gain.linearRampToValueAtTime(0.055 * intensity, start + 0.08);
+      g.gain.exponentialRampToValueAtTime(0.0005, start + 0.95);
+      osc.connect(filter).connect(g).connect(bus);
+      osc.start(start);
+      osc.stop(start + 1.0);
+    });
   }
 
   private scheduleWindTick() {
@@ -869,6 +1009,21 @@ class AudioManager {
       case "numeric-error":
         this.blip([330, 233, 165], 0.18, "sawtooth", 0.15);
         this.noiseBurst(0.4, 700, 0.09, this.fxGain!);
+        break;
+      case "babel-open":
+        this.playBabelOpenBurst();
+        break;
+      case "babel-spirit":
+        this.blip([523, 659, 784, 1046], 0.28, "sine", 0.1);
+        this.noiseBurst(0.6, 1800, 0.05, this.fxGain!);
+        break;
+      case "babel-air":
+        this.noiseBurst(1.1, 420 + extra * 200, 0.12, this.fxGain!);
+        this.noiseBurst(0.5, 2400, 0.06, this.fxGain!);
+        break;
+      case "babel-close":
+        this.noiseBurst(0.55, 500, 0.08, this.fxGain!);
+        this.blip([392, 311, 247], 0.22, "triangle", 0.08);
         break;
     }
   }

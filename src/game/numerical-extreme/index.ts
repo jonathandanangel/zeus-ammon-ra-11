@@ -195,6 +195,7 @@ export {
   formatBabelFindReport,
   babelPathMetrics,
   isAnagramOf,
+  quietlyPolishBabelBooks,
 } from "./babel-pathfinder";
 export type {
   BabelSourceKind,
@@ -230,6 +231,8 @@ export {
   babeliaLocateSearch,
   babeliaHierarchyForWord,
   babeliaLocateFromImageData,
+  isOfficialBabeliaLocationLength,
+  officialBabeliaBookmarkUrl,
   quantize12bit,
   expand12bit,
 } from "./babelia-archive";
