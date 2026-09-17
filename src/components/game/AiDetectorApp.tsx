@@ -161,9 +161,10 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
         {showInfo && (
           <div className="space-y-2 border-b border-cyan/20 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
             <p className="text-mint">
-              Custom weight to certain detectors biased toward ModernBERT leads, with math models
-              (log-odds softmax fusion + confidence gates + pairwise gap evidence) for high
-              efficiency. Full free suite still votes; soft stylometrics stay low-weight.
+              Custom weight biased toward ModernBERT leads, with a higher-order lead composite
+              (generalizes patterns like ModernBERT ≫ story without exact percents) plus log-odds
+              softmax + product-of-experts fusion. Full free suite still votes; soft stylometrics
+              stay low-weight. Library of Babel polish uses this same Free ensemble silently.
             </p>
             <p>
               Free mode needs no API keys. First scan downloads open ONNX detectors into your browser

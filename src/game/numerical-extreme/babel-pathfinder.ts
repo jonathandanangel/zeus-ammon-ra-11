@@ -1500,8 +1500,9 @@ export function generateBabelBooks(input: {
 }
 
 /**
- * Background polish: re-locate leaf coherent islands using Writing IQ + AI checks
- * (prefer AI &lt; 10%). Silent — do not show scores in UI.
+ * Background polish: re-locate leaf coherent islands using Writing IQ + the same Free
+ * AI Detector ensemble as AiDetectorApp (all lead rules / higher-order composite / PoE).
+ * Prefer AI &lt; 10%. Silent — do not show scores in UI.
  * `light: true` skips neural models and only polishes the first leaf (typing/scroll safe).
  * Same Free multi-scan SFX: coin at start, bing when finished (scoring unchanged).
  */
@@ -1558,6 +1559,7 @@ export async function quietlyPolishBabelBooks(
         let coherent = candidates[0] ?? leaf.excerpt;
         try {
           coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
+            // Full Free ensemble (ModernBERT + stylometrics + all consensus rules)
             neural: light ? "none" : "modernbert",
             localOnly: light,
             maxCandidates: light ? 2 : 3,

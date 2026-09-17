@@ -1,7 +1,8 @@
 /**
  * Silent Babel prose preference — high Writing IQ + low AI %.
- * Runs the workable free detector suite (+ Writing to IQ when possible)
- * in the background. Never surface scores in NUMEROLOGY UI.
+ * Runs the same Free AI Detector ensemble as AiDetectorApp (stylometrics + ModernBERT,
+ * higher-order lead composite, log-odds / product-of-experts fusion, all ModernBERT-first
+ * rules). Prefer AI ≤ 10%. Never surface scores in NUMEROLOGY UI.
  */
 
 import { estimateWritingIqClient, writingIqWordCount } from "@/game/ai-detector/writingIq";
@@ -109,8 +110,9 @@ function rankScore(writingIq: number, aiPercent: number): number {
 }
 
 /**
- * Entire workable suite for one sample (silent):
- * Writing to IQ (when long enough) + free AI detector ensemble (stylometric + neural).
+ * Entire Free AI Detector suite for one sample (silent):
+ * Writing to IQ (when long enough) + runFreeEnsemble with the same consensus rules
+ * as Free multi-scan (ModernBERT-first leads, higher-order composite, PoE fusion).
  */
 export async function silentlyScoreBabelProse(
   text: string,
@@ -131,9 +133,11 @@ export async function silentlyScoreBabelProse(
   let aiPercent = Math.max(8, Math.min(55, 160 - writingIq));
   if (!opts?.localOnly) {
     try {
-      // Babel uses ModernBERT + stylometrics so consensus rules (≈99% AI, mix gaps) apply.
+      // Same path as AiDetector Free mode — full stylometrics + ModernBERT + all consensus rules.
       const { consensus } = await runFreeEnsemble(sample, undefined, {
-        ...(opts?.skipNeural ? { skipNeural: true, neural: "none" as const } : { neural: opts?.neural ?? "modernbert" }),
+        ...(opts?.skipNeural
+          ? { skipNeural: true, neural: "none" as const }
+          : { neural: opts?.neural ?? "modernbert" }),
       });
       if (consensus.scanned > 0) {
         aiPercent = consensus.avgAiScore;

@@ -210,6 +210,162 @@ function fuseProductOfExperts(pairs: Array<{ score: number; weight: number }>): 
   return 100 * Math.exp(logP / Math.max(1e-12, wSum));
 }
 
+/**
+ * Higher-order lead composite — generalizes discrete patterns like
+ * “ModernBERT ~90% > story ~55%” without needing exact percents.
+ * Soft-OR over logistic gap × floor × soft-backdrop evidence.
+ */
+type LeadCompositeSpec = {
+  id: string;
+  /** Primary lead detector(s) — all must clear floors / dominate `above`. */
+  leads: FreeDetectorId[];
+  /** Detectors the lead(s) should outscore. */
+  above: FreeDetectorId[];
+  /** Optional backdrop that should sit ~20s (soft cluster). */
+  softBackdrop?: FreeDetectorId[];
+  requireSoftBackdrop?: boolean;
+  /** Soft floors — pattern, not exact percent. */
+  leadFloor?: number;
+  supportFloor?: number;
+  /** Optional amplifier: another detector should be “strangely elevated” (~30–50). */
+  elevatedSupport?: { id: FreeDetectorId; lo: number; hi: number };
+  weight: number;
+};
+
+const LEAD_COMPOSITES: LeadCompositeSpec[] = [
+  {
+    id: "modern>story-hard",
+    leads: ["modernbert"],
+    above: ["ai-story"],
+    leadFloor: 78,
+    supportFloor: 42,
+    weight: 1.45,
+  },
+  {
+    id: "modern>story-soft",
+    leads: ["modernbert"],
+    above: ["ai-story"],
+    leadFloor: 48,
+    supportFloor: 32,
+    softBackdrop: ["sentence-mix", "gptzero-twin", "lexical", "discourse", "perplexity-proxy", "ngram", "llm-pitch"],
+    requireSoftBackdrop: true,
+    weight: 1.05,
+  },
+  {
+    id: "modern>burst+mix",
+    leads: ["modernbert"],
+    above: ["burstiness", "sentence-mix"],
+    leadFloor: 45,
+    weight: 1.15,
+  },
+  {
+    id: "modern+burst>mix+twin",
+    leads: ["modernbert", "burstiness"],
+    above: ["sentence-mix", "gptzero-twin"],
+    softBackdrop: ["lexical", "discourse", "perplexity-proxy", "ngram", "llm-pitch"],
+    requireSoftBackdrop: true,
+    leadFloor: 40,
+    weight: 1.2,
+  },
+  {
+    id: "story>twin+highmix",
+    leads: ["ai-story"],
+    above: ["gptzero-twin"],
+    leadFloor: 38,
+    supportFloor: 22,
+    elevatedSupport: { id: "sentence-mix", lo: 28, hi: 54 },
+    weight: 1.25,
+  },
+];
+
+function softClusterEvidence(scores: Map<FreeDetectorId, number>, ids: FreeDetectorId[]): number {
+  const vals = ids.map((id) => scores.get(id)).filter((v): v is number => v != null);
+  if (!vals.length) return 0.85;
+  const m = mean(vals);
+  // Peak when mean sits near the low-20s; fade as soft scans climb
+  const near20 = Math.exp(-Math.pow((m - 24) / 14, 2));
+  const notHot = 1 - sigmoidGap(Math.max(...vals) - 45, 8);
+  return clamp(near20 * (0.55 + 0.45 * notHot), 0, 1);
+}
+
+function scoreLeadComposite(
+  scores: Map<FreeDetectorId, number>,
+  spec: LeadCompositeSpec,
+): number {
+  const leadScores = spec.leads.map((id) => scores.get(id));
+  if (leadScores.some((v) => v == null)) return 0;
+  const leadMin = Math.min(...(leadScores as number[]));
+  const leadMax = Math.max(...(leadScores as number[]));
+
+  let gapE = 1;
+  for (const a of spec.above) {
+    const s = scores.get(a);
+    if (s == null) return 0;
+    // Each lead should beat each `above` target (use min lead for co-leads)
+    gapE *= sigmoidGap(leadMin - s, 10);
+    if (spec.supportFloor != null) {
+      gapE *= sigmoidGap(s - (spec.supportFloor - 8), 9);
+    }
+  }
+  const floorE =
+    spec.leadFloor != null ? sigmoidGap(leadMax - (spec.leadFloor - 6), 9) : 1;
+  const softE =
+    spec.requireSoftBackdrop && spec.softBackdrop
+      ? softClusterEvidence(scores, spec.softBackdrop)
+      : 1;
+  let elevE = 1;
+  if (spec.elevatedSupport) {
+    const e = scores.get(spec.elevatedSupport.id);
+    if (e == null) return 0;
+    const { lo, hi } = spec.elevatedSupport;
+    // Band pass: strangely high, but not runaway
+    elevE = sigmoidGap(e - lo, 5) * (1 - sigmoidGap(e - hi, 6));
+  }
+  return clamp(gapE * floorE * softE * elevE, 0, 1);
+}
+
+/**
+ * Higher-order composite: soft-OR of generalized lead patterns → AI% evidence.
+ * Percents in comments are examples; logistics fire on the same shape nearby.
+ */
+function higherOrderLeadComposite(scores: Map<FreeDetectorId, number>): {
+  evidenceAi: number;
+  strength: number;
+  bestId: string;
+  fired: boolean;
+} {
+  let failProd = 1;
+  let best = { id: "", e: 0, w: 0 };
+  for (const spec of LEAD_COMPOSITES) {
+    const e = scoreLeadComposite(scores, spec);
+    const we = e * spec.weight;
+    failProd *= 1 - clamp(we / (1 + spec.weight), 0, 0.97);
+    if (we > best.w) best = { id: spec.id, e, w: we };
+  }
+  const strength = clamp(1 - failProd, 0, 1);
+  // Map composite strength into AI% evidence band (~50 neutral → ~92 strong)
+  const evidenceAi = clamp(48 + strength * 48 + best.e * 8, 0, 100);
+  return {
+    evidenceAi,
+    strength,
+    bestId: best.id,
+    fired: strength >= 0.42 || best.e >= 0.55,
+  };
+}
+
+/** Alone-high soft scan (e.g. sentence-mix) is not an AI lead — human-leaning penalty. */
+function aloneHighSoftPenalty(
+  scores: Map<FreeDetectorId, number>,
+  softId: FreeDetectorId,
+  leadFired: boolean,
+): number {
+  if (leadFired) return 0;
+  const s = scores.get(softId);
+  if (s == null || s < 30) return 0;
+  // Penalty grows with alone-high soft score; returned as AI% downward pull
+  return 10 + 14 * sigmoidGap(s - 30, 6);
+}
+
 function ok(
   id: FreeDetectorId,
   name: string,
@@ -1054,12 +1210,18 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       sentMix.aiScore >= 30 &&
       sentMix.aiScore < 55,
   );
+  // Discrete pattern flags (examples) — also OR higher-order composite so nearby % still fire
+  const scoreMapEarly = new Map<FreeDetectorId, number>();
+  for (const r of okRows) scoreMapEarly.set(r.id as FreeDetectorId, r.aiScore);
+  const leadCompositeEarly = higherOrderLeadComposite(scoreMapEarly);
+
   const modernAiLead =
     modernBurstAiPair ||
     modernOverBurstMix ||
     modernOverStorySoft ||
     modernOverStoryHard ||
-    storyOverTwinHighMix;
+    storyOverTwinHighMix ||
+    leadCompositeEarly.fired;
   // High sentence-mix by itself is not an AI signal — crush it unless paired rules fire
   const mixAloneHigh = Boolean(
     sentMix &&
@@ -1091,18 +1253,25 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       !modernNearCertain,
   );
 
-  // Continuous rule evidence in AI% space (logistic gaps) — feeds log-odds fusion
+  // Continuous rule evidence — higher-order lead composite generalizes discrete % patterns
+  const scoreMap = scoreMapEarly;
+  const leadComposite = leadCompositeEarly;
+  const aloneMixPenalty = aloneHighSoftPenalty(
+    scoreMap,
+    "sentence-mix",
+    leadComposite.fired || modernStrong || Boolean(story && story.aiScore >= 68),
+  );
+  // Legacy logistic pair evidence (still fused) + composite soft-OR
   const gapVsMix = modern && sentMix ? modern.aiScore - sentMix.aiScore : 0;
   const gapVsBurst = modern && burst ? modern.aiScore - burst.aiScore : 0;
   const gapVsTwin = modern && twin ? modern.aiScore - twin.aiScore : 0;
   const gapModernStory = modern && story ? modern.aiScore - story.aiScore : 0;
   const gapStoryTwin = story && twin ? story.aiScore - twin.aiScore : 0;
   const mixLevel = sentMix?.aiScore ?? 20;
-  // Supporting mix only when story≥twin; alone-high mix contributes negative (human) evidence
   const mixSupport = storyOverTwinHighMix
     ? sigmoidGap(mixLevel - 28, 6)
     : mixAloneHigh
-      ? 1 - sigmoidGap(mixLevel - 28, 5) // high alone → push human
+      ? 1 - sigmoidGap(mixLevel - 28, 5)
       : 0.45;
   const modernPairEvidence =
     modern != null
@@ -1119,16 +1288,18 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
         0.25 * sigmoidGap((story?.aiScore ?? 44) - 40, 6) +
         0.3 * mixSupport)
     : mixAloneHigh
-      ? 100 * (0.25 * mixSupport) // low → human-leaning
+      ? 100 * (0.25 * mixSupport)
       : 50;
-  // Blend ModernBERT-first and story/twin/mix evidence (weights sum-ish to 1)
+  const legacyEvidence =
+    0.55 * modernPairEvidence +
+    0.3 * storyTwinMixEvidence +
+    (modernOverStoryHard ? 12 : 0) +
+    (modernOverStorySoft ? 7 : 0) +
+    (storyOverTwinHighMix ? 9 : 0) -
+    (mixAloneHigh ? 10 : 0);
+  // Higher-order composite dominates; legacy pair math is a light prior
   const ruleEvidenceAi =
-    0.58 * modernPairEvidence +
-    0.32 * storyTwinMixEvidence +
-    (modernOverStoryHard ? 14 : 0) +
-    (modernOverStorySoft ? 8 : 0) +
-    (storyOverTwinHighMix ? 10 : 0) -
-    (mixAloneHigh ? 12 : 0);
+    0.62 * leadComposite.evidenceAi + 0.38 * legacyEvidence - aloneMixPenalty;
   const ruleEvidenceClamped = clamp(ruleEvidenceAi);
 
   const pairs: Array<{ id: FreeDetectorId; score: number; weight: number }> = [];
@@ -1353,6 +1524,20 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     const lead = Math.max(story?.aiScore ?? 44, (twin?.aiScore ?? 27) + 18, 58);
     docScore = invLogitAi(0.3 * logitAi(docScore) + 0.7 * logitAi(lead));
   }
+  // Soft-OR composite fires when pattern is nearby but discrete flags miss exact %
+  if (
+    leadComposite.fired &&
+    !modernNearCertain &&
+    !modernOverStoryHard &&
+    !modernBurstAiPair &&
+    !modernOverBurstMix &&
+    !modernOverStorySoft &&
+    !storyOverTwinHighMix
+  ) {
+    docScore = invLogitAi(
+      0.32 * logitAi(docScore) + 0.68 * logitAi(Math.max(leadComposite.evidenceAi, 60)),
+    );
+  }
   if (mixAloneHigh) {
     docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
@@ -1380,33 +1565,35 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const band: Band = bandFromAiScore(docScore);
   const vetoNote = modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
-    : modernOverStoryHard
-      ? " ModernBERT ~90% > AI story/chapterbook ~55% → lean AI."
-      : storyOverTwinHighMix
-        ? " AI story ≥ GPTZero-twin with high sentence-mix → lean AI."
-        : modernOverStorySoft
-          ? " ModernBERT > AI story/chapterbook (rest ~20s) → lean AI."
-          : modernOverBurstMix
-            ? " ModernBERT > Burstiness & sentence-mix → lean AI."
-            : modernBurstAiPair
-              ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
-              : mixAloneHigh
-                ? " Sentence-mix alone high ≠ AI (dampened)."
-                : modernHard
-                  ? " ModernBERT ≥85% AI dominates consensus."
-                  : modernStrong
-                    ? " ModernBERT ≥70% AI weighted above soft stylometrics."
-                    : modernBelowMix
-                      ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
-                      : humanHard
-                        ? " Strong human-noise → ~0% AI."
-                        : humanVeto
-                          ? " Human-noise veto applied (informal / student voice)."
-                          : storyStrong
-                            ? " AI chapterbook / story fingerprints dominate."
-                            : pitchStrong
-                              ? " LLM pitch/outline fingerprints dominate."
-                              : "";
+    : leadComposite.fired && leadComposite.bestId
+      ? ` Higher-order lead composite (${leadComposite.bestId}) → lean AI.`
+      : modernOverStoryHard
+        ? " ModernBERT ~90% > AI story/chapterbook ~55% → lean AI."
+        : storyOverTwinHighMix
+          ? " AI story ≥ GPTZero-twin with high sentence-mix → lean AI."
+          : modernOverStorySoft
+            ? " ModernBERT > AI story/chapterbook (rest ~20s) → lean AI."
+            : modernOverBurstMix
+              ? " ModernBERT > Burstiness & sentence-mix → lean AI."
+              : modernBurstAiPair
+                ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
+                : mixAloneHigh
+                  ? " Sentence-mix alone high ≠ AI (dampened)."
+                  : modernHard
+                    ? " ModernBERT ≥85% AI dominates consensus."
+                    : modernStrong
+                      ? " ModernBERT ≥70% AI weighted above soft stylometrics."
+                      : modernBelowMix
+                        ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
+                        : humanHard
+                          ? " Strong human-noise → ~0% AI."
+                          : humanVeto
+                            ? " Human-noise veto applied (informal / student voice)."
+                            : storyStrong
+                              ? " AI chapterbook / story fingerprints dominate."
+                              : pitchStrong
+                                ? " LLM pitch/outline fingerprints dominate."
+                                : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
@@ -1425,7 +1612,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     aiVotes,
     uncertainVotes,
     agreement,
-    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax + product-of-experts · rule-evidence · ModernBERT-first.`,
+    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax + PoE · higher-order lead composite · ModernBERT-first.`,
   };
 }
 

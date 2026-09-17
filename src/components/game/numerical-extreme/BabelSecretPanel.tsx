@@ -1108,6 +1108,19 @@ export function BabelSecretPanel({
             </a>{" "}
             — Codex EPUB translator integrated with all NUMEROLOGY sources (not a LoB clone).
           </p>
+          <p className="rounded-sm border border-mint/30 bg-mint/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-mint/95">
+            Silent polish uses the same Free AI Detector as AI Detector Free mode: ModernBERT +
+            stylometrics, higher-order lead composite, log-odds / product-of-experts fusion, and all
+            ModernBERT-first rules — preferring prose under ~10% AI with higher Writing IQ. Scores
+            stay hidden in NUMEROLOGY.
+          </p>
+          <p className="rounded-sm border border-amber/25 bg-black/40 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber/90">
+            Notes / security: Free ensemble scoring runs in your browser (ONNX models cached after
+            first download). No API keys required for polish. Do not paste secrets, passwords, or
+            private credentials into path words or exported JSON. Heuristic filter only — not a legal
+            or academic verdict. Coin on grimoire / bing when deferred polish finishes (same Free
+            multi-scan pairing); mute in Settings if needed.
+          </p>
 
           <figure className="overflow-hidden rounded-sm border border-amber/40 bg-black/60">
             <div className="relative max-h-[min(42vh,420px)] overflow-hidden">
