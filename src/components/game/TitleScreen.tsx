@@ -67,6 +67,10 @@ type ModeSection = {
   blurb: string;
   accentClass: string;
   buttonClass: string;
+  /** Soft full-screen wash while this topic is in view */
+  wash: string;
+  /** Frame glow family: aero = electric/mystique purple, fire = bright fiery */
+  glow: "aero" | "fire" | "story" | "tools" | "system";
   actions: Array<{
     label: string;
     sub?: string;
@@ -151,9 +155,11 @@ export function TitleScreen(p: TitleScreenProps) {
       title: "Flight Dynamics Trivia",
       blurb:
         "To help you remember everything in fluid mechanics and begin thinking about aerodynamics and flight and control.",
-      accentClass: "from-cyan/25 via-transparent to-magenta/20 border-cyan/40",
+      accentClass: "from-[#a78bfa]/30 via-transparent to-[#22d3ee]/20 border-[#c4b5fd]/55",
       buttonClass:
-        "border-cyan/50 text-cyan hover:bg-cyan/20 hover:text-moon shadow-[0_0_24px_rgba(34,211,238,0.15)]",
+        "border-[#c4b5fd]/60 text-[#e9d5ff] hover:bg-[#a78bfa]/20 hover:text-moon shadow-[0_0_24px_rgba(167,139,250,0.22)]",
+      wash: "rgba(168,85,247,0.42)",
+      glow: "aero",
       actions: [
         { label: "Start new campaign", onClick: p.onStart },
         ...(p.hasSave ? [{ label: "Resume campaign", onClick: p.onResume }] : []),
@@ -166,9 +172,11 @@ export function TitleScreen(p: TitleScreenProps) {
       title: "High-Speed & Extreme Aero",
       blurb:
         "Extremely difficult on purpose meant to expand memory while increasing learning rate.",
-      accentClass: "from-magenta/30 via-transparent to-fuchsia-500/20 border-magenta/45",
+      accentClass: "from-[#7c3aed]/35 via-transparent to-[#e879f9]/25 border-[#a78bfa]/60",
       buttonClass:
-        "border-magenta/55 text-magenta hover:bg-magenta/20 extreme-menu-item shadow-[0_0_24px_rgba(236,72,153,0.18)]",
+        "border-[#c084fc]/65 text-[#e9d5ff] hover:bg-[#a78bfa]/20 extreme-menu-item shadow-[0_0_24px_rgba(168,85,247,0.28)]",
+      wash: "rgba(139,92,246,0.44)",
+      glow: "aero",
       actions: [
         { label: "High-Speed Lab", onClick: p.onHighSpeed },
         { label: "Aerodynamics Extreme", onClick: p.onExtreme },
@@ -176,7 +184,7 @@ export function TitleScreen(p: TitleScreenProps) {
           label: "Aerodynamics Extreme V2",
           onClick: p.onExtremeV2,
           buttonClass:
-            "border-[#e879f9]/65 text-[#e879f9] hover:bg-[#e879f9]/15 extreme-v2-menu-item shadow-[0_0_24px_rgba(232,121,249,0.22)]",
+            "border-[#e879f9]/70 text-[#f0abfc] hover:bg-[#e879f9]/15 extreme-v2-menu-item shadow-[0_0_24px_rgba(232,121,249,0.28)]",
         },
       ],
     },
@@ -186,9 +194,11 @@ export function TitleScreen(p: TitleScreenProps) {
       title: "Heat Transfer",
       blurb:
         "Now playing by album title: Crystal Vista (Iasos, 1981) and Das Armageddon (キ aerzengel, 2026). Related: Berdysh (@Berdysh66), Occult Tripping KVLT (@OccultTrippingCult), Shypunch (@Shypunch120), SERAPHRID (@seraphrid78787), Luxen (@Luxen420). Intro bed from Portal 2. Extremely hard — built to raise learning rate fast for heat transfer and thermodynamics.",
-      accentClass: "from-[#ff8c1a]/25 via-transparent to-[#ff2a2a]/25 border-[#ff8c1a]/55",
+      accentClass: "from-[#ff8c1a]/40 via-[#ff2a2a]/15 to-[#ffcc33]/25 border-[#ff8c1a]/80",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff2a2a] hover:bg-[#ff2a2a]/15 ht-extreme-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
+      wash: "rgba(255,90,20,0.48)",
+      glow: "fire",
       actions: [
         { label: "Heat Transfer Intro", onClick: p.onHeatTransferIntro },
         {
@@ -207,6 +217,8 @@ export function TitleScreen(p: TitleScreenProps) {
       accentClass: "from-[#39ff14]/20 via-transparent to-[#7CFC00]/15 border-[#39ff14]/75",
       buttonClass:
         "border-[#90EE90]/70 text-[#b8f5b8] hover:bg-[#90EE90]/15 shadow-[0_0_24px_rgba(144,238,144,0.22)]",
+      wash: "rgba(57,255,20,0.28)",
+      glow: "story",
       actions: [{ label: "Enter Greenvale", onClick: p.onSpiritBound }],
     },
     {
@@ -215,9 +227,11 @@ export function TitleScreen(p: TitleScreenProps) {
       title: "Numerical Extreme & Vanity",
       blurb:
         "Brute force definitions, run various math calculations same original functionality, do heat transfer testing, access official Samuel Johnson Dictionary, engineering economy, component design usability, and various scientific tools from MATLAB and Octave.",
-      accentClass: "from-[#ff2a2a]/25 via-transparent to-[#ff4d6d]/20 border-[#ff2a2a]/70",
+      accentClass: "from-[#ff4d00]/40 via-[#ff2a2a]/20 to-[#ffcc00]/20 border-[#ff6b2a]/85",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff4d6d] hover:bg-[#ff2a2a]/15 numerical-extreme-menu-item vanity-app-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
+      wash: "rgba(255,60,10,0.50)",
+      glow: "fire",
       actions: [
         { label: "Numerical Extreme", onClick: p.onNumericalExtreme },
         { label: "Vanity App", onClick: p.onVanityApp },
@@ -232,6 +246,8 @@ export function TitleScreen(p: TitleScreenProps) {
       accentClass: "from-[#60a5fa]/25 via-transparent to-[#93c5fd]/20 border-[#60a5fa]/60",
       buttonClass:
         "border-[#60a5fa]/80 text-[#93c5fd] hover:bg-[#60a5fa]/15 shadow-[0_0_24px_rgba(96,165,250,0.22)]",
+      wash: "rgba(96,165,250,0.32)",
+      glow: "tools",
       actions: [{ label: "Open University Projects", onClick: p.onUniversityProjects }],
     },
     {
@@ -242,6 +258,8 @@ export function TitleScreen(p: TitleScreenProps) {
         "AI detector works very well can check the text here. Settings is mainly to toggle on and off music and sound. The text here might be AI generated especially citations in references page, but all sources were used and studied.",
       accentClass: "from-moon/15 via-transparent to-cyan/10 border-border",
       buttonClass: "border-cyan/40 text-cyan hover:bg-cyan/15",
+      wash: "rgba(234,247,255,0.18)",
+      glow: "system",
       actions: [
         { label: "Settings", onClick: p.onSettings },
         { label: "Developer validation", onClick: p.onValidate },
@@ -292,11 +310,11 @@ export function TitleScreen(p: TitleScreenProps) {
   return (
     <div
       ref={landingRef}
-      className="zeus-landing relative w-full"
+      className="zeus-landing zeus-landing-snap relative h-[100dvh] w-full overflow-y-auto"
       onPointerDown={p.onUnlockAudio}
     >
       {/* Hero */}
-      <section className="relative flex min-h-[88dvh] flex-col items-center justify-center overflow-hidden px-4 pb-16 pt-10 text-center">
+      <section className="zeus-snap-slide relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 pb-16 pt-10 text-center">
         <img
           src={brainSrc}
           alt=""
@@ -338,60 +356,74 @@ export function TitleScreen(p: TitleScreenProps) {
         </div>
       </section>
 
-      <div id="zeus-modes" className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pb-24">
+      <div id="zeus-modes" className="flex w-full flex-col">
         {sections.map((section) => (
           <section
             key={section.id}
             id={`mode-${section.id}`}
-            className={cn(
-              "zeus-mode-panel zeus-outline-box relative overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
-              section.accentClass,
-              "bg-deepblue/50 backdrop-blur-md",
-            )}
+            className="zeus-snap-slide relative flex min-h-[100dvh] w-full items-center"
+            style={{ ["--zeus-topic-wash" as string]: section.wash }}
           >
-            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-              {section.eyebrow}
-            </p>
-            <h3 className="mt-2 font-display text-2xl tracking-[0.06em] text-moon sm:text-3xl">
-              {section.title}
-            </h3>
-            <p className="mt-3 max-w-2xl font-mono text-[12px] leading-relaxed text-muted-foreground sm:text-sm">
-              {section.blurb}
-            </p>
-            {section.albums && section.albums.length > 0 ? (
-              <HeatAlbumCredits albums={section.albums} />
-            ) : null}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {section.actions
-                .filter((a) => a.show !== false)
-                .map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={action.onClick}
-                    className={cn(
-                      "rounded-sm border bg-black/35 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em] transition-colors",
-                      action.buttonClass ?? section.buttonClass,
-                    )}
-                  >
-                    {action.label}
-                    {action.sub && (
-                      <span className="mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
-                        {action.sub}
-                      </span>
-                    )}
-                  </button>
-                ))}
+            <div className="zeus-topic-wash pointer-events-none absolute inset-0" aria-hidden />
+            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 py-10">
+              <div
+                className={cn(
+                  "zeus-mode-panel zeus-title-topic-panel zeus-outline-box relative w-full overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
+                  section.accentClass,
+                  section.glow === "aero" && "zeus-glow-aero",
+                  section.glow === "fire" && "zeus-glow-fire",
+                  section.glow === "story" && "zeus-glow-story",
+                  section.glow === "tools" && "zeus-glow-tools",
+                  section.glow === "system" && "zeus-glow-system",
+                )}
+              >
+                <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+                  {section.eyebrow}
+                </p>
+                <h3 className="mt-2 font-display text-2xl tracking-[0.06em] text-moon sm:text-3xl">
+                  {section.title}
+                </h3>
+                <p className="mt-3 max-w-2xl font-mono text-[12px] leading-relaxed text-muted-foreground sm:text-sm">
+                  {section.blurb}
+                </p>
+                {section.albums && section.albums.length > 0 ? (
+                  <HeatAlbumCredits albums={section.albums} />
+                ) : null}
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {section.actions
+                    .filter((a) => a.show !== false)
+                    .map((action) => (
+                      <button
+                        key={action.label}
+                        type="button"
+                        onClick={action.onClick}
+                        className={cn(
+                          "rounded-sm border bg-black/25 px-5 py-4 text-left font-display text-sm uppercase tracking-[0.18em] transition-colors",
+                          action.buttonClass ?? section.buttonClass,
+                        )}
+                      >
+                        {action.label}
+                        {action.sub && (
+                          <span className="mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
+                            {action.sub}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
           </section>
         ))}
 
-        <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Very bright and vibrant be warned.
-        </p>
-        <div className="flex w-full max-w-sm justify-between self-center px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          <span>WOZKAF</span>
-          <span>Jonathan Angel</span>
+        <div className="zeus-snap-slide flex min-h-[40dvh] flex-col items-center justify-center gap-4 pb-16">
+          <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Very bright and vibrant be warned.
+          </p>
+          <div className="flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span>WOZKAF</span>
+            <span>Jonathan Angel</span>
+          </div>
         </div>
       </div>
     </div>
