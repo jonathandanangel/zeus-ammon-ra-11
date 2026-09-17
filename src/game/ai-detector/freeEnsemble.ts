@@ -124,8 +124,10 @@ const WEIGHT: Record<FreeDetectorId, number> = {
 
 /** Softmax temperature for adaptive weight normalization (lower = sharper). */
 const FUSION_TEMP = 1.35;
-/** Blend between log-odds fusion and weighted median. */
-const LOGIT_BLEND = 0.72;
+/** Blend between log-odds fusion and weighted median / rule evidence. */
+const LOGIT_BLEND = 0.62;
+/** Product-of-experts share in the final blend (second model for robustness). */
+const POE_BLEND = 0.22;
 
 function clamp(n: number, lo = 0, hi = 100) {
   return Math.max(lo, Math.min(hi, n));
@@ -188,6 +190,24 @@ function fuseLogOddsSoftmax(pairs: Array<{ score: number; weight: number }>): nu
     wNorm += soft;
   }
   return invLogitAi(zSum / Math.max(1e-12, wNorm));
+}
+
+/**
+ * Product-of-experts: weighted geometric mean in probability space.
+ * Second model — agrees with softmax when detectors align; resists single soft outliers.
+ */
+function fuseProductOfExperts(pairs: Array<{ score: number; weight: number }>): number {
+  const usable = pairs.filter((p) => p.weight > 0);
+  if (!usable.length) return 50;
+  let logP = 0;
+  let wSum = 0;
+  for (const p of usable) {
+    const prob = clamp(p.score, 0.5, 99.5) / 100;
+    const w = p.weight * evidenceConfidence(p.score);
+    logP += w * Math.log(prob);
+    wSum += w;
+  }
+  return 100 * Math.exp(logP / Math.max(1e-12, wSum));
 }
 
 function ok(
@@ -1012,6 +1032,15 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       story.aiScore >= 35 &&
       softAround20s,
   );
+  // ModernBERT ~90% > AI story/chapterbook ~55% → most likely AI (hard lead)
+  const modernOverStoryHard = Boolean(
+    modern &&
+      story &&
+      !modernBelowMix &&
+      modern.aiScore >= 80 &&
+      story.aiScore >= 45 &&
+      modern.aiScore > story.aiScore,
+  );
   // AI story (~44%) ≥ GPTZero-twin (~27–30) AND sentence-mix strangely high (~34) → AI.
   // Sentence-mix alone high does NOT imply AI (see mixAloneHigh dampening).
   const storyOverTwinHighMix = Boolean(
@@ -1026,7 +1055,11 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       sentMix.aiScore < 55,
   );
   const modernAiLead =
-    modernBurstAiPair || modernOverBurstMix || modernOverStorySoft || storyOverTwinHighMix;
+    modernBurstAiPair ||
+    modernOverBurstMix ||
+    modernOverStorySoft ||
+    modernOverStoryHard ||
+    storyOverTwinHighMix;
   // High sentence-mix by itself is not an AI signal — crush it unless paired rules fire
   const mixAloneHigh = Boolean(
     sentMix &&
@@ -1035,6 +1068,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       !modernBurstAiPair &&
       !modernOverBurstMix &&
       !modernOverStorySoft &&
+      !modernOverStoryHard &&
       !modernStrong &&
       !(story && story.aiScore >= 68),
   );
@@ -1073,11 +1107,11 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const modernPairEvidence =
     modern != null
       ? 100 *
-        (0.34 * sigmoidGap(gapVsMix, 10) +
-          0.22 * sigmoidGap(gapVsBurst, 12) +
-          0.14 * sigmoidGap(gapVsTwin, 14) +
-          0.18 * sigmoidGap(gapModernStory, 11) +
-          0.12 * 0.5)
+        (0.28 * sigmoidGap(gapVsMix, 10) +
+          0.18 * sigmoidGap(gapVsBurst, 12) +
+          0.12 * sigmoidGap(gapVsTwin, 14) +
+          0.22 * sigmoidGap(gapModernStory, 10) +
+          0.2 * sigmoidGap((modern.aiScore - 80) * (modernOverStoryHard ? 1 : 0.35), 8))
       : 50;
   const storyTwinMixEvidence = storyOverTwinHighMix
     ? 100 *
@@ -1087,10 +1121,11 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     : mixAloneHigh
       ? 100 * (0.25 * mixSupport) // low → human-leaning
       : 50;
-  // Blend ModernBERT-first and story/twin/mix evidence (weights sum to 1)
+  // Blend ModernBERT-first and story/twin/mix evidence (weights sum-ish to 1)
   const ruleEvidenceAi =
-    0.62 * modernPairEvidence +
-    0.38 * storyTwinMixEvidence +
+    0.58 * modernPairEvidence +
+    0.32 * storyTwinMixEvidence +
+    (modernOverStoryHard ? 14 : 0) +
     (modernOverStorySoft ? 8 : 0) +
     (storyOverTwinHighMix ? 10 : 0) -
     (mixAloneHigh ? 12 : 0);
@@ -1155,6 +1190,29 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     ) {
       w *= 0.2;
       if (score > 30) score = 16 + (score - 30) * 0.2;
+    }
+    // ModernBERT ~90% > AI story ~55% → hard boost ModernBERT, keep story as support
+    if (modernOverStoryHard && id === "modernbert") {
+      w *= 3.2;
+      score = Math.max(score, 88);
+    }
+    if (modernOverStoryHard && id === "ai-story") {
+      w *= 1.9;
+      score = Math.max(score, 58);
+    }
+    if (
+      modernOverStoryHard &&
+      (id === "sentence-mix" ||
+        id === "gptzero-twin" ||
+        id === "lexical" ||
+        id === "discourse" ||
+        id === "perplexity-proxy" ||
+        id === "ngram" ||
+        id === "burstiness" ||
+        id === "human-noise")
+    ) {
+      w *= 0.14;
+      if (score > 28) score = 14 + (score - 28) * 0.18;
     }
     // AI story ≥ twin + strangely high mix → boost story/twin, keep mix as supporting only
     if (storyOverTwinHighMix && id === "ai-story") {
@@ -1237,11 +1295,13 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   const logitFused = fuseLogOddsSoftmax(pairs);
   const med = weightedMedianPairs(pairs);
-  // Math model: softmax log-odds + weighted median + continuous rule evidence (all in logit space)
+  const poeFused = fuseProductOfExperts(pairs);
+  // Dual math model: softmax log-odds + product-of-experts + median/rule evidence
   let docScore = invLogitAi(
     LOGIT_BLEND * logitAi(logitFused) +
-      (1 - LOGIT_BLEND) * 0.55 * logitAi(med) +
-      (1 - LOGIT_BLEND) * 0.45 * logitAi(ruleEvidenceClamped),
+      POE_BLEND * logitAi(poeFused) +
+      (1 - LOGIT_BLEND - POE_BLEND) * 0.5 * logitAi(med) +
+      (1 - LOGIT_BLEND - POE_BLEND) * 0.5 * logitAi(ruleEvidenceClamped),
   );
   docScore = sharpen(docScore, 1.06);
 
@@ -1263,34 +1323,37 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (storyStrong && !modernHumanHard) {
     docScore = Math.max(docScore, 0.15 * docScore + 0.85 * Math.max(story?.aiScore ?? 82, 84));
   }
-  // Ceiling rules still win in logit space (ModernBERT-first / story-twin-mix leads)
+  // Ceiling rules in logit space (ModernBERT-first / story leads)
   if (modernNearCertain) {
     docScore = invLogitAi(0.08 * logitAi(docScore) + 0.92 * logitAi(Math.max(modern?.aiScore ?? 99, 97)));
+  } else if (modernOverStoryHard) {
+    docScore = invLogitAi(
+      0.15 * logitAi(docScore) + 0.85 * logitAi(Math.max(modern?.aiScore ?? 90, 86)),
+    );
   } else if (modernHard) {
     docScore = invLogitAi(0.2 * logitAi(docScore) + 0.8 * logitAi(Math.max(modern?.aiScore ?? 90, 88)));
   } else if (modernStrong) {
     docScore = invLogitAi(0.35 * logitAi(docScore) + 0.65 * logitAi(Math.max(modern?.aiScore ?? 78, 74)));
   }
-  if (modernBurstAiPair && !modernNearCertain) {
+  if (modernBurstAiPair && !modernNearCertain && !modernOverStoryHard) {
     const pairScore = Math.max(modern?.aiScore ?? 70, burst?.aiScore ?? 70, 74);
     docScore = invLogitAi(0.25 * logitAi(docScore) + 0.75 * logitAi(pairScore));
   }
-  if (modernOverBurstMix && !modernNearCertain) {
+  if (modernOverBurstMix && !modernNearCertain && !modernOverStoryHard) {
     docScore = invLogitAi(
       0.25 * logitAi(docScore) + 0.75 * logitAi(Math.max(modern?.aiScore ?? 72, 72)),
     );
   }
-  if (modernOverStorySoft && !modernNearCertain) {
+  if (modernOverStorySoft && !modernNearCertain && !modernOverStoryHard) {
     docScore = invLogitAi(
       0.28 * logitAi(docScore) + 0.72 * logitAi(Math.max(modern?.aiScore ?? 57, 62)),
     );
   }
-  if (storyOverTwinHighMix && !modernNearCertain) {
+  if (storyOverTwinHighMix && !modernNearCertain && !modernOverStoryHard) {
     const lead = Math.max(story?.aiScore ?? 44, (twin?.aiScore ?? 27) + 18, 58);
     docScore = invLogitAi(0.3 * logitAi(docScore) + 0.7 * logitAi(lead));
   }
   if (mixAloneHigh) {
-    // Alone-high mix: pull toward uncertain/human via log-odds, never an AI lead
     docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
   docScore = clamp(docScore);
@@ -1317,31 +1380,33 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const band: Band = bandFromAiScore(docScore);
   const vetoNote = modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
-    : storyOverTwinHighMix
-      ? " AI story ≥ GPTZero-twin with high sentence-mix → lean AI."
-      : modernOverStorySoft
-        ? " ModernBERT > AI story/chapterbook (rest ~20s) → lean AI."
-        : modernOverBurstMix
-          ? " ModernBERT > Burstiness & sentence-mix → lean AI."
-          : modernBurstAiPair
-            ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
-            : mixAloneHigh
-              ? " Sentence-mix alone high ≠ AI (dampened)."
-              : modernHard
-                ? " ModernBERT ≥85% AI dominates consensus."
-                : modernStrong
-                  ? " ModernBERT ≥70% AI weighted above soft stylometrics."
-                  : modernBelowMix
-                    ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
-                    : humanHard
-                      ? " Strong human-noise → ~0% AI."
-                      : humanVeto
-                        ? " Human-noise veto applied (informal / student voice)."
-                        : storyStrong
-                          ? " AI chapterbook / story fingerprints dominate."
-                          : pitchStrong
-                            ? " LLM pitch/outline fingerprints dominate."
-                            : "";
+    : modernOverStoryHard
+      ? " ModernBERT ~90% > AI story/chapterbook ~55% → lean AI."
+      : storyOverTwinHighMix
+        ? " AI story ≥ GPTZero-twin with high sentence-mix → lean AI."
+        : modernOverStorySoft
+          ? " ModernBERT > AI story/chapterbook (rest ~20s) → lean AI."
+          : modernOverBurstMix
+            ? " ModernBERT > Burstiness & sentence-mix → lean AI."
+            : modernBurstAiPair
+              ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
+              : mixAloneHigh
+                ? " Sentence-mix alone high ≠ AI (dampened)."
+                : modernHard
+                  ? " ModernBERT ≥85% AI dominates consensus."
+                  : modernStrong
+                    ? " ModernBERT ≥70% AI weighted above soft stylometrics."
+                    : modernBelowMix
+                      ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
+                      : humanHard
+                        ? " Strong human-noise → ~0% AI."
+                        : humanVeto
+                          ? " Human-noise veto applied (informal / student voice)."
+                          : storyStrong
+                            ? " AI chapterbook / story fingerprints dominate."
+                            : pitchStrong
+                              ? " LLM pitch/outline fingerprints dominate."
+                              : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
@@ -1360,7 +1425,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     aiVotes,
     uncertainVotes,
     agreement,
-    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax · rule-evidence fusion · ModernBERT-first.`,
+    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax + product-of-experts · rule-evidence · ModernBERT-first.`,
   };
 }
 
