@@ -901,15 +901,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   // ModernBERT 70–100% AI: trust the neural call over mushy stylometrics
   const modernStrong = Boolean(modern && modern.aiScore >= 70);
   const modernHard = Boolean(modern && modern.aiScore >= 85);
-  // ModernBERT << sentence-mix → free ModernBERT says human; stylometric mush is noise
-  const modernHumanGap = Boolean(
-    modern &&
-      sentMix &&
-      modern.aiScore < 40 &&
-      sentMix.aiScore - modern.aiScore >= 25,
-  );
+  // ModernBERT AI% < sentence-mix AI% → more likely human (trust free ModernBERT)
+  const modernBelowMix = Boolean(modern && sentMix && modern.aiScore < sentMix.aiScore);
+  const mixGap = modernBelowMix ? sentMix!.aiScore - modern!.aiScore : 0;
+  const modernHumanGap = Boolean(modernBelowMix && mixGap >= 15);
   const modernHumanHard = Boolean(
-    modern && modern.aiScore < 20 && (!sentMix || sentMix.aiScore - modern.aiScore >= 20),
+    modernBelowMix && (modern!.aiScore < 25 || mixGap >= 30),
   );
   // Authenticity veto only when NOT a clear ChatGPT pitch / AI chapterbook / strong ModernBERT
   const humanVeto = Boolean(
@@ -951,14 +948,14 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       w *= score >= 85 ? 2.4 : 1.85;
       score = Math.max(score, score >= 85 ? 90 : 78);
     }
-    // ModernBERT much lower than sentence-mix → boost human ModernBERT, crush mix
-    if ((modernHumanGap || modernHumanHard) && r.id === "modernbert") {
-      w *= 2.2;
-      score = Math.min(score, modernHumanHard ? 8 : 18);
+    // ModernBERT AI% < sentence-mix → boost human ModernBERT, crush mix
+    if (modernBelowMix && r.id === "modernbert") {
+      w *= modernHumanHard ? 2.4 : modernHumanGap ? 2.0 : 1.55;
+      score = Math.min(score, modernHumanHard ? 8 : modernHumanGap ? 16 : Math.min(score, 28));
     }
-    if ((modernHumanGap || modernHumanHard) && r.id === "sentence-mix") {
-      w *= 0.12;
-      if (score > 30) score = 18 + (score - 30) * 0.15;
+    if (modernBelowMix && r.id === "sentence-mix") {
+      w *= modernHumanHard ? 0.1 : modernHumanGap ? 0.15 : 0.28;
+      if (score > 25) score = 14 + (score - 25) * 0.12;
     }
     if (r.id === "sentence-mix") {
       w *= 0.5;
@@ -995,9 +992,9 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     ) {
       w *= 0.2;
     }
-    // Same crush when ModernBERT is clearly human vs elevated sentence-mix
+    // Soft stylometrics crushed when ModernBERT AI% < sentence-mix
     if (
-      (modernHumanGap || modernHumanHard) &&
+      modernBelowMix &&
       (r.id === "sentence-mix" ||
         r.id === "burstiness" ||
         r.id === "lexical" ||
@@ -1005,7 +1002,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
         r.id === "gptzero-twin" ||
         r.id === "discourse")
     ) {
-      w *= 0.25;
+      w *= modernHumanHard ? 0.2 : 0.35;
     }
     wSum += w;
     sSum += score * w;
@@ -1026,11 +1023,13 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   } else if (humanVeto) {
     docScore = Math.min(docScore, 0.25 * docScore + 0.75 * (noise?.aiScore ?? 12));
   }
-  // ModernBERT << sentence-mix → not AI (trust free ModernBERT LABEL_0)
-  if (modernHumanHard) {
-    docScore = Math.min(docScore, 0.15 * docScore + 0.85 * Math.min(modern?.aiScore ?? 10, 12));
-  } else if (modernHumanGap) {
-    docScore = Math.min(docScore, 0.3 * docScore + 0.7 * Math.min(modern?.aiScore ?? 22, 28));
+  // ModernBERT AI% < sentence-mix → percent human more likely
+  if (modernBelowMix) {
+    const pull = modernHumanHard ? 0.88 : modernHumanGap ? 0.75 : 0.55;
+    docScore = Math.min(
+      docScore,
+      (1 - pull) * docScore + pull * Math.min(modern?.aiScore ?? 20, modernHumanHard ? 12 : 32),
+    );
   }
   // Clear ChatGPT pitch / chapterbook → force AI lean
   if (pitchStrong && !modernHumanHard) {
@@ -1049,8 +1048,8 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   let agreement: EnsembleConsensus["agreement"] = "split";
   if ((docScore < 12 || modernHumanHard) && !modernStrong) agreement = "strong_human";
-  else if ((docScore < 40 || modernHumanGap) && !modernStrong)
-    agreement = humanVotes >= aiVotes || modernHumanGap ? "strong_human" : "lean_human";
+  else if ((docScore < 40 || modernBelowMix) && !modernStrong)
+    agreement = humanVotes >= aiVotes || modernBelowMix ? (modernHumanHard ? "strong_human" : "lean_human") : "lean_human";
   else if (docScore < 50 && !modernStrong) agreement = "lean_human";
   else if (docScore >= 75 && (aiVotes > humanVotes || storyStrong || pitchStrong || modernStrong))
     agreement = "strong_ai";
@@ -1063,19 +1062,17 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     ? " ModernBERT ≥85% AI dominates consensus."
     : modernStrong
       ? " ModernBERT ≥70% AI weighted above soft stylometrics."
-      : modernHumanHard
-        ? " ModernBERT low AI (LABEL_0) → human over sentence-mix."
-        : modernHumanGap
-          ? " ModernBERT ≪ sentence-mix → lean human (free ModernBERT)."
-          : humanHard
-            ? " Strong human-noise → ~0% AI."
-            : humanVeto
-              ? " Human-noise veto applied (informal / student voice)."
-              : storyStrong
-                ? " AI chapterbook / story fingerprints dominate."
-                : pitchStrong
-                  ? " LLM pitch/outline fingerprints dominate."
-                  : "";
+      : modernBelowMix
+        ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
+        : humanHard
+          ? " Strong human-noise → ~0% AI."
+          : humanVeto
+            ? " Human-noise veto applied (informal / student voice)."
+            : storyStrong
+              ? " AI chapterbook / story fingerprints dominate."
+              : pitchStrong
+                ? " LLM pitch/outline fingerprints dominate."
+                : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
