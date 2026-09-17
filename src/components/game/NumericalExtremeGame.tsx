@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Chart } from "@/components/game/numerical-extreme/Chart";
 import { HeatAerospacePanel } from "@/components/game/numerical-extreme/HeatAerospacePanel";
+import { BabelSecretPanel } from "@/components/game/numerical-extreme/BabelSecretPanel";
 import { BrainOverload } from "@/components/game/BrainOverload";
 import {
   EquationBox,
@@ -3641,7 +3642,9 @@ function NumerologyPanel() {
             <p className="rounded-sm border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
               Samuel Johnson 1755 and 1773 (4th ed.) define your typed word when found. Secret
               Doctrine and Greek Myths add passages via exact / anagram / scramble / similar
-              letter-count matches. Ruckman cites 1611 KJV verses for your path number.
+              letter-count matches. Ruckman cites 1611 KJV verses for your path number. Below,
+              the Babel Secret Library locates those same sources as pages/books (amber
+              highlights) and opens official libraryofbabel.info search links.
             </p>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan">
               BRUTE FORCE METHOD TO FIND DEFINITIONS!
@@ -3848,6 +3851,15 @@ function NumerologyPanel() {
           <RelevantThoughtForms
             number={result.number}
             colorName={result.philosophy.geometry.colorName}
+          />
+          <BabelSecretPanel
+            result={result}
+            johnsonWord={johnsonWordEntry}
+            johnsonWord1773={johnsonWord1773}
+            secretPassages={secretPassages}
+            mythPassages={mythPassages}
+            ruckmanVerses={ruckmanVerses}
+            sourcesReady={johnsonReady && !secretLoading && !mythLoading}
           />
         </>
       )}

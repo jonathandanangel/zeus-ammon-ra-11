@@ -179,6 +179,34 @@ export type { GreekMythPassage } from "./greek-myths";
 export { getRuckmanVersesForNumber } from "./ruckman-kjv";
 export type { RuckmanVerse } from "./ruckman-kjv";
 
+export {
+  BABEL_ALPHABET,
+  BABEL_PAGE_CHARS,
+  BABEL_ARTWORK,
+  OFFICIAL_BABEL,
+  toBabelAlphabet,
+  locatePageWithHighlights,
+  collectBabelSecrets,
+  searchBabelSecrets,
+  generateBabelBooks,
+  buildSynthesisQuery,
+  formatBabelFindReport,
+  babelPathMetrics,
+  isAnagramOf,
+} from "./babel-pathfinder";
+export type {
+  BabelSourceKind,
+  BabelHighlightToken,
+  BabelSecretQuery,
+  BabelLocation,
+  BabelPage,
+  BabelSecretFind,
+  BabelLibraryReport,
+  BabelArtwork,
+  BabelBookPage,
+  BabelGeneratedBook,
+} from "./babel-pathfinder";
+
 /** Format a number for display (null-safe). */
 export function formatNumber(
   value: number | null | undefined,

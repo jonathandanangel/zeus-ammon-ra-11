@@ -535,6 +535,14 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
           "Each path number 1–9 maps to a Major Arcana card with a short explanation expanded via Johnson gloss look-ups.",
         venue: "NUMEROLOGY · tarot block",
       },
+      {
+        title: "Library of Babel · Secret Library (NUMEROLOGY)",
+        authors:
+          "Jorge Luis Borges (1941); Jonathan Basile (libraryofbabel.info / babelia / algo); antique plates: Bruegel (1563), Kircher Turris Babel (1679), Doré (1866)",
+        detail:
+          "No usable public LoB HTTP API (LoB-API is LICENSE-only). Panel locates 29-letter pages from the typed word plus Johnson, Blavatsky, Graves anagrams, philosophy, tarot, and Thought-Forms; generates multi-leaf books from word/combinations; amber-highlights matches like Greek Myths; deep-links official Search. Antique PD art under public/numerology/babel/.",
+        venue: "NUMEROLOGY · Babel Secret Library · babel-pathfinder.ts · BabelSecretPanel.tsx",
+      },
     ],
   },
   {
