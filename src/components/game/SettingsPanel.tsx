@@ -45,7 +45,13 @@ function Toggle({
   );
 }
 
-export function SettingsPanel({ onBack }: { onBack: () => void }) {
+export function SettingsPanel({
+  onBack,
+  onAboutCreator,
+}: {
+  onBack: () => void;
+  onAboutCreator?: () => void;
+}) {
   const { settings, setSettings } = useGame();
   const set = (patch: Partial<Settings>) => setSettings(patch);
 
@@ -83,6 +89,18 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
           <option value="off">Off</option>
         </select>
       </label>
+      {onAboutCreator ? (
+        <button
+          type="button"
+          onClick={onAboutCreator}
+          className="w-full rounded-sm border border-amber/50 bg-deepblue/50 px-4 py-3 text-left font-display text-xs uppercase tracking-[0.18em] text-amber transition hover:bg-amber/15"
+        >
+          About creator
+          <span className="mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
+            Jonathan Angel · Instagram · LinkedIn
+          </span>
+        </button>
+      ) : null}
     </div>
   );
 }

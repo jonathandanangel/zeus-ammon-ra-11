@@ -40,6 +40,7 @@ import { Interaction } from "./Interactions";
 import { LightCycleGame } from "./LightCycleGame";
 import { NeonMazeGame } from "./NeonMazeGame";
 import { SettingsPanel } from "./SettingsPanel";
+import { AboutCreatorPanel } from "./AboutCreatorPanel";
 import { NumericalExtremeGame } from "./NumericalExtremeGame";
 import { SpiritBoundGame } from "./SpiritBoundGame";
 import { TitleScreen } from "./TitleScreen";
@@ -56,6 +57,7 @@ type Screen =
   | "title"
   | "play"
   | "settings"
+  | "about-creator"
   | "validate"
   | "finale"
   | "gameover"
@@ -234,6 +236,7 @@ export function AeroGrid() {
     (mode === "ht-intro" || mode === "ht-extreme") &&
     screen !== "title" &&
     screen !== "settings" &&
+    screen !== "about-creator" &&
     screen !== "validate"
       ? mode
       : null;
@@ -283,7 +286,7 @@ export function AeroGrid() {
   }, [htAudioSession, localIndex]);
 
   React.useEffect(() => {
-    if (screen === "title" || screen === "settings" || screen === "validate") {
+    if (screen === "title" || screen === "settings" || screen === "about-creator" || screen === "validate") {
       return undefined;
     }
     if (mode === "ht-intro" || mode === "ht-extreme") {
@@ -925,7 +928,15 @@ export function AeroGrid() {
         <UniversityProjectsApp onMenu={() => setScreen("title")} />
       )}
 
-      {screen === "settings" && <SettingsPanel onBack={() => setScreen("title")} />}
+      {screen === "settings" && (
+        <SettingsPanel
+          onBack={() => setScreen("title")}
+          onAboutCreator={() => setScreen("about-creator")}
+        />
+      )}
+      {screen === "about-creator" && (
+        <AboutCreatorPanel onBack={() => setScreen("settings")} />
+      )}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}
 
       {screen === "finale" && (
@@ -1431,6 +1442,7 @@ export function AeroGrid() {
       {(mode === "ht-extreme" || mode === "ht-intro") &&
         screen !== "title" &&
         screen !== "settings" &&
+        screen !== "about-creator" &&
         screen !== "validate" && (
           <NowPlayingAlbum accent={mode === "ht-extreme" ? "#ff2a2a" : "#ff8c1a"} />
         )}
