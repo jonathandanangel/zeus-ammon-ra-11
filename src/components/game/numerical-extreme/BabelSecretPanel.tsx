@@ -138,21 +138,60 @@ function BookReader({
   const accuracyPct = leaf.accuracy;
   const fadeNote =
     accuracyPct >= 85
-      ? "Front of the book · foundational database"
+      ? "Rare coherent page · foundational signal located in the hexagon"
       : accuracyPct >= 65
-        ? "Mid volume · strong secondary sources"
+        ? "Readable near-match · still more sense than noise"
         : accuracyPct >= 45
-          ? "Later leaves · probable letter matches"
-          : "Back of the book · least likely combinations";
+          ? "Mostly Babel dust · a few amber tokens remain"
+          : "Typical Library page · nearly all permutation noise";
 
   return (
     <div className="space-y-3">
       <div className="rounded-sm border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
-        Reading order: <span className="text-moon">most accurate foundational text → least likely</span>.
-        This leaf is <span className="text-cyan">{accuracyPct}%</span> · {leaf.accuracyLabel}. {fadeNote}.
+        <span className="text-moon">Library of Babel idea:</span> nothing is authored — pages are{" "}
+        <span className="text-cyan">located</span>. Walk the volume from rare coherent leaves
+        (foundational sources) into ordinary Babel noise. This leaf ·{" "}
+        <span className="text-cyan">{accuracyPct}% coherence</span> · {leaf.accuracyLabel}. {fadeNote}.
       </div>
 
-      {/* Accuracy progress across the whole book */}
+      <div className="rounded-sm border border-cyan/30 bg-black/50 px-3 py-2 font-mono text-[10px] text-moon">
+        <p className="text-[9px] uppercase tracking-[0.16em] text-magenta">Browse address</p>
+        <p className="mt-1 text-cyan">
+          hexagon <span className="text-amber">{leaf.page.location.hexagon}</span>
+        </p>
+        <p>
+          wall {leaf.page.location.wall} · shelf {leaf.page.location.shelf} · volume{" "}
+          {leaf.page.location.volume} · page {leaf.page.location.page}
+        </p>
+        <div className="mt-1.5 flex flex-wrap gap-2 text-[9px]">
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={OFFICIAL_BABEL.browse}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Official Browse
+          </a>
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={leaf.page.location.officialSearchUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Official Search
+          </a>
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={OFFICIAL_BABEL.random}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Official Random
+          </a>
+        </div>
+      </div>
+
+      {/* Coherence progress — Library walk */}
       <div className="space-y-1">
         <div className="flex flex-wrap gap-1">
           {book.pages.map((p, i) => (
@@ -160,18 +199,18 @@ function BookReader({
               key={p.index}
               type="button"
               onClick={() => onPage(i)}
-              title={`${p.accuracy}% · ${p.title}`}
+              title={`${p.accuracy}% coherence · ${p.title}`}
               className={`h-2 flex-1 min-w-[8px] rounded-sm transition ${
                 i === pageIdx ? "ring-1 ring-amber" : ""
               }`}
               style={{
-                backgroundColor: `rgba(251, 191, 36, ${Math.max(0.15, p.accuracy / 100)})`,
+                backgroundColor: `rgba(251, 191, 36, ${Math.max(0.12, p.accuracy / 100)})`,
               }}
             />
           ))}
         </div>
         <p className="font-mono text-[8px] text-muted-foreground">
-          Leaf bar · brighter = more accurate foundational source
+          Hexagon walk · brighter = rarer coherent page (less Babel noise)
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
@@ -351,7 +390,7 @@ function BookReader({
         </div>
         <div className="border-b border-cyan/15 px-3 py-2.5">
           <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-magenta">
-            Foundational leaf text
+            Located reading · coherence note
           </p>
           <pre className="font-mono text-[11px] leading-relaxed text-moon whitespace-pre-wrap">
             {highlightAmber(leaf.bodyText || leaf.excerpt, leaf.page.matched)}
@@ -541,8 +580,9 @@ export function BabelSecretPanel({
       <Panel title="Babel Secret Library" eyebrow="PRESS THE GRIMOIRE · BABEL FONT">
         <div className="flex flex-col items-center gap-4 py-2">
           <p className="max-w-xl text-center font-mono text-[10px] leading-relaxed text-amber">
-            Most likely image for this path sits on top once opened. Press the retro book to begin —
-            Babel-alphabet caption under the pentagram (Courier press · a–z , . space).
+            Library of Babel: every page already exists. Press the grimoire to locate the rare
+            coherent leaves for your word — then walk into noise. Caption uses the 29-letter press
+            (a–z, space, comma, period).
           </p>
           <button
             type="button"

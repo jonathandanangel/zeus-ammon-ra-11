@@ -290,6 +290,37 @@ export function locatePageWithHighlights(
   };
 }
 
+/** Build a BabelPage from a full 3200-char woven text (Library locate). */
+export function pageFromWovenText(
+  text: string,
+  pathNumber: number,
+  highlightWords: string[],
+  searchPhrase: string,
+): BabelPage {
+  const full = text.padEnd(BABEL_PAGE_CHARS, " ").slice(0, BABEL_PAGE_CHARS);
+  const seed = pageTextToSeed(full);
+  const location = locationFromSeed(seed, pathNumber, toBabelAlphabet(searchPhrase).slice(0, 200));
+  const lines: string[] = [];
+  for (let r = 0; r < BABEL_LINES; r += 1) {
+    lines.push(full.slice(r * BABEL_COLS, (r + 1) * BABEL_COLS));
+  }
+  const matched = [
+    ...new Set(
+      highlightWords
+        .map((w) => normalizeWord(w))
+        .filter((w) => w.length >= 2),
+    ),
+  ];
+  return {
+    location,
+    text: full,
+    lines,
+    matched,
+    matchReasons: ["located in library", "coherence weave"],
+    seedDigest: digestHex(seed),
+  };
+}
+
 function pushQuery(
   out: BabelSecretQuery[],
   seen: Set<string>,
@@ -938,35 +969,84 @@ function composeFoundationalBody(args: {
   title: string;
   excerpt: string;
   highlights: string[];
+  location?: { hexagon: string; wall: number; shelf: number; volume: number; page: number };
 }): string {
-  const fade =
+  // Borges / Basile: almost every page is noise; coherence is rare. Accuracy ≈
+  // how much signal this located page carries from the foundational database.
+  const babelFrame =
     args.accuracy >= 85
-      ? "This leaf is among the most accurate depictions in the foundational database."
+      ? "Among the indefinite hexagonal galleries, this is one of the rare coherent pages — a clear reading already waiting on the shelf. Nothing was written; the address was found."
       : args.accuracy >= 65
-        ? "This leaf is a strong but secondary witness — still close to the typed word’s path."
+        ? "A readable page in a wing of near-matches. The Library still holds the sense, but neighbouring volumes blur into similar letter-counts and stems."
         : args.accuracy >= 45
-          ? "This leaf is only probable: letter matches and neighbouring senses, not a direct definition."
-          : "This leaf is the least likely — a combination / scramble at the far end of the shelf.";
+          ? "Most of this leaf is the Library’s usual dust: a–z, space, comma, period in no order. A few amber tokens survive from Blavatsky / Graves / expansions."
+          : "Typical Babel. The combination was located, not composed — nearly all noise, with your search phrase buried somewhere in the hexagon.";
+
+  const loc = args.location
+    ? `Address: hexagon ${args.location.hexagon} · wall ${args.location.wall} · shelf ${args.location.shelf} · volume ${args.location.volume} · page ${args.location.page}.`
+    : "Address: pending location in the universal library.";
 
   const tokens = args.highlights.filter(Boolean).slice(0, 8).join(", ");
+  const signalNote =
+    args.accuracy >= 70
+      ? `Signal ratio ~${args.accuracy}% — foundational database (Johnson, Thought-Forms, path lore) dominates this page.`
+      : `Signal ratio ~${args.accuracy}% — Babel noise dominates; foundational tokens are sparse.`;
+
   return [
-    `[Leaf ${args.rank} of ${args.total} · ${args.accuracy}% · ${args.label}]`,
+    `[Located leaf ${args.rank}/${args.total} · coherence ${args.accuracy}% · ${args.label}]`,
+    `By this art you may contemplate the variation of the 29 letters.`,
     ``,
-    `Word under seal: “${args.seedWord}”. Path ${args.pathNumber}. Source class: ${args.kind}.`,
+    loc,
+    `Search key: “${args.seedWord}”. Path ${args.pathNumber}. Source class: ${args.kind}.`,
     args.why,
     ``,
-    fade,
+    babelFrame,
+    signalNote,
     ``,
-    args.title,
+    `— ${args.title} —`,
     ``,
     args.excerpt.trim(),
     ``,
-    tokens ? `Amber tokens on this leaf: ${tokens}.` : "",
+    tokens ? `Amber tokens located on this page: ${tokens}.` : "",
     ``,
-    `As you progress the book, accuracy declines: foundational sources first, speculative combinations last.`,
+    `Progress the volume as you would walk the Library: first the pages that still mean, then the pages that only contain a scrap of your search, then the shelves of pure permutation.`,
   ]
     .filter((line) => line !== undefined)
     .join("\n");
+}
+
+/**
+ * Mix coherent source text with Babel-alphabet noise.
+ * High coherence → mostly source. Low coherence → mostly noise (true Babel).
+ */
+export function weaveBabelPageText(
+  coherent: string,
+  pathNumber: number,
+  salt: string,
+  coherencePct: number,
+): string {
+  const babelCoherent = toBabelAlphabet(coherent);
+  const target = BABEL_PAGE_CHARS;
+  const signalBudget = Math.max(
+    40,
+    Math.min(target - 80, Math.floor((target * Math.max(5, Math.min(98, coherencePct))) / 100)),
+  );
+  const signal = babelCoherent.slice(0, signalBudget);
+  const seed = hashStringToSeed(`${pathNumber}|${salt}|weave`);
+  const rand = mulberry32(seed);
+  const chars: string[] = new Array(target);
+  for (let i = 0; i < target; i += 1) {
+    chars[i] = BABEL_ALPHABET[Math.floor(rand() * 29)]!;
+  }
+  // Plant the coherent block at a reproducible offset (search-locate)
+  const maxStart = Math.max(0, target - signal.length - 4);
+  const start = Math.floor(rand() * (maxStart + 1));
+  const block = ` ${signal} `;
+  for (let i = 0; i < block.length && start + i < target; i += 1) {
+    const ch = block[i]!;
+    chars[start + i] = CHAR_INDEX[ch] !== undefined ? ch : " ";
+  }
+  return chars.join("");
 }
 
 /**
@@ -1259,6 +1339,21 @@ export function generateBabelBooks(input: {
     const total = drafts.length;
 
     for (const [index, ch] of drafts.entries()) {
+      // Library of Babel idea: coherence % = how much foundational signal vs noise
+      const coherentBlock = `${ch.title}. ${ch.excerpt}. ${ch.phrase}`;
+      const woven = weaveBabelPageText(
+        coherentBlock,
+        result.number,
+        `${spec.id}-${ch.kind}-${index}`,
+        ch.accuracy,
+      );
+      const page = pageFromWovenText(
+        woven,
+        result.number,
+        [result.normalized, ...ch.highlight.map((h) => h.word)],
+        ch.phrase,
+      );
+
       const bodyText = composeFoundationalBody({
         rank: index + 1,
         total,
@@ -1271,37 +1366,28 @@ export function generateBabelBooks(input: {
         title: ch.title,
         excerpt: ch.excerpt,
         highlights: ch.highlight.map((h) => h.word),
+        location: {
+          hexagon: page.location.hexagon,
+          wall: page.location.wall,
+          shelf: page.location.shelf,
+          volume: page.location.volume,
+          page: page.location.page,
+        },
       });
 
-      // Embed both the composed leaf and source phrase into the Babel page
-      const locatePhrase = `${bodyText}\n\n${ch.phrase}`.slice(0, 1800);
-      try {
-        const page = locatePageWithHighlights(
-          locatePhrase,
-          [
-            ...ch.highlight,
-            { word: result.normalized, reason: "exact", kind: "keyword" },
-            { word: String(ch.accuracy), reason: "accuracy", kind: ch.kind },
-          ],
-          result.number,
-          `${spec.id}-acc${ch.accuracy}-p${index}`,
-        );
-        pages.push({
-          index: index + 1,
-          title: `${ch.accuracy}% · ${ch.title}`,
-          sourceKind: ch.kind,
-          page,
-          highlight: ch.highlight,
-          excerpt: ch.excerpt,
-          bodyText,
-          accuracy: ch.accuracy,
-          accuracyLabel: ch.accuracyLabel,
-          accuracyWhy: ch.accuracyWhy,
-        });
-        allMatched.push(...page.matched);
-      } catch {
-        // skip
-      }
+      pages.push({
+        index: index + 1,
+        title: `${ch.accuracy}% · ${ch.title}`,
+        sourceKind: ch.kind,
+        page,
+        highlight: ch.highlight,
+        excerpt: ch.excerpt,
+        bodyText,
+        accuracy: ch.accuracy,
+        accuracyLabel: ch.accuracyLabel,
+        accuracyWhy: ch.accuracyWhy,
+      });
+      allMatched.push(...page.matched);
     }
     if (!pages.length) continue;
 
@@ -1326,7 +1412,7 @@ export function generateBabelBooks(input: {
     books.push({
       id: `${spec.id}-${normalizeWord(result.normalized)}-${result.number}`,
       title: spec.title,
-      subtitle: `Path ${result.number} · ${result.title} · most→least accurate`,
+      subtitle: `Path ${result.number} · located in the Library · coherent→noise`,
       pathNumber: result.number,
       seedWord: result.normalized,
       combination: spec.combo,
@@ -1337,7 +1423,7 @@ export function generateBabelBooks(input: {
       pages,
       allMatched: [...new Set(allMatched)],
       officialSearchUrl: `${OFFICIAL_BABEL.search}?find=${encodeURIComponent(searchPhrase)}`,
-      blurb: spec.blurb,
+      blurb: `${spec.blurb} Borges/Basile: pages are located, not written — early leaves keep foundational signal; later leaves return to Babel noise.`,
       info: {
         callNumber: `BABEL ${result.number}.${normalizeWord(result.normalized).slice(0, 6).toUpperCase()} ${spec.id.slice(0, 4).toUpperCase()}`,
         hexagon: firstLoc.hexagon,

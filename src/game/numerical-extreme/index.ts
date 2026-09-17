@@ -186,6 +186,8 @@ export {
   OFFICIAL_BABEL,
   toBabelAlphabet,
   locatePageWithHighlights,
+  pageFromWovenText,
+  weaveBabelPageText,
   collectBabelSecrets,
   searchBabelSecrets,
   generateBabelBooks,
