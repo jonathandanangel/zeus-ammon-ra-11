@@ -10,7 +10,7 @@ type Aki = InstanceType<typeof AkiClass>;
 async function loadAki(): Promise<typeof AkiClass> {
   // Import the class module directly: aki-api's index.js reads a CA bundle file
   // at import time that does not exist here (postinstall scripts are skipped).
-  const mod = (await import(/* @vite-ignore */ "aki-api/dist/src/Akinator" as string)) as unknown as {
+  const mod = (await import("aki-api/dist/src/Akinator")) as unknown as {
     default: typeof AkiClass;
   };
   return mod.default;
