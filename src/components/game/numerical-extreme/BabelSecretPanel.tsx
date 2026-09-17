@@ -38,11 +38,6 @@ import {
   type SecretDoctrinePassage,
 } from "@/game/numerical-extreme";
 import { downloadJson } from "@/game/numerical-extreme";
-import { PolaritySwitch } from "@/components/game/PolaritySwitch";
-import {
-  loadAiDetectorPolarity,
-  subscribeAiDetectorPolarity,
-} from "@/game/ai-detector/polarity";
 import { cn } from "@/lib/utils";
 import { TextInput } from "@/components/game/numerical-extreme/ui";
 import { audio } from "@/game/audio";
@@ -813,13 +808,6 @@ export function BabelSecretPanel({
   const [pageIdx, setPageIdx] = React.useState(0);
   const [showFinds, setShowFinds] = React.useState(false);
   const [begun, setBegun] = React.useState(false);
-  const [polarityEpoch, setPolarityEpoch] = React.useState(0);
-
-  React.useEffect(() => {
-    return subscribeAiDetectorPolarity(() => {
-      setPolarityEpoch((n) => n + 1);
-    });
-  }, []);
   const [grimoireUrl, setGrimoireUrl] = React.useState(RETRO_GRIMOIRE_SRC);
 
   const [books, setBooks] = React.useState<BabelGeneratedBook[]>([]);
@@ -895,7 +883,6 @@ export function BabelSecretPanel({
     secretPassages,
     mythPassages,
     ruckmanVerses,
-    polarityEpoch,
   ]);
 
   React.useEffect(() => {
@@ -1127,12 +1114,9 @@ export function BabelSecretPanel({
             stylometrics, higher-order lead composite, log-odds / product-of-experts fusion, and all
             ModernBERT-first rules — preferring prose under ~10% AI while maximizing Writing IQ
             toward ~190. Ordered Spatial Reasoning (V18) also scores locate-token structure for
-            high-variance recall. Scores stay hidden in NUMEROLOGY. Shared polarity:{" "}
-            <span className="text-amber">{loadAiDetectorPolarity()}</span>.
+            high-variance recall. Scores stay hidden in NUMEROLOGY. Reasoning parameters and
+            commands improve over time with the AI Detector stack (manual integrations).
           </p>
-          <PolaritySwitch
-            onPolarityChange={() => setPolarityEpoch((n) => n + 1)}
-          />
           <p className="rounded-sm border border-amber/25 bg-black/40 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber/90">
             Notes / security: Free ensemble scoring runs in your browser (ONNX models cached after
             first download). No API keys required for polish. Do not paste secrets, passwords, or
