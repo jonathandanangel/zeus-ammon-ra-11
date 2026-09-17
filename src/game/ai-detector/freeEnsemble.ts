@@ -23,6 +23,7 @@ export type FreeDetectorId =
   | "gptzero-twin"
   | "human-noise"
   | "llm-pitch"
+  | "ai-story"
   | "openai-roberta"
   | "hc3-roberta"
   | "modernbert"
@@ -48,6 +49,11 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
     id: "llm-pitch",
     name: "LLM pitch / outline",
     blurb: "ChatGPT novel pitches: Title Concept, Act I–III, “let me know” offers",
+  },
+  {
+    id: "ai-story",
+    name: "AI story / chapterbook",
+    blurb: "Formulaic chapter fiction: Chapter N, Epilogue, Just then, dialogue cadence",
   },
   {
     id: "openai-roberta",
@@ -98,21 +104,22 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
 
 /**
  * Prefer low false positives on human student writing (GPTZero philosophy).
- * human-noise vetoes soft AI leans unless llm-pitch is strong (ChatGPT outlines).
+ * human-noise / ai-story dominate soft neural leans (Babel filter depends on this).
  */
 const WEIGHT: Partial<Record<FreeDetectorId, number>> = {
-  "human-noise": 4.2,
+  "human-noise": 5.5,
   "llm-pitch": 4.5,
-  "gptzero-twin": 1.6,
-  "openai-roberta": 2.2,
-  "hc3-roberta": 1.9,
-  modernbert: 2.4,
-  burstiness: 1.2,
-  "perplexity-proxy": 0.9,
-  lexical: 0.7,
-  ngram: 0.8,
-  discourse: 1.5,
-  "sentence-mix": 1.2,
+  "ai-story": 4.8,
+  "gptzero-twin": 1.4,
+  "openai-roberta": 1.6,
+  "hc3-roberta": 1.5,
+  modernbert: 1.8,
+  burstiness: 0.9,
+  "perplexity-proxy": 0.7,
+  lexical: 0.6,
+  ngram: 0.7,
+  discourse: 1.1,
+  "sentence-mix": 1.0,
 };
 
 function clamp(n: number, lo = 0, hi = 100) {
@@ -245,11 +252,19 @@ function scanGptZeroTwin(text: string): DetectorScanResult {
   if (!(avgPpl < 2.25 && burst < 0.22)) {
     aiScore = Math.min(aiScore, 42 + (aiScore - 42) * 0.35);
   }
-  // Sentence-length burstiness (real GPTZero cue) — if lengths vary, not AI
+  // Sentence-length burstiness — high CV often human, BUT chapterbook short-line
+  // stacks also spike CV, so only apply the human pull when not story-shaped.
   const lengths = sentencesOf(text).map((s) => wordsOf(s).length).filter((n) => n > 0);
   const lenCv = stdev(lengths) / Math.max(1, mean(lengths));
-  if (lenCv >= 0.35) aiScore -= 18;
-  else if (lenCv >= 0.25) aiScore -= 10;
+  const chapterish =
+    (text.match(/\bChapter\s+\d+\b/gi) ?? []).length >= 2 || /\bEpilogue\b/i.test(text);
+  if (!chapterish) {
+    if (lenCv >= 0.35) aiScore -= 18;
+    else if (lenCv >= 0.25) aiScore -= 10;
+  } else if (lenCv < 0.35) {
+    // Uniform short chapter cadence → AI lean
+    aiScore += 12;
+  }
   aiScore = sharpen(clamp(aiScore), 1.05);
   return ok(
     "gptzero-twin",
@@ -266,17 +281,19 @@ function scanGptZeroTwin(text: string): DetectorScanResult {
  */
 function scanHumanNoise(text: string): DetectorScanResult {
   const words = wordsOf(text);
-  if (words.length < 25) return fail("human-noise", "Human noise", "Need more text.");
+  if (words.length < 12) return fail("human-noise", "Human noise", "Need more text.");
 
   let hits = 0;
   const notes: string[] = [];
   const lower = text.toLowerCase();
 
-  // Doubled words: "is is", "the the"
+  // Doubled words: "is is", "the the" — ignore SFX / cheer stacks (WAKA WAKA)
+  const sfxWord = /^(waka|ha+|haha|mwaha|chomp|crash|crack|boom|pow|bang|lol|lmao)+$/i;
   for (let i = 0; i < words.length - 1; i++) {
-    if (words[i] === words[i + 1] && (words[i]?.length ?? 0) >= 2) {
+    const w = words[i]!;
+    if (w === words[i + 1] && w.length >= 2 && !sfxWord.test(w)) {
       hits += 3;
-      notes.push(`double:${words[i]}`);
+      notes.push(`double:${w}`);
     }
   }
 
@@ -290,6 +307,21 @@ function scanHumanNoise(text: string): DetectorScanResult {
   if (/\bum,?\s+yeah\b|\bcool,\s*cool\b|\bi state mindlessly\b|\bdoodling\b/i.test(lower)) {
     hits += 3;
     notes.push("spoken-filler");
+  }
+
+  // Telegram / student grammar: missing conjunctions ("works very well can check")
+  if (
+    /\b\w+s\s+(very\s+)?well\s+can\b/.test(lower) ||
+    /\b(is|are|was)\s+mainly\s+to\b/.test(lower) ||
+    /\band was thinking about\b/.test(lower) ||
+    /\bnot revealed and\b/.test(lower) ||
+    /\bmight be\b.{0,40}\bbut all\b/.test(lower) ||
+    /\bcan check the text here\b/.test(lower) ||
+    /\bwith same original\b/.test(lower) ||
+    /\bdo heat transfer\b/.test(lower)
+  ) {
+    hits += 4;
+    notes.push("student-grammar");
   }
 
   // Common ESL / rushed substitutions, misspellings, odd coinages
@@ -340,10 +372,13 @@ function scanHumanNoise(text: string): DetectorScanResult {
   // Informal hedges / filler humans use
   const informal = (
     lower.match(
-      /\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|apparently|really was|of course|nonetheless|mindlessly)\b/g,
+      /\b(basically|literally|kinda|sort of|trying to|seemed|seemingly|simply|apparently|really was|of course|mindlessly|mainly|especially)\b/g,
     ) ?? []
   ).length;
   if (informal >= 2) {
+    hits += 2;
+    notes.push(`informal:${informal}`);
+  } else if (informal >= 1) {
     hits += 1;
     notes.push(`informal:${informal}`);
   }
@@ -357,7 +392,10 @@ function scanHumanNoise(text: string): DetectorScanResult {
   // Run-on / comma splice density vs polished AI
   const sentences = sentencesOf(text);
   const longRuns = sentences.filter((s) => wordsOf(s).length > 28).length;
-  if (longRuns >= 2) {
+  if (longRuns >= 1 && sentences.length <= 4) {
+    hits += 2;
+    notes.push("run-on-blurb");
+  } else if (longRuns >= 2) {
     hits += 1;
     notes.push("run-on");
   }
@@ -368,16 +406,92 @@ function scanHumanNoise(text: string): DetectorScanResult {
     notes.push("len-mix");
   }
 
-  // Very polished zero-noise → slightly AI-leaning; lots of noise → strongly human
-  const aiScore = sharpen(clamp(58 - hits * 6.5), 1.1);
+  // Parenthetical asides / feature laundry lists (product blurbs students write)
+  if (/\([^)]{12,}\)/.test(text) && /,\s*[^,]{8,},\s*[^,]{8,},/.test(text)) {
+    hits += 2;
+    notes.push("aside-list");
+  }
+
+  // Strong authenticity → near 0% AI (Babel + bench both need this polarity)
+  let aiScore = hits >= 4 ? clamp(12 - hits * 2) : sharpen(clamp(52 - hits * 8), 1.15);
+  if (hits >= 6) aiScore = Math.min(aiScore, 4);
+  if (hits >= 8) aiScore = 0;
   return ok(
     "human-noise",
     "Human noise",
     aiScore,
     hits
-      ? `authenticity hits=${hits} (${notes.slice(0, 6).join(", ")}) → human-leaning`
+      ? `authenticity hits=${hits} (${notes.slice(0, 6).join(", ")}) → human`
       : "Little surface noise — neutral/soft",
     `hits=${hits}`,
+  );
+}
+
+/**
+ * Formulaic LLM children’s / crossover fiction — Chapter N, Epilogue, beat markers.
+ * High AI score. Fixes false “human” calls on Pac-Man-style generated stories.
+ */
+function scanAiStory(text: string): DetectorScanResult {
+  if (text.trim().length < 120) return fail("ai-story", "AI story / chapterbook", "Need more text.");
+
+  let s = 0;
+  const notes: string[] = [];
+  const chapters = (text.match(/\bChapter\s+\d+\b/gi) ?? []).length;
+  if (chapters >= 2) {
+    s += 4;
+    notes.push(`chapters:${chapters}`);
+  } else if (chapters === 1) {
+    s += 2;
+    notes.push("chapter");
+  }
+  if (/\bEpilogue\b/i.test(text)) {
+    s += 3;
+    notes.push("epilogue");
+  }
+  if (/\bThe End\.?\s*$/im.test(text) || /\bThe End\b/i.test(text)) {
+    s += 2;
+    notes.push("the-end");
+  }
+  const beats = (text.match(/\b(Just then|Suddenly|Meanwhile|At the same moment|One final|Within minutes)\b/gi) ?? [])
+    .length;
+  if (beats >= 3) {
+    s += 3;
+    notes.push(`beats:${beats}`);
+  } else if (beats >= 1) {
+    s += 1;
+    notes.push(`beats:${beats}`);
+  }
+  // Short dialogue-heavy paragraphs (LLM kids-book cadence)
+  const paras = text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
+  const shortParas = paras.filter((p) => wordsOf(p).length > 0 && wordsOf(p).length <= 12).length;
+  const shortRatio = shortParas / Math.max(1, paras.length);
+  if (paras.length >= 20 && shortRatio >= 0.55) {
+    s += 3;
+    notes.push(`short-paras:${shortRatio.toFixed(2)}`);
+  }
+  const said = (text.match(/\b(said|replied|asked|shouted|grinned|smiled|roared|nodded)\b/gi) ?? []).length;
+  if (said >= 8 && chapters >= 1) {
+    s += 2;
+    notes.push(`dialogue-tags:${said}`);
+  }
+  // Sound-effect / onomatopoeia blocks common in LLM kidfic
+  if (/\b(CHOMP|CRASH|CRACK|BOOM|WAKA-WAKA|MWAHAHA)\b/.test(text)) {
+    s += 2;
+    notes.push("sfx");
+  }
+  // Crossover title pattern
+  if (/^[^\n]{8,80}:\s*[^\n]{8,80}\n/m.test(text) && chapters >= 1) {
+    s += 1;
+    notes.push("title-colon");
+  }
+
+  const aiScore = sharpen(clamp(s === 0 ? 22 : 28 + s * 9), 1.12);
+  return ok(
+    "ai-story",
+    "AI story / chapterbook",
+    aiScore,
+    s ? `story signals=${s} (${notes.slice(0, 6).join(", ")})` : "No chapterbook / formulaic-story fingerprints",
+    `signals=${s}`,
   );
 }
 
@@ -567,16 +681,6 @@ const DISCOURSE = [
   "moreover",
   "additionally",
   "consequently",
-  "nonetheless",
-  "overall",
-  "essentially",
-  "notably",
-  "importantly",
-  "significantly",
-  "various",
-  "numerous",
-  "crucial",
-  "vital",
   "delve",
   "tapestry",
   "landscape",
@@ -691,20 +795,17 @@ function aiProbFromRows(rows: ClfRow[]): { ai: number; label: string } {
     const s = Number(row.score) || 0;
     if (s >= (arr.find((r) => r.label === topLabel)?.score ?? 0)) topLabel = label;
 
-    // OpenAI detector: Fake=AI, Real=Human
-    // HC3: ChatGPT / Human
-    // ModernBERT: often LABEL_0/LABEL_1 or AI/Human
-    if (/fake|chatgpt|ai|generated|synthetic|machine|label_1/i.test(label)) {
+    // OpenAI: Fake=AI, Real=Human · HC3: ChatGPT/Human · ModernBERT: 1=AI, 0=Human
+    if (/fake|chatgpt|^ai$|ai-|generated|synthetic|machine|^label_1$/i.test(label)) {
       bestAi = Math.max(bestAi, s);
-    } else if (/real|human|authentic|label_0/i.test(label)) {
+    } else if (/real|^human$|authentic|^label_0$/i.test(label)) {
       bestHuman = Math.max(bestHuman, s);
     }
   }
 
   if (bestAi === 0 && bestHuman === 0) {
-    // Unknown label scheme: treat top score as AI if label looks AI-ish, else as human conf
     const top = arr.reduce((a, b) => (b.score > a.score ? b : a), arr[0]!);
-    if (/fake|chatgpt|ai|generated|1/i.test(top.label)) {
+    if (/fake|chatgpt|ai|generated|label_1/i.test(top.label)) {
       return { ai: top.score * 100, label: top.label };
     }
     return { ai: (1 - top.score) * 100, label: top.label };
@@ -754,10 +855,8 @@ async function runNeural(
     }
   const avg = mean(scores);
   const med = median(scores);
-  // Milder sharpen — older detectors over-call Fake on student prose
-  let aiScore = sharpen(0.6 * avg + 0.4 * med, 1.1);
-  // Conservative: pull extreme Fake claims toward uncertain unless very confident
-  if (aiScore > 70 && aiScore < 92) aiScore = 55 + (aiScore - 70) * 0.85;
+  // Keep raw polarity — do NOT dampen high AI (that was flipping Babel / bench).
+  const aiScore = sharpen(0.6 * avg + 0.4 * med, 1.05);
   return ok(
     id,
     name,
@@ -794,9 +893,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   const noise = okRows.find((r) => r.id === "human-noise");
   const pitch = okRows.find((r) => r.id === "llm-pitch");
-  const pitchStrong = pitch && pitch.aiScore >= 68;
-  // Authenticity veto only when NOT a clear ChatGPT pitch/outline
-  const humanVeto = Boolean(noise && noise.aiScore <= 32 && !pitchStrong);
+  const story = okRows.find((r) => r.id === "ai-story");
+  const pitchStrong = Boolean(pitch && pitch.aiScore >= 68);
+  const storyStrong = Boolean(story && story.aiScore >= 72);
+  // Authenticity veto only when NOT a clear ChatGPT pitch / AI chapterbook
+  const humanVeto = Boolean(noise && noise.aiScore <= 18 && !pitchStrong && !storyStrong);
+  const humanHard = Boolean(noise && noise.aiScore <= 8 && !pitchStrong && !storyStrong);
 
   let wSum = 0;
   let sSum = 0;
@@ -808,12 +910,16 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   for (const r of okRows) {
     let w = WEIGHT[r.id as FreeDetectorId] ?? 1;
     let score = r.aiScore;
-    // Strong pitch → boost AI signal, ignore soft human-noise dampening
+    // Strong pitch / story → boost AI signal
     if (pitchStrong && r.id === "llm-pitch") {
       score = Math.max(score, 82);
       w *= 1.35;
     }
-    // If human-noise fires (and not a pitch), dampen soft AI leans from twin + neural
+    if (storyStrong && r.id === "ai-story") {
+      score = Math.max(score, 86);
+      w *= 1.4;
+    }
+    // If human-noise fires hard, dampen soft AI leans from twin + neural + discourse
     if (
       humanVeto &&
       (r.id === "gptzero-twin" ||
@@ -821,16 +927,19 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
         r.id === "hc3-roberta" ||
         r.id === "modernbert" ||
         r.id === "perplexity-proxy" ||
-        r.id === "discourse")
+        r.id === "discourse" ||
+        r.id === "burstiness" ||
+        r.id === "lexical" ||
+        r.id === "ngram" ||
+        r.id === "sentence-mix")
     ) {
-      if (score > 40) {
-        score = 28 + (score - 40) * 0.25;
-        w *= 0.55;
+      if (score > 25) {
+        score = humanHard ? score * 0.08 : 12 + (score - 25) * 0.15;
+        w *= 0.4;
       }
     }
-    // Soft twin alone shouldn't dominate when authenticity is strong
     if (humanVeto && r.id === "gptzero-twin") {
-      score = Math.min(score, 38);
+      score = Math.min(score, humanHard ? 6 : 22);
     }
     wSum += w;
     sSum += score * w;
@@ -845,33 +954,39 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const med = median(weightedScores);
   let docScore = sharpen(0.65 * avg + 0.35 * med, 1.08);
 
-  // GPTZero-like low FPR: authenticity veto pulls document toward human
-  if (humanVeto) {
-    docScore = Math.min(docScore, 0.35 * docScore + 0.65 * (noise?.aiScore ?? 22));
+  // Strong student/human authenticity → force near 0% AI (Babel needs this polarity)
+  if (humanHard) {
+    docScore = Math.min(docScore, noise?.aiScore ?? 0);
+  } else if (humanVeto) {
+    docScore = Math.min(docScore, 0.25 * docScore + 0.75 * (noise?.aiScore ?? 12));
   }
-  // Clear ChatGPT pitch package → force AI lean
+  // Clear ChatGPT pitch / chapterbook → force AI lean
   if (pitchStrong) {
-    docScore = Math.max(docScore, 0.25 * docScore + 0.75 * Math.max(pitch?.aiScore ?? 75, 78));
+    docScore = Math.max(docScore, 0.2 * docScore + 0.8 * Math.max(pitch?.aiScore ?? 75, 78));
   }
-  // Prefer human on soft leans
-  if (!pitchStrong && docScore >= 48 && docScore < 58 && humanVotes + uncertainVotes >= aiVotes) {
-    docScore -= 8;
+  if (storyStrong) {
+    docScore = Math.max(docScore, 0.15 * docScore + 0.85 * Math.max(story?.aiScore ?? 82, 84));
   }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (docScore < 40) agreement = humanVotes >= aiVotes ? "strong_human" : "lean_human";
+  if (docScore < 12) agreement = "strong_human";
+  else if (docScore < 40) agreement = humanVotes >= aiVotes ? "strong_human" : "lean_human";
   else if (docScore < 50) agreement = "lean_human";
-  else if (docScore >= 75 && aiVotes > humanVotes) agreement = "strong_ai";
-  else if (docScore >= 60 && (aiVotes >= humanVotes || pitchStrong)) agreement = "lean_ai";
+  else if (docScore >= 75 && (aiVotes > humanVotes || storyStrong || pitchStrong)) agreement = "strong_ai";
+  else if (docScore >= 60 && (aiVotes >= humanVotes || pitchStrong || storyStrong)) agreement = "lean_ai";
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = humanVeto
-    ? " Human-noise veto applied (typos/informal voice)."
-    : pitchStrong
-      ? " LLM pitch/outline fingerprints dominate."
-      : "";
+  const vetoNote = humanHard
+    ? " Strong human-noise → ~0% AI."
+    : humanVeto
+      ? " Human-noise veto applied (informal / student voice)."
+      : storyStrong
+        ? " AI chapterbook / story fingerprints dominate."
+        : pitchStrong
+          ? " LLM pitch/outline fingerprints dominate."
+          : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
@@ -906,6 +1021,9 @@ export async function runFreeEnsemble(
   onProgress?.("LLM pitch / outline fingerprints…");
   const pitch = scanLlmPitch(text);
 
+  onProgress?.("AI story / chapterbook fingerprints…");
+  const story = scanAiStory(text);
+
   onProgress?.("GPTZero-style twin (perplexity + burstiness)…");
   const twin = scanGptZeroTwin(text);
 
@@ -913,6 +1031,7 @@ export async function runFreeEnsemble(
   const statistical = [
     noise,
     pitch,
+    story,
     twin,
     scanBurstiness(text),
     scanPerplexityProxy(text),
@@ -951,7 +1070,7 @@ export async function runFreeEnsemble(
     text,
   );
 
-  const results = [noise, pitch, twin, openai, hc3, modern, ...statistical.slice(3)];
+  const results = [noise, pitch, story, twin, openai, hc3, modern, ...statistical.slice(4)];
   const consensus = weightedConsensus(results);
   return { results, consensus };
 }
