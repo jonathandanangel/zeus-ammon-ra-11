@@ -2178,6 +2178,18 @@
     0 0 110px rgba(0, 160, 255, 0.45);
 }
 
+/* Section headers on title frames — bright white + main-title style glow */
+.zeus-topic-title {
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 14px rgba(255, 255, 255, 0.95),
+    0 0 28px rgba(200, 245, 255, 0.85),
+    0 0 48px rgba(122, 247, 255, 0.65),
+    0 0 72px rgba(0, 200, 255, 0.45),
+    0 0 110px rgba(0, 160, 255, 0.28);
+}
+
 .zeus-intro--leaving {
   opacity: 0;
   transform: scale(1.04);
@@ -2232,26 +2244,61 @@
   animation: zeus-landing-in 0.85s ease both;
 }
 
-/* Same sections + wording — one topic per viewport with topic color wash */
+/* Same sections + wording — full-bleed topic frames, seamless scroll */
 .zeus-landing-snap {
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
 }
 
 .zeus-snap-slide {
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
+}
+
+.zeus-topic-slide {
+  isolation: isolate;
+  background: #050814;
 }
 
 .zeus-topic-wash {
-  /* Full-bleed topic light only — no black band/rectangle */
-  background: radial-gradient(
-    ellipse 95% 80% at 50% 48%,
-    var(--zeus-topic-wash, transparent) 0%,
-    color-mix(in srgb, var(--zeus-topic-wash, transparent) 45%, transparent) 42%,
-    transparent 78%
-  );
+  /* Continuous full-bleed light — no floating square / black band */
+  background:
+    radial-gradient(
+      ellipse 130% 95% at 50% 50%,
+      var(--zeus-topic-wash, transparent) 0%,
+      color-mix(in srgb, var(--zeus-topic-wash, transparent) 55%, #050814) 58%,
+      #050814 100%
+    );
+}
+
+.zeus-title-topic-panel {
+  background: transparent;
+}
+
+/* Soft edge glow on the full slide, not a card box */
+.zeus-topic-slide.zeus-glow-aero {
+  box-shadow:
+    inset 0 0 110px rgba(124, 58, 237, 0.28),
+    inset 0 0 180px rgba(34, 211, 238, 0.14);
+}
+
+.zeus-topic-slide.zeus-glow-fire {
+  box-shadow:
+    inset 0 0 120px rgba(255, 70, 0, 0.32),
+    inset 0 0 190px rgba(255, 160, 0, 0.18);
+}
+
+.zeus-topic-slide.zeus-glow-story {
+  box-shadow: inset 0 0 110px rgba(57, 255, 20, 0.16);
+}
+
+.zeus-topic-slide.zeus-glow-tools {
+  box-shadow: inset 0 0 110px rgba(96, 165, 250, 0.16);
+}
+
+.zeus-topic-slide.zeus-glow-system {
+  box-shadow: inset 0 0 90px rgba(37, 217, 255, 0.1);
 }
 
 .zeus-scroll-hint {
@@ -2267,67 +2314,6 @@
   background: var(--outline-glass) !important;
   backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
   -webkit-backdrop-filter: blur(var(--outline-blur)) saturate(1.15);
-}
-
-/* Title topic frames — brighter, themed glows (after glass rule so it wins) */
-.zeus-landing .zeus-title-topic-panel.zeus-mode-panel {
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-}
-
-.zeus-landing .zeus-title-topic-panel.zeus-glow-aero {
-  --zeus-frame: #c4b5fd;
-  --zeus-frame-hot: #22d3ee;
-  background:
-    linear-gradient(135deg, rgba(124, 58, 237, 0.38), rgba(34, 211, 238, 0.12) 55%, rgba(15, 23, 42, 0.35)) !important;
-  border-color: rgba(196, 181, 253, 0.75) !important;
-  box-shadow:
-    0 0 0 1px rgba(196, 181, 253, 0.55),
-    0 0 28px rgba(168, 85, 247, 0.55),
-    0 0 70px rgba(124, 58, 237, 0.45),
-    0 0 120px rgba(34, 211, 238, 0.22),
-    inset 0 0 40px rgba(168, 85, 247, 0.12);
-}
-
-.zeus-landing .zeus-title-topic-panel.zeus-glow-fire {
-  background:
-    linear-gradient(135deg, rgba(255, 90, 0, 0.42), rgba(255, 42, 42, 0.22) 45%, rgba(255, 200, 40, 0.14) 70%, rgba(30, 10, 4, 0.35)) !important;
-  border-color: rgba(255, 140, 40, 0.9) !important;
-  box-shadow:
-    0 0 0 1px rgba(255, 180, 60, 0.65),
-    0 0 32px rgba(255, 80, 0, 0.65),
-    0 0 80px rgba(255, 40, 0, 0.5),
-    0 0 130px rgba(255, 160, 0, 0.28),
-    inset 0 0 48px rgba(255, 100, 0, 0.16);
-}
-
-.zeus-landing .zeus-title-topic-panel.zeus-glow-story {
-  background:
-    linear-gradient(135deg, rgba(57, 255, 20, 0.22), rgba(12, 40, 18, 0.4)) !important;
-  border-color: rgba(144, 238, 144, 0.7) !important;
-  box-shadow:
-    0 0 0 1px rgba(144, 238, 144, 0.4),
-    0 0 40px rgba(57, 255, 20, 0.3),
-    0 0 90px rgba(57, 255, 20, 0.18);
-}
-
-.zeus-landing .zeus-title-topic-panel.zeus-glow-tools {
-  background:
-    linear-gradient(135deg, rgba(96, 165, 250, 0.28), rgba(12, 28, 52, 0.42)) !important;
-  border-color: rgba(147, 197, 253, 0.65) !important;
-  box-shadow:
-    0 0 0 1px rgba(147, 197, 253, 0.4),
-    0 0 40px rgba(96, 165, 250, 0.32),
-    0 0 90px rgba(96, 165, 250, 0.18);
-}
-
-.zeus-landing .zeus-title-topic-panel.zeus-glow-system {
-  background:
-    linear-gradient(135deg, rgba(234, 247, 255, 0.12), rgba(12, 28, 52, 0.45)) !important;
-  border-color: rgba(234, 247, 255, 0.28) !important;
-  box-shadow:
-    0 0 0 1px rgba(234, 247, 255, 0.18),
-    0 0 36px rgba(37, 217, 255, 0.18);
 }
 
 /* Frosted glass main frames — every mode shell */

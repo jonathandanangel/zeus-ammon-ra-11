@@ -361,26 +361,27 @@ export function TitleScreen(p: TitleScreenProps) {
           <section
             key={section.id}
             id={`mode-${section.id}`}
-            className="zeus-snap-slide relative flex min-h-[100dvh] w-full items-center"
+            className={cn(
+              "zeus-snap-slide zeus-topic-slide relative flex min-h-[100dvh] w-full items-center",
+              section.glow === "aero" && "zeus-glow-aero",
+              section.glow === "fire" && "zeus-glow-fire",
+              section.glow === "story" && "zeus-glow-story",
+              section.glow === "tools" && "zeus-glow-tools",
+              section.glow === "system" && "zeus-glow-system",
+            )}
             style={{ ["--zeus-topic-wash" as string]: section.wash }}
           >
             <div className="zeus-topic-wash pointer-events-none absolute inset-0" aria-hidden />
-            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 py-10">
-              <div
-                className={cn(
-                  "zeus-mode-panel zeus-title-topic-panel zeus-outline-box relative w-full overflow-hidden rounded-sm border bg-gradient-to-br p-6 sm:p-10",
-                  section.accentClass,
-                  section.glow === "aero" && "zeus-glow-aero",
-                  section.glow === "fire" && "zeus-glow-fire",
-                  section.glow === "story" && "zeus-glow-story",
-                  section.glow === "tools" && "zeus-glow-tools",
-                  section.glow === "system" && "zeus-glow-system",
-                )}
-              >
+            <div
+              className={cn(
+                "zeus-title-topic-panel relative z-10 flex min-h-[100dvh] w-full flex-col justify-center px-5 py-14 sm:px-10",
+              )}
+            >
+              <div className="mx-auto w-full max-w-5xl">
                 <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
                   {section.eyebrow}
                 </p>
-                <h3 className="mt-2 font-display text-2xl tracking-[0.06em] text-moon sm:text-3xl">
+                <h3 className="zeus-topic-title mt-2 font-display text-2xl tracking-[0.06em] sm:text-3xl">
                   {section.title}
                 </h3>
                 <p className="mt-3 max-w-2xl font-mono text-[12px] leading-relaxed text-muted-foreground sm:text-sm">
@@ -416,7 +417,7 @@ export function TitleScreen(p: TitleScreenProps) {
           </section>
         ))}
 
-        <div className="zeus-snap-slide flex min-h-[40dvh] flex-col items-center justify-center gap-4 pb-16">
+        <div className="zeus-snap-slide zeus-topic-slide flex min-h-[40dvh] flex-col items-center justify-center gap-4 pb-16">
           <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
             Very bright and vibrant be warned.
           </p>
