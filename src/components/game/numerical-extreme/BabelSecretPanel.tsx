@@ -135,9 +135,45 @@ function BookReader({
   if (!leaf) return null;
   const body = leaf.page.lines.join("\n");
   const { info } = book;
+  const accuracyPct = leaf.accuracy;
+  const fadeNote =
+    accuracyPct >= 85
+      ? "Front of the book · foundational database"
+      : accuracyPct >= 65
+        ? "Mid volume · strong secondary sources"
+        : accuracyPct >= 45
+          ? "Later leaves · probable letter matches"
+          : "Back of the book · least likely combinations";
 
   return (
     <div className="space-y-3">
+      <div className="rounded-sm border border-amber/35 bg-amber/10 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber">
+        Reading order: <span className="text-moon">most accurate foundational text → least likely</span>.
+        This leaf is <span className="text-cyan">{accuracyPct}%</span> · {leaf.accuracyLabel}. {fadeNote}.
+      </div>
+
+      {/* Accuracy progress across the whole book */}
+      <div className="space-y-1">
+        <div className="flex flex-wrap gap-1">
+          {book.pages.map((p, i) => (
+            <button
+              key={p.index}
+              type="button"
+              onClick={() => onPage(i)}
+              title={`${p.accuracy}% · ${p.title}`}
+              className={`h-2 flex-1 min-w-[8px] rounded-sm transition ${
+                i === pageIdx ? "ring-1 ring-amber" : ""
+              }`}
+              style={{
+                backgroundColor: `rgba(251, 191, 36, ${Math.max(0.15, p.accuracy / 100)})`,
+              }}
+            />
+          ))}
+        </div>
+        <p className="font-mono text-[8px] text-muted-foreground">
+          Leaf bar · brighter = more accurate foundational source
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
         <figure className="overflow-hidden rounded-sm border border-amber/35 bg-black/50">
             <img
@@ -306,16 +342,25 @@ function BookReader({
       >
         <div className="border-b border-amber/25 bg-amber/10 px-3 py-2">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-amber">
-            {kindLabel(leaf.sourceKind)} · {leaf.page.location.address}
+            {leaf.accuracy}% · {leaf.accuracyLabel} · {kindLabel(leaf.sourceKind)}
           </p>
+          <p className="font-mono text-[8px] text-muted-foreground">{leaf.accuracyWhy}</p>
           <p className="font-mono text-[8px] text-muted-foreground">
-            Amber = exact / stem / anagram / scramble / similar letters from source texts
+            {leaf.page.location.address} · amber = source tokens
           </p>
         </div>
+        <div className="border-b border-cyan/15 px-3 py-2.5">
+          <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-magenta">
+            Foundational leaf text
+          </p>
+          <pre className="font-mono text-[11px] leading-relaxed text-moon whitespace-pre-wrap">
+            {highlightAmber(leaf.bodyText || leaf.excerpt, leaf.page.matched)}
+          </pre>
+        </div>
         <p className="border-b border-cyan/15 px-3 py-2 font-mono text-[10px] leading-relaxed text-moon/85">
-          {highlightAmber(leaf.excerpt, leaf.page.matched)}
+          Source excerpt · {highlightAmber(leaf.excerpt, leaf.page.matched)}
         </p>
-        <pre className="max-h-[22rem] overflow-auto px-3 py-2.5 font-mono text-[10px] leading-relaxed text-mint/90 whitespace-pre-wrap break-all">
+        <pre className="max-h-[18rem] overflow-auto px-3 py-2.5 font-mono text-[10px] leading-relaxed text-mint/90 whitespace-pre-wrap break-all">
           {highlightAmber(body, leaf.page.matched)}
         </pre>
       </div>

@@ -772,6 +772,12 @@ export type BabelBookPage = {
   page: BabelPage;
   highlight: BabelHighlightToken[];
   excerpt: string;
+  /** Readable “new” leaf text woven from foundational sources (not only Babel noise). */
+  bodyText: string;
+  /** 0–100 · most accurate foundational match first; fades as you turn pages. */
+  accuracy: number;
+  accuracyLabel: string;
+  accuracyWhy: string;
 };
 
 /** Bibliographic card — “new book information” for a located volume. */
@@ -831,10 +837,142 @@ function combinationTokens(result: NumerologyResult, extras: string[]): string[]
   return [...new Set(base)].slice(0, 10);
 }
 
+type ChapterDraft = {
+  title: string;
+  kind: BabelSourceKind;
+  phrase: string;
+  highlight: BabelHighlightToken[];
+  excerpt: string;
+  bodyText: string;
+  accuracy: number;
+  accuracyLabel: string;
+  accuracyWhy: string;
+};
+
+/** Rank: exact word/path/Johnson > Thought-Forms > philosophy/tarot > Blavatsky > Graves > expansions/anagrams > synthesis. */
+function accuracyForKind(
+  kind: BabelSourceKind,
+  opts?: { exactJohnson?: boolean; passageScore?: number; anagram?: boolean },
+): { accuracy: number; label: string; why: string } {
+  switch (kind) {
+    case "keyword":
+    case "path":
+      return {
+        accuracy: 98,
+        label: "Foundational · exact",
+        why: "Typed word → letter-sum path — the primary key of this volume.",
+      };
+    case "johnson":
+      return {
+        accuracy: opts?.exactJohnson ? 94 : 86,
+        label: opts?.exactJohnson ? "Foundational · Johnson headword" : "Strong · Johnson sense",
+        why: "Samuel Johnson defines the word (or a path expansion) directly.",
+      };
+    case "thought-form":
+      return {
+        accuracy: 90,
+        label: "Foundational · Thought-Forms",
+        why: "Besant/Leadbeater colour–emotion plate for this path ray.",
+      };
+    case "philosophy":
+      return {
+        accuracy: 82,
+        label: "Strong · tradition quote",
+        why: "Primary-source philosopher card tied to the path digit.",
+      };
+    case "tarot":
+      return {
+        accuracy: 78,
+        label: "Strong · tarot arcana",
+        why: "Major Arcana mapped to the same path number.",
+      };
+    case "ruckman":
+      return {
+        accuracy: 74,
+        label: "Cited · KJV verse",
+        why: "Ruckman citation for this path number (1611 text).",
+      };
+    case "secret-doctrine": {
+      const boost = Math.min(12, Math.floor((opts?.passageScore ?? 40) / 8));
+      return {
+        accuracy: 58 + boost,
+        label: "Probable · Blavatsky match",
+        why: "Secret Doctrine passage via exact / stem / anagram / scramble / similar letters.",
+      };
+    }
+    case "greek-myth": {
+      const boost = Math.min(12, Math.floor((opts?.passageScore ?? 40) / 8));
+      return {
+        accuracy: 52 + boost,
+        label: "Probable · Graves match",
+        why: "Greek Myths passage via exact / stem / anagram / scramble / similar letters.",
+      };
+    }
+    case "anagram":
+    case "johnson-expansion":
+      return {
+        accuracy: opts?.anagram ? 48 : 44,
+        label: opts?.anagram ? "Weaker · anagram / scramble" : "Weaker · expansion",
+        why: "Letter-signature neighbour — related, not the typed headword itself.",
+      };
+    case "synthesis":
+      return {
+        accuracy: 28,
+        label: "Least likely · combination leaf",
+        why: "Assembled combo of many sources — speculative catalogue leaf.",
+      };
+    default:
+      return { accuracy: 35, label: "Peripheral", why: "Lower-confidence source leaf." };
+  }
+}
+
+function composeFoundationalBody(args: {
+  rank: number;
+  total: number;
+  accuracy: number;
+  label: string;
+  why: string;
+  kind: BabelSourceKind;
+  seedWord: string;
+  pathNumber: number;
+  title: string;
+  excerpt: string;
+  highlights: string[];
+}): string {
+  const fade =
+    args.accuracy >= 85
+      ? "This leaf is among the most accurate depictions in the foundational database."
+      : args.accuracy >= 65
+        ? "This leaf is a strong but secondary witness — still close to the typed word’s path."
+        : args.accuracy >= 45
+          ? "This leaf is only probable: letter matches and neighbouring senses, not a direct definition."
+          : "This leaf is the least likely — a combination / scramble at the far end of the shelf.";
+
+  const tokens = args.highlights.filter(Boolean).slice(0, 8).join(", ");
+  return [
+    `[Leaf ${args.rank} of ${args.total} · ${args.accuracy}% · ${args.label}]`,
+    ``,
+    `Word under seal: “${args.seedWord}”. Path ${args.pathNumber}. Source class: ${args.kind}.`,
+    args.why,
+    ``,
+    fade,
+    ``,
+    args.title,
+    ``,
+    args.excerpt.trim(),
+    ``,
+    tokens ? `Amber tokens on this leaf: ${tokens}.` : "",
+    ``,
+    `As you progress the book, accuracy declines: foundational sources first, speculative combinations last.`,
+  ]
+    .filter((line) => line !== undefined)
+    .join("\n");
+}
+
 /**
- * Generate a multi-page “new” book located in Babel from the typed word and
- * combinations drawn from Johnson, Blavatsky, Graves, philosophy, tarot,
- * Thought-Forms — one chapter per foundational source.
+ * Generate a multi-page book whose leaves run most → least accurate
+ * against the foundational source database (Johnson, Thought-Forms,
+ * philosophy, Blavatsky, Graves, tarot, combinations).
  */
 export function generateBabelBooks(input: {
   result: NumerologyResult;
@@ -864,115 +1002,124 @@ export function generateBabelBooks(input: {
       title: `Codex of ${result.normalized}`,
       combo: combinationTokens(result, [bundle.colorName, bundle.primaryFigure.emotion]),
       blurb:
-        "Path digit, Thought-Forms colour/emotion, sacred geometry, and tarot — woven into one located volume.",
+        "Leaves ordered most → least accurate: path & Johnson first, then Thought-Forms, traditions, Blavatsky/Graves matches, combinations last.",
     },
     {
       id: "lexicon-hex",
       title: `Johnson Hexagon on “${result.normalized}”`,
       combo: combinationTokens(result, johnsonExtras),
       blurb:
-        "Samuel Johnson headwords and brute-force expansions for this path — definitions already waiting on a shelf.",
+        "Lexicon-first volume — exact Johnson senses lead; expansions and scrambles trail toward the back.",
     },
     {
       id: "doctrine-myth",
       title: `Blavatsky × Graves · letter scrambles`,
       combo: combinationTokens(result, [...doctrineMatches, ...mythMatches]),
       blurb:
-        "Anagram / scramble / similar-letter hits from The Secret Doctrine and The Greek Myths — amber tokens mark every match.",
+        "Doctrine and myth letter-matches ranked by passage score; weakest combinations close the book.",
     },
   ];
 
   for (const spec of combos.slice(0, maxBooks)) {
-    const chapters: Array<{
-      title: string;
-      kind: BabelSourceKind;
-      phrase: string;
-      highlight: BabelHighlightToken[];
-      excerpt: string;
-    }> = [];
+    const drafts: ChapterDraft[] = [];
 
-    chapters.push({
-      title: "I · The word and its path",
-      kind: "path",
-      phrase: `${result.normalized} ${result.title} ${result.traits.join(" ")} ${result.note}`,
-      highlight: [
-        { word: result.normalized, reason: "exact", kind: "keyword" },
-        { word: result.title, reason: "path title", kind: "path" },
-        ...result.traits.slice(0, 4).map((t) => ({
-          word: t,
-          reason: "path trait",
-          kind: "path" as const,
-        })),
-      ],
-      excerpt: result.note,
-    });
-
-    chapters.push({
-      title: "II · Thought-Forms colour",
-      kind: "thought-form",
-      phrase: `${bundle.colorName} ${bundle.musicalNote} ${bundle.primaryFigure.emotion} ${bundle.primaryFigure.quote}`,
-      highlight: [
-        { word: bundle.colorName, reason: "colour ray", kind: "thought-form" },
-        ...wordsFromText(bundle.primaryFigure.emotion, 4).slice(0, 4).map((w) => ({
-          word: w,
-          reason: "emotion",
-          kind: "thought-form" as const,
-        })),
-      ],
-      excerpt: bundle.primaryFigure.quote.slice(0, 220),
-    });
-
-    if (input.johnsonWord || result.johnsonExpansions.some((e) => e.found)) {
-      const head = input.johnsonWord?.headword ?? result.normalized;
-      const sense = input.johnsonWord?.senses[0] ?? "";
-      chapters.push({
-        title: "III · Johnson’s lexicon",
-        kind: "johnson",
-        phrase: `${head} ${sense} ${johnsonExtras.join(" ")}`,
+    {
+      const meta = accuracyForKind("path");
+      drafts.push({
+        title: "The word and its path",
+        kind: "path",
+        phrase: `${result.normalized} ${result.title} ${result.traits.join(" ")} ${result.note}`,
         highlight: [
-          { word: head, reason: "Johnson headword", kind: "johnson" },
-          ...johnsonExtras.slice(0, 5).map((w) => ({
-            word: w,
-            reason: isAnagramOf(result.normalized, w) ? "anagram / scramble" : "Johnson expansion",
-            kind: (isAnagramOf(result.normalized, w) ? "anagram" : "johnson-expansion") as BabelSourceKind,
+          { word: result.normalized, reason: "exact", kind: "keyword" },
+          { word: result.title, reason: "path title", kind: "path" },
+          ...result.traits.slice(0, 4).map((t) => ({
+            word: t,
+            reason: "path trait",
+            kind: "path" as const,
           })),
         ],
-        excerpt: sense.slice(0, 220) || "Johnson expansions for path lore.",
+        excerpt: result.note,
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
       });
     }
 
-    for (const [i, p] of (input.secretPassages ?? []).slice(0, 2).entries()) {
-      chapters.push({
-        title: `IV.${i + 1} · Blavatsky p.${p.page}`,
-        kind: "secret-doctrine",
-        phrase: `${p.matched.join(" ")} ${p.text.slice(0, 200)}`,
-        highlight: p.matched.slice(0, 6).map((w) => ({
-          word: w,
-          reason: p.reasons[0] ?? "anagram / scramble",
-          kind: "secret-doctrine" as const,
-        })),
-        excerpt: p.text.slice(0, 220),
+    if (input.johnsonWord || input.johnsonWord1773) {
+      const edition = input.johnsonWord ?? input.johnsonWord1773!;
+      const sense = edition.senses[0] ?? "";
+      const meta = accuracyForKind("johnson", { exactJohnson: true });
+      drafts.push({
+        title: `Johnson · ${edition.headword}`,
+        kind: "johnson",
+        phrase: `${edition.headword} ${sense}`,
+        highlight: [
+          { word: edition.headword, reason: "Johnson headword", kind: "johnson" },
+          ...wordsFromText(sense, 5)
+            .slice(0, 4)
+            .map((w) => ({
+              word: w,
+              reason: reasonForPair(result.normalized, w),
+              kind: "johnson" as const,
+            })),
+        ],
+        excerpt: sense.slice(0, 280) || edition.partOfSpeech,
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
       });
     }
 
-    for (const [i, p] of (input.mythPassages ?? []).slice(0, 2).entries()) {
-      chapters.push({
-        title: `V.${i + 1} · Graves p.${p.page}`,
-        kind: "greek-myth",
-        phrase: `${p.matched.join(" ")} ${p.text.slice(0, 200)}`,
-        highlight: p.matched.slice(0, 6).map((w) => ({
-          word: w,
-          reason: p.reasons[0] ?? "anagram / scramble",
-          kind: "greek-myth" as const,
-        })),
-        excerpt: p.text.slice(0, 220),
+    {
+      const meta = accuracyForKind("thought-form");
+      drafts.push({
+        title: `Thought-Forms · ${bundle.colorName}`,
+        kind: "thought-form",
+        phrase: `${bundle.colorName} ${bundle.musicalNote} ${bundle.primaryFigure.emotion} ${bundle.primaryFigure.quote}`,
+        highlight: [
+          { word: bundle.colorName, reason: "colour ray", kind: "thought-form" },
+          ...wordsFromText(bundle.primaryFigure.emotion, 4).slice(0, 4).map((w) => ({
+            word: w,
+            reason: "emotion",
+            kind: "thought-form" as const,
+          })),
+        ],
+        excerpt: bundle.primaryFigure.quote.slice(0, 280),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
       });
     }
 
-    const phil = result.philosophy.thoughts.slice(0, 2);
-    for (const [i, t] of phil.entries()) {
-      chapters.push({
-        title: `VI.${i + 1} · ${t.philosopher}`,
+    {
+      const meta = accuracyForKind("tarot");
+      drafts.push({
+        title: `Tarot · ${result.tarot.name}`,
+        kind: "tarot",
+        phrase: `${result.tarot.name} ${result.tarot.arcana} ${result.tarot.explanation}`,
+        highlight: [
+          { word: result.tarot.name, reason: "tarot name", kind: "tarot" },
+          ...wordsFromText(result.tarot.arcana, 4).map((w) => ({
+            word: w,
+            reason: "arcana",
+            kind: "tarot" as const,
+          })),
+        ],
+        excerpt: result.tarot.explanation.slice(0, 280),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
+      });
+    }
+
+    for (const t of result.philosophy.thoughts.slice(0, 3)) {
+      const meta = accuracyForKind("philosophy");
+      drafts.push({
+        title: t.philosopher,
         kind: "philosophy",
         phrase: `${t.philosopher} ${t.thought}`,
         highlight: [
@@ -987,40 +1134,169 @@ export function generateBabelBooks(input: {
             kind: "philosophy" as const,
           })),
         ],
-        excerpt: t.thought.slice(0, 220),
+        excerpt: `${t.work} — ${t.thought}`.slice(0, 320),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
       });
     }
 
-    // Combination leaf — the “new” book spine from search combos
-    chapters.push({
-      title: "VII · Combination leaf",
-      kind: "synthesis",
-      phrase: `combination ${spec.combo.join(" ")} for path ${result.number} in the library of babel`,
-      highlight: spec.combo.map((w) => ({
-        word: w,
-        reason: reasonForPair(result.normalized, w),
-        kind: "synthesis" as const,
-      })),
-      excerpt: spec.blurb,
-    });
+    for (const v of (input.ruckmanVerses ?? []).slice(0, 2)) {
+      const meta = accuracyForKind("ruckman");
+      drafts.push({
+        title: `KJV · ${v.ref}`,
+        kind: "ruckman",
+        phrase: `${v.ref} ${v.text}`,
+        highlight: [
+          ...wordsFromText(v.ref, 3).map((w) => ({
+            word: w,
+            reason: "verse ref",
+            kind: "ruckman" as const,
+          })),
+          ...wordsFromText(v.text, 5)
+            .slice(0, 4)
+            .map((w) => ({
+              word: w,
+              reason: "verse word",
+              kind: "ruckman" as const,
+            })),
+        ],
+        excerpt: v.text.slice(0, 280),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
+      });
+    }
+
+    const doctrineSorted = [...(input.secretPassages ?? [])].sort((a, b) => b.score - a.score);
+    for (const p of doctrineSorted.slice(0, 3)) {
+      const meta = accuracyForKind("secret-doctrine", { passageScore: p.score });
+      drafts.push({
+        title: `Blavatsky · p.${p.page}`,
+        kind: "secret-doctrine",
+        phrase: `${p.matched.join(" ")} ${p.text.slice(0, 220)}`,
+        highlight: p.matched.slice(0, 6).map((w) => ({
+          word: w,
+          reason: p.reasons[0] ?? "anagram / scramble",
+          kind: "secret-doctrine" as const,
+        })),
+        excerpt: p.text.slice(0, 320),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: `${meta.why} Match score ${p.score}.`,
+      });
+    }
+
+    const mythSorted = [...(input.mythPassages ?? [])].sort((a, b) => b.score - a.score);
+    for (const p of mythSorted.slice(0, 3)) {
+      const meta = accuracyForKind("greek-myth", { passageScore: p.score });
+      drafts.push({
+        title: `Graves · p.${p.page}`,
+        kind: "greek-myth",
+        phrase: `${p.matched.join(" ")} ${p.text.slice(0, 220)}`,
+        highlight: p.matched.slice(0, 6).map((w) => ({
+          word: w,
+          reason: p.reasons[0] ?? "anagram / scramble",
+          kind: "greek-myth" as const,
+        })),
+        excerpt: p.text.slice(0, 320),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: `${meta.why} Match score ${p.score}.`,
+      });
+    }
+
+    for (const exp of result.johnsonExpansions.filter((e) => e.found).slice(0, 5)) {
+      const ana = isAnagramOf(result.normalized, exp.word);
+      const meta = accuracyForKind(ana ? "anagram" : "johnson-expansion", { anagram: ana });
+      drafts.push({
+        title: ana ? `Anagram · ${exp.word}` : `Expansion · ${exp.word}`,
+        kind: ana ? "anagram" : "johnson-expansion",
+        phrase: `${exp.word} ${exp.entry?.senses[0] ?? ""}`,
+        highlight: [
+          {
+            word: exp.word,
+            reason: ana ? "anagram / scramble" : "Johnson expansion",
+            kind: ana ? "anagram" : "johnson-expansion",
+          },
+        ],
+        excerpt: (exp.entry?.senses[0] ?? "Path-lore expansion.").slice(0, 240),
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
+      });
+    }
+
+    {
+      const meta = accuracyForKind("synthesis");
+      drafts.push({
+        title: "Combination leaf · least likely",
+        kind: "synthesis",
+        phrase: `combination ${spec.combo.join(" ")} for path ${result.number} in the library of babel`,
+        highlight: spec.combo.map((w) => ({
+          word: w,
+          reason: reasonForPair(result.normalized, w),
+          kind: "synthesis" as const,
+        })),
+        excerpt: spec.blurb,
+        bodyText: "",
+        ...meta,
+        accuracyLabel: meta.label,
+        accuracyWhy: meta.why,
+      });
+    }
+
+    // Most accurate → least likely
+    drafts.sort((a, b) => b.accuracy - a.accuracy || a.title.localeCompare(b.title));
 
     const pages: BabelBookPage[] = [];
     const allMatched: string[] = [];
-    for (const [index, ch] of chapters.entries()) {
+    const total = drafts.length;
+
+    for (const [index, ch] of drafts.entries()) {
+      const bodyText = composeFoundationalBody({
+        rank: index + 1,
+        total,
+        accuracy: ch.accuracy,
+        label: ch.accuracyLabel,
+        why: ch.accuracyWhy,
+        kind: ch.kind,
+        seedWord: result.normalized,
+        pathNumber: result.number,
+        title: ch.title,
+        excerpt: ch.excerpt,
+        highlights: ch.highlight.map((h) => h.word),
+      });
+
+      // Embed both the composed leaf and source phrase into the Babel page
+      const locatePhrase = `${bodyText}\n\n${ch.phrase}`.slice(0, 1800);
       try {
         const page = locatePageWithHighlights(
-          ch.phrase,
-          ch.highlight,
+          locatePhrase,
+          [
+            ...ch.highlight,
+            { word: result.normalized, reason: "exact", kind: "keyword" },
+            { word: String(ch.accuracy), reason: "accuracy", kind: ch.kind },
+          ],
           result.number,
-          `${spec.id}-p${index}`,
+          `${spec.id}-acc${ch.accuracy}-p${index}`,
         );
         pages.push({
           index: index + 1,
-          title: ch.title,
+          title: `${ch.accuracy}% · ${ch.title}`,
           sourceKind: ch.kind,
           page,
           highlight: ch.highlight,
           excerpt: ch.excerpt,
+          bodyText,
+          accuracy: ch.accuracy,
+          accuracyLabel: ch.accuracyLabel,
+          accuracyWhy: ch.accuracyWhy,
         });
         allMatched.push(...page.matched);
       } catch {
@@ -1032,7 +1308,10 @@ export function generateBabelBooks(input: {
     const coverArt = artworkForPath(result.number + books.length);
     const searchPhrase = toBabelAlphabet(spec.combo.join(" ")).slice(0, 200);
     const firstLoc = pages[0]!.page.location;
-    const seedNum = Number.parseInt(pages[0]!.page.seedDigest.replace(/[^0-9a-f]/gi, "").slice(0, 8) || "1", 16);
+    const seedNum = Number.parseInt(
+      pages[0]!.page.seedDigest.replace(/[^0-9a-f]/gi, "").slice(0, 8) || "1",
+      16,
+    );
     const imprintYear = 1600 + (seedNum % 400);
     const isbnLike = `978-0-${String(result.number).padStart(2, "0")}-${String(seedNum % 1_000_000).padStart(6, "0")}-${seedNum % 10}`;
     const subjects = [
@@ -1041,12 +1320,13 @@ export function generateBabelBooks(input: {
       result.tarot.name,
       result.philosophy.sacredName,
       "Library of Babel",
+      "accuracy hierarchy",
       ...spec.combo.slice(0, 3),
     ];
     books.push({
       id: `${spec.id}-${normalizeWord(result.normalized)}-${result.number}`,
       title: spec.title,
-      subtitle: `Path ${result.number} · ${result.title} · ${bundle.colorName}`,
+      subtitle: `Path ${result.number} · ${result.title} · most→least accurate`,
       pathNumber: result.number,
       seedWord: result.normalized,
       combination: spec.combo,
@@ -1070,7 +1350,7 @@ export function generateBabelBooks(input: {
         language: "29-letter Babel alphabet (a–z, space, comma, period)",
         subjects: [...new Set(subjects)],
         contents: pages.map((p) => p.title),
-        dedication: `For the seekers of “${result.normalized}” on path ${result.number} — ${bundle.primaryFigure.emotion}.`,
+        dedication: `For seekers of “${result.normalized}” — read front to back as accuracy falls from foundational sources to least-likely combinations.`,
         isbnLike,
         officialSearchUrl: `${OFFICIAL_BABEL.search}?find=${encodeURIComponent(searchPhrase)}`,
         theoryUrl: OFFICIAL_BABEL.theory,
