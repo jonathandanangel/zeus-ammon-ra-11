@@ -219,6 +219,7 @@ function fuseProductOfExperts(pairs: Array<{ score: number; weight: number }>): 
  * Higher-order lead composite — generalizes discrete patterns like
  * “ModernBERT ~90% > story ~55%” without needing exact percents.
  * Soft-OR over logistic gap × floor × soft-backdrop evidence.
+ * `polarity: "human"` patterns push toward elegant / strong-human evidence.
  */
 type LeadCompositeSpec = {
   id: string;
@@ -234,6 +235,16 @@ type LeadCompositeSpec = {
   supportFloor?: number;
   /** Optional amplifier: another detector should be “strangely elevated” (~30–50). */
   elevatedSupport?: { id: FreeDetectorId; lo: number; hi: number };
+  /** Detectors that must sit near 0 (≤ ~12) — elegant-human stack. */
+  nearZero?: FreeDetectorId[];
+  /** Cap for every non-exempt detector (e.g. rest ≤20%). */
+  elseMax?: number;
+  /** Ids exempt from elseMax (mid-band leads). */
+  elseExempt?: FreeDetectorId[];
+  /** Extra gap: this id must outscore `mustBeat`. */
+  alsoAbove?: { id: FreeDetectorId; mustBeat: FreeDetectorId };
+  /** AI lead (default) vs human / elegant-human evidence. */
+  polarity?: "ai" | "human";
   weight: number;
 };
 
@@ -281,6 +292,58 @@ const LEAD_COMPOSITES: LeadCompositeSpec[] = [
     elevatedSupport: { id: "sentence-mix", lo: 28, hi: 54 },
     weight: 1.25,
   },
+  // Elegant human writing — ModernBERT > OpenAI (~56%) & mix (~53%), rest ≤20%, near-zero stack
+  {
+    id: "elegant-human-mix",
+    polarity: "human",
+    leads: ["modernbert"],
+    above: ["openai-roberta", "sentence-mix"],
+    leadFloor: 52,
+    elevatedSupport: { id: "sentence-mix", lo: 45, hi: 62 },
+    nearZero: ["perplexity-proxy", "lexical", "human-noise", "hc3-roberta"],
+    elseMax: 22,
+    elseExempt: ["modernbert", "openai-roberta", "sentence-mix"],
+    softBackdrop: [
+      "burstiness",
+      "gptzero-twin",
+      "lexical",
+      "discourse",
+      "perplexity-proxy",
+      "ngram",
+      "llm-pitch",
+      "ai-story",
+      "human-noise",
+      "hc3-roberta",
+    ],
+    requireSoftBackdrop: true,
+    weight: 1.55,
+  },
+  {
+    id: "elegant-human-openai>burst",
+    polarity: "human",
+    leads: ["modernbert"],
+    above: ["openai-roberta", "sentence-mix"],
+    leadFloor: 52,
+    elevatedSupport: { id: "openai-roberta", lo: 48, hi: 65 },
+    alsoAbove: { id: "openai-roberta", mustBeat: "burstiness" },
+    nearZero: ["perplexity-proxy", "lexical", "human-noise", "hc3-roberta"],
+    elseMax: 22,
+    elseExempt: ["modernbert", "openai-roberta", "sentence-mix"],
+    softBackdrop: [
+      "burstiness",
+      "gptzero-twin",
+      "lexical",
+      "discourse",
+      "perplexity-proxy",
+      "ngram",
+      "llm-pitch",
+      "ai-story",
+      "human-noise",
+      "hc3-roberta",
+    ],
+    requireSoftBackdrop: true,
+    weight: 1.5,
+  },
 ];
 
 function softClusterEvidence(scores: Map<FreeDetectorId, number>, ids: FreeDetectorId[]): number {
@@ -326,35 +389,83 @@ function scoreLeadComposite(
     // Band pass: strangely high, but not runaway
     elevE = sigmoidGap(e - lo, 5) * (1 - sigmoidGap(e - hi, 6));
   }
-  return clamp(gapE * floorE * softE * elevE, 0, 1);
+  let alsoE = 1;
+  if (spec.alsoAbove) {
+    const a = scores.get(spec.alsoAbove.id);
+    const b = scores.get(spec.alsoAbove.mustBeat);
+    if (a == null || b == null) return 0;
+    alsoE = sigmoidGap(a - b, 8);
+  }
+  let nearZeroE = 1;
+  if (spec.nearZero?.length) {
+    for (const id of spec.nearZero) {
+      const s = scores.get(id);
+      if (s == null) continue; // missing scanner → don't kill pattern
+      // High when score ≤ ~12; collapses as it rises
+      nearZeroE *= 1 - sigmoidGap(s - 10, 6);
+    }
+  }
+  let elseMaxE = 1;
+  if (spec.elseMax != null) {
+    const exempt = new Set([
+      ...(spec.elseExempt ?? []),
+      ...spec.leads,
+      ...spec.above,
+    ]);
+    for (const [id, s] of scores) {
+      if (exempt.has(id)) continue;
+      // Soft fail when any non-exempt detector exceeds elseMax
+      elseMaxE *= 1 - sigmoidGap(s - spec.elseMax, 5);
+    }
+  }
+  return clamp(gapE * floorE * softE * elevE * alsoE * nearZeroE * elseMaxE, 0, 1);
 }
 
 /**
- * Higher-order composite: soft-OR of generalized lead patterns → AI% evidence.
- * Percents in comments are examples; logistics fire on the same shape nearby.
+ * Higher-order composite: soft-OR of generalized lead patterns.
+ * AI polarity → evidenceAi; human polarity → evidenceHuman (elegant writing band).
  */
 function higherOrderLeadComposite(scores: Map<FreeDetectorId, number>): {
   evidenceAi: number;
+  evidenceHuman: number;
   strength: number;
+  humanStrength: number;
   bestId: string;
+  bestHumanId: string;
   fired: boolean;
+  humanFired: boolean;
 } {
-  let failProd = 1;
-  let best = { id: "", e: 0, w: 0 };
+  let failProdAi = 1;
+  let failProdHuman = 1;
+  let bestAi = { id: "", e: 0, w: 0 };
+  let bestHuman = { id: "", e: 0, w: 0 };
   for (const spec of LEAD_COMPOSITES) {
     const e = scoreLeadComposite(scores, spec);
     const we = e * spec.weight;
-    failProd *= 1 - clamp(we / (1 + spec.weight), 0, 0.97);
-    if (we > best.w) best = { id: spec.id, e, w: we };
+    const term = 1 - clamp(we / (1 + spec.weight), 0, 0.97);
+    if (spec.polarity === "human") {
+      failProdHuman *= term;
+      if (we > bestHuman.w) bestHuman = { id: spec.id, e, w: we };
+    } else {
+      failProdAi *= term;
+      if (we > bestAi.w) bestAi = { id: spec.id, e, w: we };
+    }
   }
-  const strength = clamp(1 - failProd, 0, 1);
+  const strength = clamp(1 - failProdAi, 0, 1);
+  const humanStrength = clamp(1 - failProdHuman, 0, 1);
   // Map composite strength into AI% evidence band (~50 neutral → ~92 strong)
-  const evidenceAi = clamp(48 + strength * 48 + best.e * 8, 0, 100);
+  const evidenceAi = clamp(48 + strength * 48 + bestAi.e * 8, 0, 100);
+  // Human composite → low AI% evidence (~50 neutral → ~8 strong elegant-human)
+  const evidenceHuman = clamp(52 - humanStrength * 46 - bestHuman.e * 6, 0, 100);
   return {
     evidenceAi,
+    evidenceHuman,
     strength,
-    bestId: best.id,
-    fired: strength >= 0.42 || best.e >= 0.55,
+    humanStrength,
+    bestId: bestAi.id,
+    bestHumanId: bestHuman.id,
+    fired: strength >= 0.42 || bestAi.e >= 0.55,
+    humanFired: humanStrength >= 0.42 || bestHuman.e >= 0.55,
   };
 }
 
@@ -1169,12 +1280,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   })();
 
   /**
-   * Elegant human writing (very specific band):
+   * Elegant human writing (discrete band + higher-order human composite soft-OR).
    * ModernBERT > OpenAI RoBERTa (~55.8%) AND ModernBERT > sentence-mix (~53%),
    * with sentence-mix ≈53% OR OpenAI RoBERTa (~55.8%) > burstiness,
    * everything else ≤20%, and predictability / lexical / human-noise / HC3 ≈0.
    */
-  const elegantHumanWriting = (() => {
+  const elegantHumanDiscrete = (() => {
     if (!modern || !openai || !sentMix || !burst) return false;
     const modernLeadsOpenAi = modern.aiScore > openai.aiScore;
     const modernLeadsMix = modern.aiScore > sentMix.aiScore;
@@ -1185,13 +1296,11 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     const openAiOverBurst = openai.aiScore > burst.aiScore;
     if (!(mixAround53 || (openAiAround56 && openAiOverBurst))) return false;
 
-    // Predictability, lexical diversity, human-noise, HC3 — very low / ~0
     const nearZero = (r: DetectorScanResult | undefined) => !r || !r.ok || r.aiScore <= 12;
     if (!nearZero(perplexity) || !nearZero(lexical) || !nearZero(noise) || !nearZero(hc3)) {
       return false;
     }
 
-    // Everything else (not ModernBERT / OpenAI / sentence-mix) ≤ ~20%
     const exempt = new Set(["modernbert", "openai-roberta", "sentence-mix"]);
     for (const r of okRows) {
       if (exempt.has(r.id)) continue;
@@ -1256,14 +1365,20 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const scoreMapEarly = new Map<FreeDetectorId, number>();
   for (const r of okRows) scoreMapEarly.set(r.id as FreeDetectorId, r.aiScore);
   const leadCompositeEarly = higherOrderLeadComposite(scoreMapEarly);
+  const elegantHumanWriting =
+    (elegantHumanDiscrete || leadCompositeEarly.humanFired) &&
+    !modernNearCertain &&
+    !pitchStrong &&
+    !storyStrong;
 
   const modernAiLead =
-    modernBurstAiPair ||
-    modernOverBurstMix ||
-    modernOverStorySoft ||
-    modernOverStoryHard ||
-    storyOverTwinHighMix ||
-    leadCompositeEarly.fired;
+    !elegantHumanWriting &&
+    (modernBurstAiPair ||
+      modernOverBurstMix ||
+      modernOverStorySoft ||
+      modernOverStoryHard ||
+      storyOverTwinHighMix ||
+      leadCompositeEarly.fired);
   // High sentence-mix by itself is not an AI signal — crush it unless paired rules fire
   const mixAloneHigh = Boolean(
     sentMix &&
@@ -1339,9 +1454,13 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     (modernOverStorySoft ? 7 : 0) +
     (storyOverTwinHighMix ? 9 : 0) -
     (mixAloneHigh ? 10 : 0);
-  // Higher-order composite dominates; legacy pair math is a light prior
+  // Higher-order composite dominates; legacy pair math is a light prior.
+  // Human-polarity composites (elegant writing) pull evidenceAi down continuously.
   const ruleEvidenceAi =
-    0.62 * leadComposite.evidenceAi + 0.38 * legacyEvidence - aloneMixPenalty;
+    0.55 * leadComposite.evidenceAi +
+    0.28 * legacyEvidence +
+    0.17 * leadComposite.evidenceHuman -
+    aloneMixPenalty;
   const ruleEvidenceClamped = clamp(ruleEvidenceAi);
 
   const pairs: Array<{ id: FreeDetectorId; score: number; weight: number }> = [];
@@ -1569,6 +1688,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   // Soft-OR composite fires when pattern is nearby but discrete flags miss exact %
   if (
     leadComposite.fired &&
+    !elegantHumanWriting &&
     !modernNearCertain &&
     !modernOverStoryHard &&
     !modernBurstAiPair &&
@@ -1583,14 +1703,17 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (mixAloneHigh) {
     docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
-  // Elegant human writing — Mid ModernBERT / OpenAI / mix with near-zero soft stack → human
-  if (elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong) {
-    docScore = invLogitAi(0.18 * logitAi(docScore) + 0.82 * logitAi(8));
+  // Elegant human — discrete band OR human-polarity composite weight → strong human
+  if (elegantHumanWriting) {
+    const humanPull = leadComposite.humanFired
+      ? leadComposite.evidenceHuman
+      : 8;
+    docScore = invLogitAi(0.15 * logitAi(docScore) + 0.85 * logitAi(humanPull));
   }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong) {
+  if (elegantHumanWriting) {
     agreement = "strong_human";
   } else if (modernNearCertain) agreement = "strong_ai";
   else if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
@@ -1611,8 +1734,10 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong
-    ? " Elegant human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
+  const vetoNote = elegantHumanWriting
+    ? leadComposite.humanFired
+      ? ` Elegant human writing — human composite (${leadComposite.bestHumanId || "elegant-human"}) weighted into lead system → human.`
+      : " Elegant human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
     : modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
     : leadComposite.fired && leadComposite.bestId
