@@ -219,6 +219,22 @@ export {
 } from "./babel-images";
 export type { BabelImageStyle, BabelLocatedImage } from "./babel-images";
 
+export {
+  BABELIA_W,
+  BABELIA_H,
+  BABELIA_PALETTE,
+  OFFICIAL_BABELIA,
+  babeliaFromLocation,
+  babeliaRandom,
+  babeliaStep,
+  babeliaLocateSearch,
+  babeliaHierarchyForWord,
+  babeliaLocateFromImageData,
+  quantize12bit,
+  expand12bit,
+} from "./babelia-archive";
+export type { BabeliaPlate } from "./babelia-archive";
+
 /** Format a number for display (null-safe). */
 export function formatNumber(
   value: number | null | undefined,

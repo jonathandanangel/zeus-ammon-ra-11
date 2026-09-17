@@ -9,7 +9,12 @@ import {
 import {
   BABEL_ARTWORK,
   OFFICIAL_BABEL,
+  OFFICIAL_BABELIA,
   RETRO_GRIMOIRE_SRC,
+  babeliaFromLocation,
+  babeliaHierarchyForWord,
+  babeliaRandom,
+  babeliaStep,
   composeGrimoireWithBabelText,
   downloadDataUrl,
   formatBabelFindReport,
@@ -21,6 +26,7 @@ import {
   type BabelLibraryReport,
   type BabelLocatedImage,
   type BabelSecretFind,
+  type BabeliaPlate,
   type GreekMythPassage,
   type JohnsonSense,
   type NumerologyResult,
@@ -28,6 +34,7 @@ import {
   type SecretDoctrinePassage,
 } from "@/game/numerical-extreme";
 import { downloadJson } from "@/game/numerical-extreme";
+import { TextInput } from "@/components/game/numerical-extreme/ui";
 
 /** Amber highlight — same convention as Greek Myths / Secret Doctrine panels. */
 function highlightAmber(text: string, matched: string[]): React.ReactNode {
@@ -407,6 +414,200 @@ function BookReader({
   );
 }
 
+function BabeliaArchiveBrowser({
+  seedWord,
+  pathNumber,
+  colorHex,
+  combination,
+}: {
+  seedWord: string;
+  pathNumber: number;
+  colorHex: string;
+  combination: string[];
+}) {
+  const hierarchy = React.useMemo(
+    () =>
+      babeliaHierarchyForWord({
+        seedWord,
+        pathNumber,
+        colorHex,
+        combination: combination.length ? combination : [seedWord],
+      }),
+    [seedWord, pathNumber, colorHex, combination],
+  );
+
+  const [plate, setPlate] = React.useState<BabeliaPlate | null>(null);
+  const [seekDraft, setSeekDraft] = React.useState("");
+  const [tierIdx, setTierIdx] = React.useState(0);
+
+  React.useEffect(() => {
+    setTierIdx(0);
+    setPlate(hierarchy[0] ?? babeliaRandom());
+    setSeekDraft(hierarchy[0]?.location.slice(0, 80) ?? "");
+  }, [hierarchy]);
+
+  const active = plate ?? hierarchy[0];
+  if (!active) return null;
+
+  return (
+    <Panel
+      title="Babelia · image archives"
+      eyebrow="12-bit · location → pixels · locate, don’t store"
+    >
+      <div className="space-y-3">
+        <p className="font-mono text-[10px] leading-relaxed text-amber">
+          Same idea as{" "}
+          <a
+            className="underline underline-offset-2"
+            href={OFFICIAL_BABELIA.home}
+            target="_blank"
+            rel="noreferrer"
+          >
+            babelia.libraryofbabel.info
+          </a>
+          : every plate is regenerated from a location number (scaled 160×104 educational archive,
+          12-bit palette). Hierarchy below runs high-coherence search hits → ordinary noise — like
+          the text Library’s rare coherent pages.
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <GhostButton
+            type="button"
+            onClick={() => {
+              const next = babeliaRandom();
+              setPlate(next);
+              setSeekDraft(next.location.slice(0, 120));
+            }}
+          >
+            Random
+          </GhostButton>
+          <GhostButton
+            type="button"
+            onClick={() => {
+              const next = babeliaStep(active.location, -1);
+              setPlate(next);
+              setSeekDraft(next.location.slice(0, 120));
+            }}
+          >
+            Prev location
+          </GhostButton>
+          <GhostButton
+            type="button"
+            onClick={() => {
+              const next = babeliaStep(active.location, 1);
+              setPlate(next);
+              setSeekDraft(next.location.slice(0, 120));
+            }}
+          >
+            Next location
+          </GhostButton>
+          <a
+            className="inline-flex items-center font-mono text-[9px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+            href={OFFICIAL_BABELIA.search}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Official image search ↗
+          </a>
+          <a
+            className="inline-flex items-center font-mono text-[9px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+            href={OFFICIAL_BABELIA.about}
+            target="_blank"
+            rel="noreferrer"
+          >
+            About archives ↗
+          </a>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="min-w-[220px] flex-1 font-mono text-[10px] text-muted-foreground">
+            Seek location (digits)
+            <TextInput
+              value={seekDraft}
+              onChange={(e) => setSeekDraft(e.target.value)}
+              spellCheck={false}
+              className="mt-1"
+              placeholder="paste babelia location digits…"
+            />
+          </label>
+          <GhostButton
+            type="button"
+            onClick={() => {
+              const next = babeliaFromLocation(seekDraft || "1", 0);
+              setPlate(next);
+            }}
+          >
+            Seek
+          </GhostButton>
+        </div>
+
+        <figure className="overflow-hidden rounded-sm border border-cyan/30 bg-black/60">
+          <img
+            src={active.dataUrl}
+            alt={active.shortId}
+            className="mx-auto w-full max-w-xl"
+            style={{ imageRendering: "pixelated" }}
+          />
+          <figcaption className="space-y-1 border-t border-cyan/20 px-3 py-2 font-mono text-[10px]">
+            <p className="text-cyan">{active.shortId}</p>
+            <p className="break-all text-[8px] text-muted-foreground">
+              full location · {active.location.slice(0, 180)}
+              {active.location.length > 180 ? "…" : ""}
+            </p>
+            <p className="text-amber">
+              coherence {active.coherence}% · {active.note}
+            </p>
+            <button
+              type="button"
+              className="text-[8px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+              onClick={() => downloadDataUrl(active.dataUrl, `babelia-${pathNumber}.png`)}
+            >
+              Download PNG
+            </button>
+          </figcaption>
+        </figure>
+
+        <div className="space-y-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
+            Image search hierarchy · most coherent → archive noise
+          </p>
+          <div className="space-y-2">
+            {hierarchy.map((p, i) => (
+              <button
+                key={`${p.shortId}-${i}`}
+                type="button"
+                onClick={() => {
+                  setTierIdx(i);
+                  setPlate(p);
+                  setSeekDraft(p.location.slice(0, 120));
+                }}
+                className={`flex w-full gap-3 overflow-hidden rounded-sm border text-left transition ${
+                  tierIdx === i ? "border-amber/60 bg-amber/10" : "border-cyan/20 bg-black/40"
+                }`}
+                style={{ opacity: Math.max(0.5, 1 - i * 0.08) }}
+              >
+                <img
+                  src={p.dataUrl}
+                  alt=""
+                  className="h-16 w-24 shrink-0 object-cover"
+                  style={{ imageRendering: "pixelated" }}
+                />
+                <span className="min-w-0 flex-1 py-2 pr-2 font-mono text-[9px] leading-snug text-moon">
+                  <span className="text-cyan">
+                    #{i + 1} · {p.coherence}%
+                  </span>
+                  <br />
+                  {p.note}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 export function BabelSecretPanel({
   result,
   johnsonWord,
@@ -751,33 +952,41 @@ export function BabelSecretPanel({
       </Panel>
 
       {activeBook && (
-        <Panel
-          title="Generated books · from foundational sources"
-          eyebrow={`${books.length} volume${books.length === 1 ? "" : "s"} · word + combinations`}
-          action={
-            <div className="flex flex-wrap gap-1">
-              {books.map((b, i) => (
-                <GhostButton
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setBookIdx(i);
-                    setPageIdx(0);
-                  }}
-                >
-                  {i === bookIdx ? `● ${i + 1}` : String(i + 1)}
-                </GhostButton>
-              ))}
-            </div>
-          }
-        >
-          <BookReader
-            book={activeBook}
-            pageIdx={pageIdx}
-            onPage={setPageIdx}
-            images={bookImages}
+        <>
+          <Panel
+            title="Generated books · from foundational sources"
+            eyebrow={`${books.length} volume${books.length === 1 ? "" : "s"} · coherent→noise`}
+            action={
+              <div className="flex flex-wrap gap-1">
+                {books.map((b, i) => (
+                  <GhostButton
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setBookIdx(i);
+                      setPageIdx(0);
+                    }}
+                  >
+                    {i === bookIdx ? `● ${i + 1}` : String(i + 1)}
+                  </GhostButton>
+                ))}
+              </div>
+            }
+          >
+            <BookReader
+              book={activeBook}
+              pageIdx={pageIdx}
+              onPage={setPageIdx}
+              images={bookImages}
+            />
+          </Panel>
+          <BabeliaArchiveBrowser
+            seedWord={activeBook.seedWord}
+            pathNumber={activeBook.pathNumber}
+            colorHex={activeBook.colorHex}
+            combination={activeBook.combination}
           />
-        </Panel>
+        </>
       )}
 
       {report?.synthesis && (
