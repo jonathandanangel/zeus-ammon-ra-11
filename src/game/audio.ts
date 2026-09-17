@@ -103,21 +103,18 @@ const BANANZA_WIND_LEVELS: { bpm: number; turbulence: number }[] = [
 ];
 
 const HT_BED_URL = {
-  bananza: "/audio/ht-bananza-bed.mp3",
-  intro: "/audio/ht-portal-bed.mp3",
+  bananza: HT_BANANZA_BED_URL,
+  intro: HT_PORTAL_BED_URL,
 } as const;
 
 /** Bananza: Armageddon (from 34:20) → Portal OST → repeat. */
-const BANANZA_PLAYLIST = [
-  "/audio/ht-bananza-bed.mp3",
-  "/audio/ht-bananza-portal.mp3",
-] as const;
+const BANANZA_PLAYLIST = [HT_BANANZA_BED_URL, HT_BANANZA_PORTAL_URL] as const;
 
 /** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats. */
 const TITLE_PLAYLIST = [
-  "/audio/title-crystal-vista.mp3",
-  "/audio/title-armageddon.mp3",
-  "/audio/title-portal.mp3",
+  TITLE_CRYSTAL_VISTA_URL,
+  TITLE_ARMAGEDDON_URL,
+  TITLE_PORTAL_URL,
 ] as const;
 
 /** Album / track credits shown in Heat Transfer Extreme (and title) for the active bed. */
