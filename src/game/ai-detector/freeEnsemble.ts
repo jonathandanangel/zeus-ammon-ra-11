@@ -122,8 +122,72 @@ const WEIGHT: Record<FreeDetectorId, number> = {
   "sentence-mix": 0.35,
 };
 
+/** Softmax temperature for adaptive weight normalization (lower = sharper). */
+const FUSION_TEMP = 1.35;
+/** Blend between log-odds fusion and weighted median. */
+const LOGIT_BLEND = 0.72;
+
 function clamp(n: number, lo = 0, hi = 100) {
   return Math.max(lo, Math.min(hi, n));
+}
+
+/** AI% → log-odds (numerically stable). */
+function logitAi(score: number): number {
+  const p = clamp(score, 0.5, 99.5) / 100;
+  return Math.log(p / (1 - p));
+}
+
+/** Log-odds → AI%. */
+function invLogitAi(z: number): number {
+  if (z > 20) return 99.9;
+  if (z < -20) return 0.1;
+  return 100 / (1 + Math.exp(-z));
+}
+
+/** Logistic sigmoid on a score gap (percentage points). */
+function sigmoidGap(gap: number, scale = 12): number {
+  return 1 / (1 + Math.exp(-gap / scale));
+}
+
+/**
+ * Confidence gate: extremes (|score−50|) dominate mushy mid-band votes.
+ * Quadratic evidence strength ∈ [0.35, 1].
+ */
+function evidenceConfidence(score: number): number {
+  const d = Math.abs(score - 50) / 50;
+  return 0.35 + 0.65 * d * d;
+}
+
+/** O(n log n) weighted median — no replicated arrays. */
+function weightedMedianPairs(pairs: Array<{ score: number; weight: number }>): number {
+  const usable = pairs.filter((p) => p.weight > 0);
+  if (!usable.length) return 50;
+  usable.sort((a, b) => a.score - b.score);
+  const total = usable.reduce((s, p) => s + p.weight, 0);
+  let acc = 0;
+  for (const p of usable) {
+    acc += p.weight;
+    if (acc >= total * 0.5) return p.score;
+  }
+  return usable[usable.length - 1]!.score;
+}
+
+/**
+ * Softmax-normalized log-odds fusion over the full detector suite.
+ * Weights already encode ModernBERT-first adaptive importance.
+ */
+function fuseLogOddsSoftmax(pairs: Array<{ score: number; weight: number }>): number {
+  const usable = pairs.filter((p) => p.weight > 0);
+  if (!usable.length) return 50;
+  const maxW = Math.max(...usable.map((p) => p.weight));
+  let zSum = 0;
+  let wNorm = 0;
+  for (const p of usable) {
+    const soft = Math.exp((p.weight - maxW) / FUSION_TEMP);
+    zSum += soft * logitAi(p.score);
+    wNorm += soft;
+  }
+  return invLogitAi(zSum / Math.max(1e-12, wNorm));
 }
 
 function ok(
@@ -900,19 +964,15 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const twin = okRows.find((r) => r.id === "gptzero-twin");
   const pitchStrong = Boolean(pitch && pitch.aiScore >= 68);
   const storyStrong = Boolean(story && story.aiScore >= 72);
-  // ModernBERT 70–100% AI: trust the neural call over mushy stylometrics
   const modernStrong = Boolean(modern && modern.aiScore >= 70);
   const modernHard = Boolean(modern && modern.aiScore >= 85);
-  // ~99% ModernBERT → basically AI (free detector ceiling call)
   const modernNearCertain = Boolean(modern && modern.aiScore >= 95);
-  // ModernBERT AI% < sentence-mix AI% → more likely human (trust free ModernBERT)
   const modernBelowMix = Boolean(modern && sentMix && modern.aiScore < sentMix.aiScore);
   const mixGap = modernBelowMix ? sentMix!.aiScore - modern!.aiScore : 0;
   const modernHumanGap = Boolean(modernBelowMix && mixGap >= 15);
   const modernHumanHard = Boolean(
     modernBelowMix && (modern!.aiScore < 25 || mixGap >= 30),
   );
-  // ModernBERT + Burstiness both > sentence-mix AND GPTZero-twin, rest ~20s → most likely AI
   const softAround20s = (() => {
     const soft = okRows.filter((r) =>
       ["sentence-mix", "gptzero-twin", "lexical", "discourse", "perplexity-proxy", "ngram", "llm-pitch"].includes(
@@ -934,7 +994,6 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       burst.aiScore > twin.aiScore &&
       softAround20s,
   );
-  // ModernBERT alone above Burstiness AND sentence-mix → most likely AI
   const modernOverBurstMix = Boolean(
     modern &&
       burst &&
@@ -944,7 +1003,6 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       modern.aiScore > sentMix.aiScore,
   );
   const modernAiLead = modernBurstAiPair || modernOverBurstMix;
-  // Authenticity veto only when NOT a clear ChatGPT pitch / AI chapterbook / ModernBERT lead / ≈99%
   const humanVeto = Boolean(
     noise &&
       noise.aiScore <= 18 &&
@@ -964,128 +1022,135 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       !modernNearCertain,
   );
 
-  let wSum = 0;
-  let sSum = 0;
-  const weightedScores: number[] = [];
+  // Continuous ModernBERT pairwise evidence (logistic of score gaps)
+  const gapVsMix = modern && sentMix ? modern.aiScore - sentMix.aiScore : 0;
+  const gapVsBurst = modern && burst ? modern.aiScore - burst.aiScore : 0;
+  const gapVsTwin = modern && twin ? modern.aiScore - twin.aiScore : 0;
+  const modernPairEvidence =
+    modern != null
+      ? 100 *
+        (0.5 * sigmoidGap(gapVsMix, 10) +
+          0.3 * sigmoidGap(gapVsBurst, 12) +
+          0.2 * sigmoidGap(gapVsTwin, 14))
+      : 50;
+
+  const pairs: Array<{ id: FreeDetectorId; score: number; weight: number }> = [];
   let humanVotes = 0;
   let aiVotes = 0;
   let uncertainVotes = 0;
 
   for (const r of okRows) {
-    let w = WEIGHT[r.id as FreeDetectorId] ?? 1;
+    const id = r.id as FreeDetectorId;
+    let w = WEIGHT[id] ?? 1;
     let score = r.aiScore;
-    // Strong pitch / story → boost AI signal
-    if (pitchStrong && r.id === "llm-pitch") {
+
+    if (pitchStrong && id === "llm-pitch") {
       score = Math.max(score, 82);
       w *= 1.35;
     }
-    if (storyStrong && r.id === "ai-story") {
+    if (storyStrong && id === "ai-story") {
       score = Math.max(score, 86);
       w *= 1.4;
     }
-    // ModernBERT custom rules — highest importance over the full suite
-    if (r.id === "modernbert" && score >= 70) {
+
+    // ModernBERT custom rules — highest importance (multiplicative on base WEIGHT)
+    if (id === "modernbert" && score >= 70) {
       w *= score >= 95 ? 4.0 : score >= 85 ? 2.8 : 2.0;
       score = Math.max(score, score >= 95 ? 98 : score >= 85 ? 90 : 78);
     }
-    if (modernNearCertain && r.id !== "modernbert") {
-      w *= 0.15;
-    }
-    // ModernBERT + Burstiness above mix+twin (rest ~20s) → boost the AI pair
-    if (modernBurstAiPair && (r.id === "modernbert" || r.id === "burstiness")) {
+    if (modernNearCertain && id !== "modernbert") w *= 0.15;
+
+    if (modernBurstAiPair && (id === "modernbert" || id === "burstiness")) {
       w *= 2.4;
       score = Math.max(score, 74);
     }
-    if (modernBurstAiPair && (r.id === "sentence-mix" || r.id === "gptzero-twin")) {
+    if (modernBurstAiPair && (id === "sentence-mix" || id === "gptzero-twin")) {
       w *= 0.15;
       if (score > 30) score = 16 + (score - 30) * 0.2;
     }
-    // ModernBERT > Burstiness AND sentence-mix → boost ModernBERT, crush the lower two
-    if (modernOverBurstMix && r.id === "modernbert") {
+    if (modernOverBurstMix && id === "modernbert") {
       w *= 2.5;
       score = Math.max(score, Math.min(94, score + 10));
     }
-    if (modernOverBurstMix && (r.id === "burstiness" || r.id === "sentence-mix")) {
+    if (modernOverBurstMix && (id === "burstiness" || id === "sentence-mix")) {
       w *= 0.18;
       if (score > 35) score = 18 + (score - 35) * 0.25;
     }
-    // ModernBERT AI% < sentence-mix → boost human ModernBERT, crush mix (still keep mix in mix)
-    if (modernBelowMix && r.id === "modernbert") {
+    if (modernBelowMix && id === "modernbert") {
       w *= modernHumanHard ? 3.0 : modernHumanGap ? 2.4 : 1.8;
       score = Math.min(score, modernHumanHard ? 6 : modernHumanGap ? 14 : Math.min(score, 26));
     }
-    if (modernBelowMix && r.id === "sentence-mix") {
+    if (modernBelowMix && id === "sentence-mix") {
       w *= modernHumanHard ? 0.08 : modernHumanGap ? 0.12 : 0.22;
       if (score > 25) score = 14 + (score - 25) * 0.12;
     }
-    if (r.id === "sentence-mix") {
-      w *= 0.5;
-    }
-    // If human-noise fires hard, dampen soft AI leans — but never ModernBERT when strong
+    if (id === "sentence-mix") w *= 0.5;
+
     if (
       humanVeto &&
-      (r.id === "gptzero-twin" ||
-        r.id === "openai-roberta" ||
-        r.id === "hc3-roberta" ||
-        r.id === "perplexity-proxy" ||
-        r.id === "discourse" ||
-        r.id === "burstiness" ||
-        r.id === "lexical" ||
-        r.id === "ngram" ||
-        r.id === "sentence-mix")
+      (id === "gptzero-twin" ||
+        id === "openai-roberta" ||
+        id === "hc3-roberta" ||
+        id === "perplexity-proxy" ||
+        id === "discourse" ||
+        id === "burstiness" ||
+        id === "lexical" ||
+        id === "ngram" ||
+        id === "sentence-mix")
     ) {
       if (score > 25) {
         score = humanHard ? score * 0.08 : 12 + (score - 25) * 0.15;
         w *= 0.4;
       }
     }
-    if (humanVeto && r.id === "gptzero-twin") {
-      score = Math.min(score, humanHard ? 6 : 22);
-    }
-    // Soft stylometrics get crushed when ModernBERT is strongly AI
+    if (humanVeto && id === "gptzero-twin") score = Math.min(score, humanHard ? 6 : 22);
+
     if (
       modernStrong &&
-      (r.id === "sentence-mix" ||
-        r.id === "burstiness" ||
-        r.id === "lexical" ||
-        r.id === "perplexity-proxy" ||
-        r.id === "gptzero-twin")
+      (id === "sentence-mix" ||
+        id === "burstiness" ||
+        id === "lexical" ||
+        id === "perplexity-proxy" ||
+        id === "gptzero-twin")
     ) {
       w *= 0.2;
     }
-    // Soft stylometrics crushed when ModernBERT AI% < sentence-mix
     if (
       modernBelowMix &&
-      (r.id === "sentence-mix" ||
-        r.id === "burstiness" ||
-        r.id === "lexical" ||
-        r.id === "perplexity-proxy" ||
-        r.id === "gptzero-twin" ||
-        r.id === "discourse")
+      (id === "sentence-mix" ||
+        id === "burstiness" ||
+        id === "lexical" ||
+        id === "perplexity-proxy" ||
+        id === "gptzero-twin" ||
+        id === "discourse")
     ) {
       w *= modernHumanHard ? 0.2 : 0.35;
     }
-    wSum += w;
-    sSum += score * w;
-    for (let i = 0; i < Math.round(w * 2); i++) weightedScores.push(score);
+
+    // Evidence confidence × base/adaptive weight (all detectors stay in the mix)
+    w *= evidenceConfidence(score);
+    pairs.push({ id, score: clamp(score), weight: Math.max(1e-6, w) });
+
     const band = bandFromAiScore(score);
     if (band === "human") humanVotes += 1;
     else if (band === "uncertain") uncertainVotes += 1;
     else aiVotes += 1;
   }
 
-  let avg = sSum / wSum;
-  const med = median(weightedScores);
-  let docScore = sharpen(0.65 * avg + 0.35 * med, 1.08);
+  const logitFused = fuseLogOddsSoftmax(pairs);
+  const med = weightedMedianPairs(pairs);
+  // Blend log-odds fusion with robust weighted median; inject continuous ModernBERT pair evidence
+  let docScore =
+    LOGIT_BLEND * logitFused +
+    (1 - LOGIT_BLEND) * med * 0.85 +
+    (1 - LOGIT_BLEND) * modernPairEvidence * 0.15;
+  docScore = sharpen(docScore, 1.06);
 
-  // Strong student/human authenticity → force near 0% AI (Babel needs this polarity)
-  // Never override ModernBERT ≈99% / AI-lead custom rules — those have highest importance.
   if (humanHard && !modernNearCertain && !modernAiLead) {
     docScore = Math.min(docScore, noise?.aiScore ?? 0);
   } else if (humanVeto && !modernNearCertain && !modernAiLead) {
     docScore = Math.min(docScore, 0.25 * docScore + 0.75 * (noise?.aiScore ?? 12));
   }
-  // ModernBERT AI% < sentence-mix → percent human more likely
   if (modernBelowMix && !modernAiLead && !modernNearCertain) {
     const pull = modernHumanHard ? 0.88 : modernHumanGap ? 0.75 : 0.55;
     docScore = Math.min(
@@ -1093,7 +1158,6 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       (1 - pull) * docScore + pull * Math.min(modern?.aiScore ?? 20, modernHumanHard ? 12 : 32),
     );
   }
-  // Clear ChatGPT pitch / chapterbook → force AI lean
   if (pitchStrong && !modernHumanHard) {
     docScore = Math.max(docScore, 0.2 * docScore + 0.8 * Math.max(pitch?.aiScore ?? 75, 78));
   }
@@ -1176,7 +1240,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     aiVotes,
     uncertainVotes,
     agreement,
-    summary: `${summaryMap[agreement]}${vetoNote} Free GPTZero-style + authenticity checks.`,
+    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax fusion · ModernBERT-first weights.`,
   };
 }
 

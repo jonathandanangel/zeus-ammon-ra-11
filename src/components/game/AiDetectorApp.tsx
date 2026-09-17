@@ -113,10 +113,16 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
             <h1 className="mt-1 font-display text-xl uppercase tracking-[0.16em] text-cyan text-glow sm:text-2xl">
               AI DETECTOR BENCH
             </h1>
-            <p className="mt-1 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
-              Free mode: GPTZero-style perplexity+burstiness twin + 3 neural ONNX detectors +
-              stylometrics — no keys. API mode: real GPTZero / WasItAI / Sapling / Winston / ZeroGPT /
-              Originality when you have keys. Every scan also calls Writing to IQ (
+            <p className="mt-2 max-w-3xl font-mono text-[12px] leading-relaxed text-moon">
+              Tired of people calling everything AI generated? Tired of if it sounds deep or complex
+              it must be AI? Don&apos;t worry I am also worried about this and have a solution!
+            </p>
+            <p className="mt-2 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
+              Custom weight to certain detectors (biased) and used math models (log-odds / softmax
+              fusion, confidence gates, ModernBERT-first rules) to reach high efficiency. Free mode:
+              GPTZero-style twin + ONNX neural detectors + stylometrics — no keys. API mode: GPTZero /
+              WasItAI / Sapling / Winston / ZeroGPT / Originality when you have keys. Every scan also
+              calls Writing to IQ (
               <a
                 className="text-cyan underline"
                 href={WRITING_IQ_SOURCE.siteUrl}
@@ -147,13 +153,14 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
         {showInfo && (
           <div className="space-y-2 border-b border-cyan/20 px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
             <p className="text-mint">
-              Free mode needs no API keys. First scan downloads open ONNX detectors into your browser
-              cache (OpenAI RoBERTa, HC3, ModernBERT). Neural scores are weighted heavier than
-              stylometrics — closer to how GPTZero leans on deep models over surface stats.
+              Custom weight to certain detectors biased toward ModernBERT leads, with math models
+              (log-odds softmax fusion + confidence gates + pairwise gap evidence) for high
+              efficiency. Full free suite still votes; soft stylometrics stay low-weight.
             </p>
             <p>
-              Still evidence, not proof. Commercial GPTZero API (API mode) usually wins on newest
-              LLMs if you have a key.
+              Free mode needs no API keys. First scan downloads open ONNX detectors into your browser
+              cache (OpenAI RoBERTa, HC3, ModernBERT). Still evidence, not proof — commercial GPTZero
+              API (API mode) usually wins on newest LLMs if you have a key.
             </p>
           </div>
         )}

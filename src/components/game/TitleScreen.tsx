@@ -275,7 +275,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "System",
       title: "Settings & validation",
       blurb:
-        "AI detector works very well can check the text here. Settings is mainly to toggle on and off music and sound. The text here might be AI generated especially citations in references page, but all sources were used and studied.",
+        "Tired of people calling everything AI generated? Tired of if it sounds deep or complex it must be AI? Don't worry I am also worried about this and have a solution! AI Detector uses custom weight to certain detectors (biased) and math models to reach high efficiency. Settings is mainly to toggle on and off music and sound. The text here might be AI generated especially citations in references page, but all sources were used and studied.",
       accentClass: "from-moon/15 via-transparent to-cyan/10 border-border",
       buttonClass: "border-cyan/40 text-cyan hover:bg-cyan/15",
       wash: "rgba(234,247,255,0.18)",
@@ -285,6 +285,7 @@ export function TitleScreen(p: TitleScreenProps) {
         { label: "Developer validation", onClick: p.onValidate },
         {
           label: "AI Detector",
+          sub: "Custom-weighted detectors · math fusion for efficiency",
           onClick: p.onAiDetector,
           buttonClass:
             "border-cyan/55 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(34,211,238,0.22)]",
