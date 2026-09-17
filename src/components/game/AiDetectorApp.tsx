@@ -14,6 +14,7 @@ import {
   saveAiDetectorPolarity,
   type AiDetectorPolarity,
 } from "@/game/ai-detector/polarity";
+import { PolaritySwitch } from "@/components/game/PolaritySwitch";
 import {
   DETECTORS,
   toneForBand,
@@ -479,6 +480,27 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
           ))}
         </section>
       )}
+
+      <PolaritySwitch
+        polarity={polarity}
+        onPolarityChange={(next) => {
+          setPolarity(next);
+          if (rawResults?.length) {
+            const summary = applyPolarityView(rawResults, next, mode);
+            setStatus(
+              next === "flipped"
+                ? `Polarity FLIPPED (AI Detector + Babel) · ${summary}`
+                : `Polarity STANDARD (AI Detector + Babel) · ${summary}`,
+            );
+          } else {
+            setStatus(
+              next === "flipped"
+                ? "Polarity FLIPPED — AI Detector and Babel polish both use 100−AI%."
+                : "Polarity STANDARD — AI Detector and Babel polish both use raw AI%.",
+            );
+          }
+        }}
+      />
     </div>
   );
 }
