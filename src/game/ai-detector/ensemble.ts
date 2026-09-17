@@ -13,6 +13,11 @@ import {
   type EnsembleInput,
   type EnsembleOutput,
 } from "./types";
+import {
+  applyPolarityToScore,
+  loadAiDetectorPolarity,
+  type AiDetectorPolarity,
+} from "./polarity";
 
 function asNumber(v: unknown, fallback = NaN): number {
   const n = typeof v === "number" ? v : Number(v);
@@ -366,5 +371,29 @@ export const runAiDetectorEnsemble = createServerFn({ method: "POST" })
       return SCANNERS[id](key, data.content);
     });
     const results = await Promise.all(jobs);
+    // Polarity is applied client-side (localStorage) via finalizeApiWithPolarity.
     return { results, consensus: buildConsensus(results) };
   });
+
+/** Same detector scores, optional 100−AI% flip, then rebuild consensus. */
+export function finalizeApiWithPolarity(
+  rawResults: DetectorScanResult[],
+  polarity: AiDetectorPolarity = loadAiDetectorPolarity(),
+): EnsembleOutput & { rawResults: DetectorScanResult[] } {
+  const results = rawResults.map((r) => {
+    if (!r.ok) return r;
+    const aiScore = applyPolarityToScore(r.aiScore, polarity);
+    const band = bandFromAiScore(aiScore);
+    return {
+      ...r,
+      aiScore,
+      band,
+      label: labelFromBand(band),
+      detail:
+        polarity === "flipped" && !/\bpolarity\b/i.test(r.detail)
+          ? `${r.detail} · polarity=flipped`
+          : r.detail,
+    };
+  });
+  return { results, consensus: buildConsensus(results), rawResults };
+}

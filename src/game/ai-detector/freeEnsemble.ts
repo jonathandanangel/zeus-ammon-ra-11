@@ -12,6 +12,11 @@
  * Neural votes are weighted higher in consensus (closer to GPTZero behavior).
  */
 import {
+  applyPolarityToScore,
+  loadAiDetectorPolarity,
+  type AiDetectorPolarity,
+} from "./polarity";
+import {
   bandFromAiScore,
   labelFromBand,
   type Band,
@@ -1619,8 +1624,16 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 export async function runFreeEnsemble(
   content: string,
   onProgress?: (msg: string) => void,
-  opts?: { skipNeural?: boolean; neural?: "all" | "modernbert" | "none" },
-): Promise<{ results: DetectorScanResult[]; consensus: EnsembleConsensus }> {
+  opts?: {
+    skipNeural?: boolean;
+    neural?: "all" | "modernbert" | "none";
+    polarity?: AiDetectorPolarity;
+  },
+): Promise<{
+  results: DetectorScanResult[];
+  consensus: EnsembleConsensus;
+  rawResults: DetectorScanResult[];
+}> {
   const text = content.trim();
   onProgress?.("Human-noise / authenticity check…");
   const noise = scanHumanNoise(text);
@@ -1650,8 +1663,7 @@ export async function runFreeEnsemble(
 
   const neuralMode = opts?.skipNeural ? "none" : (opts?.neural ?? "all");
   if (neuralMode === "none") {
-    const consensus = weightedConsensus(statistical);
-    return { results: statistical, consensus };
+    return finalizeFreeWithPolarity(statistical, opts?.polarity);
   }
 
   let openai: DetectorScanResult | null = null;
@@ -1687,6 +1699,28 @@ export async function runFreeEnsemble(
     neuralMode === "modernbert"
       ? [noise, pitch, story, twin, modern, ...statistical.slice(4)]
       : [noise, pitch, story, twin, openai!, hc3!, modern, ...statistical.slice(4)];
-  const consensus = weightedConsensus(results);
-  return { results, consensus };
+  return finalizeFreeWithPolarity(results, opts?.polarity);
+}
+
+/** Map raw detector scores through polarity, then rebuild consensus (same fusion rules). */
+export function finalizeFreeWithPolarity(
+  rawResults: DetectorScanResult[],
+  polarity: AiDetectorPolarity = loadAiDetectorPolarity(),
+): { results: DetectorScanResult[]; consensus: EnsembleConsensus; rawResults: DetectorScanResult[] } {
+  const results = rawResults.map((r) => {
+    if (!r.ok) return r;
+    const aiScore = applyPolarityToScore(r.aiScore, polarity);
+    const band = bandFromAiScore(aiScore);
+    return {
+      ...r,
+      aiScore,
+      band,
+      label: labelFromBand(band),
+      detail:
+        polarity === "flipped" && !/\bpolarity\b/i.test(r.detail)
+          ? `${r.detail} · polarity=flipped`
+          : r.detail,
+    };
+  });
+  return { results, consensus: weightedConsensus(results), rawResults };
 }

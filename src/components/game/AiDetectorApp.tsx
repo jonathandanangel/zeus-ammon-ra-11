@@ -1,14 +1,19 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { audio } from "@/game/audio";
-import { runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
-import { FREE_DETECTORS, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
+import { finalizeApiWithPolarity, runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
+import { FREE_DETECTORS, finalizeFreeWithPolarity, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
 import {
   estimateWritingIqClient,
   WRITING_IQ_DISCLAIMER,
   WRITING_IQ_SOURCE,
   type WritingIqResult,
 } from "@/game/ai-detector/writingIq";
+import {
+  loadAiDetectorPolarity,
+  saveAiDetectorPolarity,
+  type AiDetectorPolarity,
+} from "@/game/ai-detector/polarity";
 import {
   DETECTORS,
   toneForBand,
@@ -31,10 +36,12 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
   const [status, setStatus] = React.useState(
     "Free mode works without keys — GPTZero-style neural + stylometric stack. Paste ~50+ words.",
   );
+  const [rawResults, setRawResults] = React.useState<DetectorScanResult[] | null>(null);
   const [results, setResults] = React.useState<DetectorScanResult[] | null>(null);
   const [consensus, setConsensus] = React.useState<EnsembleConsensus | null>(null);
   const [writingIq, setWritingIq] = React.useState<WritingIqResult | null>(null);
   const [showInfo, setShowInfo] = React.useState(true);
+  const [polarity, setPolarity] = React.useState<AiDetectorPolarity>(() => loadAiDetectorPolarity());
 
   const field =
     "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-md px-3 py-2 font-mono text-xs text-moon outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/30";
@@ -44,6 +51,43 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
   const activeIds = DETECTORS.filter((d) => enabled[d.id]).map((d) => d.id);
   const readyIds = activeIds.filter((id) => (keys[id] ?? "").trim().length > 0);
+
+  function applyPolarityView(
+    raw: DetectorScanResult[],
+    nextPolarity: AiDetectorPolarity,
+    scanMode: Mode,
+  ) {
+    if (scanMode === "free") {
+      const out = finalizeFreeWithPolarity(raw, nextPolarity);
+      setResults(out.results);
+      setConsensus(out.consensus);
+      return out.consensus.summary;
+    }
+    const out = finalizeApiWithPolarity(raw, nextPolarity);
+    setResults(out.results);
+    setConsensus(out.consensus);
+    return out.consensus.summary;
+  }
+
+  function togglePolarity() {
+    const next: AiDetectorPolarity = polarity === "flipped" ? "standard" : "flipped";
+    setPolarity(next);
+    saveAiDetectorPolarity(next);
+    if (rawResults?.length) {
+      const summary = applyPolarityView(rawResults, next, mode);
+      setStatus(
+        next === "flipped"
+          ? `Polarity FLIPPED (100−AI%) · ${summary}`
+          : `Polarity STANDARD · ${summary}`,
+      );
+    } else {
+      setStatus(
+        next === "flipped"
+          ? "Polarity FLIPPED — high AI% ↔ human swapped until you flip back."
+          : "Polarity STANDARD — high AI% means AI.",
+      );
+    }
+  }
 
   async function runScan() {
     if (wordCount < 40) {
@@ -59,6 +103,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
     setBusy(true);
     setResults(null);
     setConsensus(null);
+    setRawResults(null);
     setWritingIq(null);
     try {
       const iqJob =
@@ -68,7 +113,11 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
 
       if (mode === "free") {
         setStatus("Free multi-scan + Writing to IQ…");
-        const [out, iq] = await Promise.all([runFreeEnsemble(content, setStatus), iqJob]);
+        const [out, iq] = await Promise.all([
+          runFreeEnsemble(content, setStatus, { polarity }),
+          iqJob,
+        ]);
+        setRawResults(out.rawResults);
         setResults(out.results);
         setConsensus(out.consensus);
         setWritingIq(iq);
@@ -93,14 +142,16 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
           }),
           iqJob,
         ]);
-        setResults(out.results);
-        setConsensus(out.consensus);
+        setRawResults(out.results);
+        const polarized = finalizeApiWithPolarity(out.results, polarity);
+        setResults(polarized.results);
+        setConsensus(polarized.consensus);
         setWritingIq(iq);
-        const okN = out.results.filter((r) => r.ok).length;
+        const okN = polarized.results.filter((r) => r.ok).length;
         setStatus(
           okN === 0
             ? "All API scans failed — check keys/credits, or use Free mode."
-            : out.consensus.summary,
+            : polarized.consensus.summary,
         );
       }
     } catch (err) {
@@ -146,6 +197,19 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={cn(
+                btn,
+                polarity === "flipped"
+                  ? "border-amber bg-amber/20 text-amber shadow-[0_0_18px_rgba(251,191,36,0.28)]"
+                  : "border-mint/50 text-mint",
+              )}
+              onClick={togglePolarity}
+              title="If human reads as AI (or reverse), flip polarity instantly — same detectors, inverted AI%."
+            >
+              Polarity · {polarity === "flipped" ? "FLIPPED" : "STANDARD"}
+            </button>
             <button type="button" className={btn} onClick={() => setShowInfo((v) => !v)}>
               {showInfo ? "Hide info" : "More info"}
             </button>
@@ -170,6 +234,12 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               Free mode needs no API keys. First scan downloads open ONNX detectors into your browser
               cache (OpenAI RoBERTa, HC3, ModernBERT). Still evidence, not proof — commercial GPTZero
               API (API mode) usually wins on newest LLMs if you have a key.
+            </p>
+            <p className="text-amber/90">
+              Polarity switch: if human writing reads as AI (or the reverse), tap{" "}
+              <span className="text-amber">Polarity · FLIPPED/STANDARD</span> — same detectors and
+              fusion, every AI% becomes 100−AI% and consensus rebuilds instantly. Default is FLIPPED
+              after the last inversion bug. Babel polish uses the same saved polarity.
             </p>
             <p className="text-amber/90">
               Notes / security: text is scored in your browser for Free mode (models cached locally
@@ -208,6 +278,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               setMode(id);
               setResults(null);
               setConsensus(null);
+              setRawResults(null);
               setWritingIq(null);
               setStatus(
                 id === "free"
