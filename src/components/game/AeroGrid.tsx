@@ -617,12 +617,12 @@ export function AeroGrid() {
     }, 420);
   };
 
-  if (!hydrated) return null;
-
   React.useEffect(() => {
     document.documentElement.classList.add("cyber-skin");
     return () => document.documentElement.classList.remove("cyber-skin");
   }, []);
+
+  if (!hydrated) return null;
 
   const worldProgress = progress.index / TOTAL_QUESTIONS;
   const infernoActive =
