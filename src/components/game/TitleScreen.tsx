@@ -261,22 +261,22 @@ export function TitleScreen(p: TitleScreenProps) {
       glow: "arcade",
       actions: [
         {
-          label: "MEMORY EXTREME LIGHT CYCLE",
+          label: "EXTREME LIGHT CYCLE",
           sub: `High score ${arcadeScores["grid-run"]}`,
           onClick: () => p.onArcade("grid-run"),
         },
         {
-          label: "MEMORY EXTREME PACMAN",
+          label: "EXTREME PACMAN",
           sub: `High score ${arcadeScores["neon-maze"]}`,
           onClick: () => p.onArcade("neon-maze"),
         },
         {
-          label: "MEMORY EXTREME RECALL",
+          label: "EXTREME RECALL",
           sub: `High score ${arcadeScores["electric-recall"]}`,
           onClick: () => p.onArcade("electric-recall"),
         },
         {
-          label: "MEMORY EXTREME GAUNTLET",
+          label: "EXTREME GAUNTLET",
           sub: `High score ${arcadeScores["memory-gauntlet"]}`,
           onClick: () => p.onArcade("memory-gauntlet"),
         },
