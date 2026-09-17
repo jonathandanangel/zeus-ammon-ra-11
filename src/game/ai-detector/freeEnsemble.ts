@@ -243,6 +243,12 @@ type LeadCompositeSpec = {
   elseExempt?: FreeDetectorId[];
   /** Extra gap: this id must outscore `mustBeat`. */
   alsoAbove?: { id: FreeDetectorId; mustBeat: FreeDetectorId };
+  /**
+   * `lead` (default): ModernBERT-style gap patterns.
+   * `all-under`: every scanner below elseMax (default 40) → most-likely-human.
+   * (Not the elegant-human lead-gap method.)
+   */
+  mode?: "lead" | "all-under";
   /** AI lead (default) vs human / elegant-human evidence. */
   polarity?: "ai" | "human";
   weight: number;
@@ -344,6 +350,16 @@ const LEAD_COMPOSITES: LeadCompositeSpec[] = [
     requireSoftBackdrop: true,
     weight: 1.5,
   },
+  // All scanners under ~40% (often teens/20s) — most likely human (not elegant-human method)
+  {
+    id: "all-under-40-human",
+    mode: "all-under",
+    polarity: "human",
+    leads: [],
+    above: [],
+    elseMax: 40,
+    weight: 1.4,
+  },
 ];
 
 function softClusterEvidence(scores: Map<FreeDetectorId, number>, ids: FreeDetectorId[]): number {
@@ -360,6 +376,19 @@ function scoreLeadComposite(
   scores: Map<FreeDetectorId, number>,
   spec: LeadCompositeSpec,
 ): number {
+  // Flat band: every score under elseMax (~40) — teens/20s human profile
+  if (spec.mode === "all-under") {
+    const vals = [...scores.values()];
+    if (vals.length < 5) return 0;
+    const cap = spec.elseMax ?? 40;
+    const maxV = Math.max(...vals);
+    const meanV = mean(vals);
+    const underCap = 1 - sigmoidGap(maxV - (cap - 3), 4);
+    // Prefer mean in the teens/low-20s (user example ~20s type)
+    const mid20 = Math.exp(-Math.pow((meanV - 20) / 14, 2));
+    return clamp(underCap * (0.4 + 0.6 * mid20), 0, 1);
+  }
+
   const leadScores = spec.leads.map((id) => scores.get(id));
   if (leadScores.some((v) => v == null)) return 0;
   const leadMin = Math.min(...(leadScores as number[]));
@@ -1280,6 +1309,13 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   })();
 
   /**
+   * All scanners under 40% (often teens/20s) → most likely human.
+   * Simple ceiling rule — elegant-human lead-gap method does not apply here.
+   */
+  const allUnder40Human =
+    okRows.length >= 5 && okRows.every((r) => r.aiScore < 40);
+
+  /**
    * Elegant human writing (discrete band + higher-order human composite soft-OR).
    * ModernBERT > OpenAI RoBERTa (~55.8%) AND ModernBERT > sentence-mix (~53%),
    * with sentence-mix ≈53% OR OpenAI RoBERTa (~55.8%) > burstiness,
@@ -1366,13 +1402,19 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   for (const r of okRows) scoreMapEarly.set(r.id as FreeDetectorId, r.aiScore);
   const leadCompositeEarly = higherOrderLeadComposite(scoreMapEarly);
   const elegantHumanWriting =
-    (elegantHumanDiscrete || leadCompositeEarly.humanFired) &&
+    (elegantHumanDiscrete ||
+      (leadCompositeEarly.humanFired &&
+        leadCompositeEarly.bestHumanId !== "all-under-40-human")) &&
     !modernNearCertain &&
     !pitchStrong &&
     !storyStrong;
 
+  /** All < 40% — most likely human; elegant-human lead method does not apply. */
+  const mostLikelyHumanBand = allUnder40Human && !elegantHumanWriting;
+
   const modernAiLead =
     !elegantHumanWriting &&
+    !mostLikelyHumanBand &&
     (modernBurstAiPair ||
       modernOverBurstMix ||
       modernOverStorySoft ||
@@ -1709,12 +1751,18 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       ? leadComposite.evidenceHuman
       : 8;
     docScore = invLogitAi(0.15 * logitAi(docScore) + 0.85 * logitAi(humanPull));
+  } else if (mostLikelyHumanBand) {
+    // Flat all-under-40 ceiling — not elegant-human method
+    const maxAi = Math.max(...okRows.map((r) => r.aiScore));
+    docScore = invLogitAi(0.35 * logitAi(docScore) + 0.65 * logitAi(Math.min(maxAi * 0.55, 22)));
   }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
   if (elegantHumanWriting) {
     agreement = "strong_human";
+  } else if (mostLikelyHumanBand) {
+    agreement = docScore < 25 ? "strong_human" : "lean_human";
   } else if (modernNearCertain) agreement = "strong_ai";
   else if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
   else if ((docScore < 12 || modernHumanHard) && !modernStrong && !modernAiLead)
@@ -1735,9 +1783,11 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   const band: Band = bandFromAiScore(docScore);
   const vetoNote = elegantHumanWriting
-    ? leadComposite.humanFired
+    ? leadComposite.humanFired && leadComposite.bestHumanId !== "all-under-40-human"
       ? ` Elegant human writing — human composite (${leadComposite.bestHumanId || "elegant-human"}) weighted into lead system → human.`
       : " Elegant human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
+    : mostLikelyHumanBand
+      ? " Most likely human — every scanner under 40% (teens/20s-style profile); elegant-human lead method does not apply."
     : modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
     : leadComposite.fired && leadComposite.bestId
@@ -1772,8 +1822,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: elegantHumanWriting
       ? `Elegant human writing (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`
-      : `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
-    lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
+      : mostLikelyHumanBand
+        ? `Most likely human — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
+        : `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
+    lean_human: mostLikelyHumanBand
+      ? `Most likely human — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
+      : `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
     split: `Uncertain / mixed (weighted AI ${docScore.toFixed(0)}%). Route to a human reviewer.`,
     lean_ai: `Lean AI (weighted AI ${docScore.toFixed(0)}%).`,
     strong_ai: `Strong AI signal (weighted AI ${docScore.toFixed(0)}%).`,
