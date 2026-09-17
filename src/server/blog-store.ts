@@ -1,7 +1,7 @@
 /**
  * Creator blog store — public read, authenticated write.
- * Durable posts live in data/blog-posts.json (survive deploys when committed).
- * Seed posts always appear so new visitors understand why ZEUS was made.
+ * Durable order: in-memory (process) → Cache API → data/ + public/ JSON → seed.
+ * Posts remain until edit/delete; /api/blog serves the same list to every visitor.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -44,8 +44,24 @@ const SEED_POSTS: BlogPost[] = [
 
 type StoreFile = { posts: BlogPost[] };
 
-function storePath(): string {
+type BlogGlobal = typeof globalThis & {
+  __zeusBlogPosts?: BlogPost[];
+  __zeusBlogHydrated?: boolean;
+};
+
+const CACHE_NAME = "zeus-blog-v1";
+const CACHE_REQ = "https://zeus-ammon-ra.internal/blog/posts.json";
+
+function g(): BlogGlobal {
+  return globalThis as BlogGlobal;
+}
+
+function dataPath(): string {
   return join(process.cwd(), "data", "blog-posts.json");
+}
+
+function publicPath(): string {
+  return join(process.cwd(), "public", "blog", "posts.json");
 }
 
 function hashCredentials(username: string, password: string): string {
@@ -63,29 +79,39 @@ export function verifyBlogCredentials(username: string, password: string): boole
   return diff === 0;
 }
 
-function readFromDisk(): BlogPost[] {
+function isPost(p: unknown): p is BlogPost {
+  if (!p || typeof p !== "object") return false;
+  const o = p as Record<string, unknown>;
+  return (
+    typeof o["id"] === "string" &&
+    typeof o["title"] === "string" &&
+    typeof o["body"] === "string" &&
+    typeof o["author"] === "string" &&
+    typeof o["createdAt"] === "string"
+  );
+}
+
+function parseStore(raw: string): BlogPost[] {
   try {
-    const path = storePath();
-    if (!existsSync(path)) return [];
-    const parsed = JSON.parse(readFileSync(path, "utf8")) as StoreFile;
+    const parsed = JSON.parse(raw) as StoreFile;
     if (!parsed || !Array.isArray(parsed.posts)) return [];
-    return parsed.posts.filter(
-      (p) =>
-        p &&
-        typeof p.id === "string" &&
-        typeof p.title === "string" &&
-        typeof p.body === "string" &&
-        typeof p.author === "string" &&
-        typeof p.createdAt === "string",
-    );
+    return parsed.posts.filter(isPost);
   } catch {
     return [];
   }
 }
 
-function writeToDisk(posts: BlogPost[]): boolean {
+function readJsonFile(path: string): BlogPost[] {
   try {
-    const path = storePath();
+    if (!existsSync(path)) return [];
+    return parseStore(readFileSync(path, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function writeJsonFile(path: string, posts: BlogPost[]): boolean {
+  try {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, `${JSON.stringify({ posts }, null, 2)}\n`, "utf8");
     return true;
@@ -94,26 +120,116 @@ function writeToDisk(posts: BlogPost[]): boolean {
   }
 }
 
-/** Merge seed + disk, newest first, unique by id (disk wins on id clash). */
-export function listBlogPosts(): BlogPost[] {
+function mergeById(...lists: BlogPost[][]): BlogPost[] {
   const byId = new Map<string, BlogPost>();
-  for (const p of SEED_POSTS) byId.set(p.id, p);
-  for (const p of readFromDisk()) byId.set(p.id, p);
+  for (const list of lists) {
+    for (const p of list) byId.set(p.id, p);
+  }
   return [...byId.values()].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
-export function createBlogPost(input: {
+/** Keep user posts + seed overrides (edited seeds); drop unchanged seeds. */
+function durableOnly(posts: BlogPost[]): BlogPost[] {
+  return posts.filter((p) => {
+    const seed = SEED_POSTS.find((s) => s.id === p.id);
+    if (!seed) return true;
+    return seed.title !== p.title || seed.body !== p.body;
+  });
+}
+
+async function readFromCache(): Promise<BlogPost[]> {
+  try {
+    const cachesApi = (globalThis as { caches?: CacheStorage }).caches;
+    if (!cachesApi?.open) return [];
+    const cache = await cachesApi.open(CACHE_NAME);
+    const res = await cache.match(CACHE_REQ);
+    if (!res) return [];
+    return parseStore(await res.text());
+  } catch {
+    return [];
+  }
+}
+
+async function writeToCache(posts: BlogPost[]): Promise<boolean> {
+  try {
+    const cachesApi = (globalThis as { caches?: CacheStorage }).caches;
+    if (!cachesApi?.open) return false;
+    const cache = await cachesApi.open(CACHE_NAME);
+    await cache.put(
+      CACHE_REQ,
+      new Response(JSON.stringify({ posts }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=31536000",
+        },
+      }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getMemory(): BlogPost[] {
+  return g().__zeusBlogPosts ?? [];
+}
+
+async function hydrate(): Promise<void> {
+  if (g().__zeusBlogHydrated && Array.isArray(g().__zeusBlogPosts)) return;
+  const fromCache = await readFromCache();
+  const fromFiles = writableCandidates().flatMap((path) => readJsonFile(path));
+  g().__zeusBlogPosts = durableOnly(mergeById(fromFiles, fromCache));
+  g().__zeusBlogHydrated = true;
+}
+
+function writableCandidates(): string[] {
+  const paths = [dataPath(), publicPath()];
+  try {
+    paths.push(join("/tmp", "zeus-blog-posts.json"));
+  } catch {
+    /* ignore */
+  }
+  return paths;
+}
+
+async function persistDurable(durable: BlogPost[]): Promise<{
+  memory: true;
+  disk: boolean;
+  cache: boolean;
+}> {
+  const next = durableOnly(durable);
+  g().__zeusBlogPosts = next;
+  g().__zeusBlogHydrated = true;
+  let disk = false;
+  for (const path of writableCandidates()) {
+    if (writeJsonFile(path, next)) disk = true;
+  }
+  const cache = await writeToCache(next);
+  return { memory: true, disk, cache };
+}
+
+/** Public list: seed + durable posts. Newest first. */
+export async function listBlogPosts(): Promise<BlogPost[]> {
+  await hydrate();
+  return mergeById(SEED_POSTS, getMemory());
+}
+
+export async function createBlogPost(input: {
   title: string;
   body: string;
   author: string;
-}): { ok: true; post: BlogPost; persisted: boolean } | { ok: false; error: string } {
+}): Promise<
+  | { ok: true; post: BlogPost; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | { ok: false; error: string }
+> {
   const title = input.title.trim().slice(0, 200);
   const body = input.body.trim().slice(0, 20000);
   if (!title) return { ok: false, error: "Title is required." };
   if (!body) return { ok: false, error: "Body is required." };
 
+  await hydrate();
   const post: BlogPost = {
     id: randomUUID(),
     title,
@@ -122,17 +238,24 @@ export function createBlogPost(input: {
     createdAt: new Date().toISOString(),
   };
 
-  const disk = readFromDisk().filter((p) => p.id !== post.id);
-  disk.push(post);
-  const persisted = writeToDisk(disk);
-  return { ok: true, post, persisted };
+  const next = mergeById(
+    getMemory().filter((p) => p.id !== post.id),
+    [post],
+  );
+  const backends = await persistDurable(next);
+  // Memory always holds the post for this runtime; cache/disk when available.
+  const persisted = backends.memory || backends.disk || backends.cache;
+  return { ok: true, post, persisted, backends };
 }
 
-export function updateBlogPost(input: {
+export async function updateBlogPost(input: {
   id: string;
   title: string;
   body: string;
-}): { ok: true; post: BlogPost; persisted: boolean } | { ok: false; error: string } {
+}): Promise<
+  | { ok: true; post: BlogPost; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | { ok: false; error: string }
+> {
   const id = input.id.trim();
   if (!id) return { ok: false, error: "Missing post id." };
   const title = input.title.trim().slice(0, 200);
@@ -140,39 +263,46 @@ export function updateBlogPost(input: {
   if (!title) return { ok: false, error: "Title is required." };
   if (!body) return { ok: false, error: "Body is required." };
 
-  const current = listBlogPosts().find((p) => p.id === id);
+  await hydrate();
+  const current = (await listBlogPosts()).find((p) => p.id === id);
   if (!current) return { ok: false, error: "Post not found." };
 
-  const post: BlogPost = {
-    ...current,
-    title,
-    body,
-    // Keep original createdAt; bump updatedAt only in body metadata via optional field later
-  };
-
-  const disk = readFromDisk().filter((p) => p.id !== id);
-  disk.push(post);
-  const persisted = writeToDisk(disk);
-  return { ok: true, post, persisted };
+  const post: BlogPost = { ...current, title, body };
+  const next = mergeById(
+    getMemory().filter((p) => p.id !== id),
+    [post],
+  );
+  const backends = await persistDurable(next);
+  return { ok: true, post, persisted: true, backends };
 }
 
-export function deleteBlogPost(
+export async function deleteBlogPost(
   id: string,
-): { ok: true; persisted: boolean } | { ok: false; error: string } {
+): Promise<
+  | { ok: true; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | { ok: false; error: string }
+> {
+  await hydrate();
   const seed = SEED_POSTS.find((p) => p.id === id);
-  if (seed) {
-    // Removing a seed override restores the built-in seed; cannot erase seed entirely.
-    const disk = readFromDisk();
-    const next = disk.filter((p) => p.id !== id);
-    if (next.length === disk.length) {
-      return { ok: false, error: "Built-in seed posts cannot be deleted (edit instead)." };
-    }
-    const persisted = writeToDisk(next);
-    return { ok: true, persisted };
+  const mem = getMemory();
+  if (seed && !mem.some((p) => p.id === id)) {
+    return { ok: false, error: "Built-in seed posts cannot be deleted (edit instead)." };
   }
-  const disk = readFromDisk();
-  const next = disk.filter((p) => p.id !== id);
-  if (next.length === disk.length) return { ok: false, error: "Post not found." };
-  const persisted = writeToDisk(next);
-  return { ok: true, persisted };
+  if (!seed && !mem.some((p) => p.id === id)) {
+    return { ok: false, error: "Post not found." };
+  }
+  const next = mem.filter((p) => p.id !== id);
+  const backends = await persistDurable(next);
+  return { ok: true, persisted: true, backends };
+}
+
+/** Merge creator-client posts into the shared store (authenticated). */
+export async function mergeBlogPosts(
+  incoming: BlogPost[],
+): Promise<{ ok: true; backends: { memory: true; disk: boolean; cache: boolean } }> {
+  await hydrate();
+  const cleaned = incoming.filter(isPost);
+  const next = durableOnly(mergeById(getMemory(), cleaned));
+  const backends = await persistDurable(next);
+  return { ok: true, backends };
 }

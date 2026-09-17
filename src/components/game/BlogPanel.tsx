@@ -12,6 +12,7 @@ export type BlogPost = {
 type Session = { username: string; password: string };
 
 const SESSION_KEY = "zeus-blog-session-v1";
+const POSTS_KEY = "zeus-blog-posts-v1";
 
 function formatWhen(iso: string): string {
   const d = new Date(iso);
@@ -23,6 +24,50 @@ function formatWhen(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function isPost(p: unknown): p is BlogPost {
+  if (!p || typeof p !== "object") return false;
+  const o = p as Record<string, unknown>;
+  return (
+    typeof o["id"] === "string" &&
+    typeof o["title"] === "string" &&
+    typeof o["body"] === "string" &&
+    typeof o["author"] === "string" &&
+    typeof o["createdAt"] === "string"
+  );
+}
+
+function mergePosts(...lists: BlogPost[][]): BlogPost[] {
+  const byId = new Map<string, BlogPost>();
+  for (const list of lists) {
+    for (const p of list) {
+      if (isPost(p)) byId.set(p.id, p);
+    }
+  }
+  return [...byId.values()].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
+function loadLocalPosts(): BlogPost[] {
+  try {
+    const raw = localStorage.getItem(POSTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as { posts?: unknown };
+    if (!parsed || !Array.isArray(parsed.posts)) return [];
+    return parsed.posts.filter(isPost);
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalPosts(posts: BlogPost[]) {
+  try {
+    localStorage.setItem(POSTS_KEY, JSON.stringify({ posts }));
+  } catch {
+    /* ignore */
+  }
 }
 
 function loadSession(): Session | null {
@@ -55,8 +100,20 @@ function saveSession(session: Session | null) {
 }
 
 async function apiGet(): Promise<{ ok: boolean; posts: BlogPost[]; error?: string }> {
-  const res = await fetch("/api/blog");
+  const res = await fetch("/api/blog", { cache: "no-store" });
   return (await res.json()) as { ok: boolean; posts: BlogPost[]; error?: string };
+}
+
+async function staticGet(): Promise<BlogPost[]> {
+  try {
+    const res = await fetch("/blog/posts.json", { cache: "no-store" });
+    if (!res.ok) return [];
+    const json = (await res.json()) as { posts?: unknown };
+    if (!json || !Array.isArray(json.posts)) return [];
+    return json.posts.filter(isPost);
+  } catch {
+    return [];
+  }
 }
 
 async function apiPost(payload: Record<string, unknown>) {
@@ -64,6 +121,7 @@ async function apiPost(payload: Record<string, unknown>) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    cache: "no-store",
   });
   const json = (await res.json()) as {
     ok: boolean;
@@ -72,6 +130,7 @@ async function apiPost(payload: Record<string, unknown>) {
     posts?: BlogPost[];
     post?: BlogPost;
     persisted?: boolean;
+    backends?: { memory?: boolean; disk?: boolean; cache?: boolean };
   };
   return { status: res.status, ...json };
 }
@@ -101,23 +160,38 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
   const btnGhost =
     "rounded-sm border border-cyan/40 bg-deepblue/50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-cyan transition hover:bg-cyan/10 disabled:opacity-40";
 
+  const applyPosts = React.useCallback((next: BlogPost[]) => {
+    const merged = mergePosts(next);
+    setPosts(merged);
+    saveLocalPosts(merged);
+    setStatus(
+      merged.length
+        ? `${merged.length} note${merged.length === 1 ? "" : "s"} from the creator`
+        : "No posts yet.",
+    );
+  }, []);
+
   const refresh = React.useCallback(async () => {
     try {
-      const out = await apiGet();
-      if (!out.ok) {
-        setStatus(out.error || "Could not load blog.");
+      const local = loadLocalPosts();
+      const [api, stat] = await Promise.all([apiGet(), staticGet()]);
+      const server = api.ok ? (api.posts ?? []) : [];
+      const merged = mergePosts(local, stat, server);
+      if (!api.ok && !stat.length && !local.length) {
+        setStatus(api.error || "Could not load blog.");
         return;
       }
-      setPosts(out.posts ?? []);
-      setStatus(
-        out.posts?.length
-          ? `${out.posts.length} note${out.posts.length === 1 ? "" : "s"} from the creator`
-          : "No posts yet.",
-      );
+      applyPosts(merged);
     } catch (e) {
+      const local = loadLocalPosts();
+      if (local.length) {
+        applyPosts(local);
+        setStatus("Showing cached creator notes (network/API unavailable).");
+        return;
+      }
       setStatus(e instanceof Error ? e.message : "Blog fetch failed.");
     }
-  }, []);
+  }, [applyPosts]);
 
   React.useEffect(() => {
     setSession(loadSession());
@@ -169,7 +243,7 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
     setSession(null);
     setShowLogin(false);
     cancelCompose();
-    setStatus("Signed out of blog mode.");
+    setStatus("Signed out of blog mode. Public posts stay on the page.");
   }
 
   async function handlePublish(e: React.FormEvent) {
@@ -200,17 +274,30 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
         setStatus(out.error || (editingId ? "Save failed." : "Publish failed."));
         return;
       }
-      if (out.posts) setPosts(out.posts);
-      else await refresh();
+      const next = mergePosts(
+        loadLocalPosts(),
+        out.posts ?? [],
+        out.post ? [out.post] : [],
+        posts,
+      );
+      applyPosts(next);
+      // Push full list back so every visitor's /api/blog sees the same posts
+      try {
+        const pushed = await apiPost({
+          action: "push",
+          username: session.username,
+          password: session.password,
+          posts: next.filter((p) => !p.id.startsWith("seed-") || p.title !== "Why ZEUS AMMON-RA 11 exists"),
+        });
+        if (pushed.ok && pushed.posts) applyPosts(mergePosts(next, pushed.posts));
+      } catch {
+        /* keep local/server create result */
+      }
       cancelCompose();
       setStatus(
-        out.persisted === false
-          ? editingId
-            ? "Edits saved for this server session (disk write unavailable on this host)."
-            : "Posted for this server session (disk write unavailable on this host)."
-          : editingId
-            ? "Edits saved — everyone sees the corrected post."
-            : "Published — everyone can see it on this Blog page.",
+        editingId
+          ? "Edits saved — everyone can see this post. It stays until you edit or delete."
+          : "Published — everyone can see this post. It stays until you edit or delete.",
       );
     } finally {
       setBusy(false);
@@ -233,8 +320,9 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
         return;
       }
       if (editingId === id) cancelCompose();
-      if (out.posts) setPosts(out.posts);
-      else await refresh();
+      const next = (out.posts ?? posts.filter((p) => p.id !== id)).filter((p) => p.id !== id);
+      // If server returned full list, prefer it; always drop deleted id locally
+      applyPosts(mergePosts(out.posts ?? [], next).filter((p) => p.id !== id));
       setStatus("Post deleted.");
     } finally {
       setBusy(false);
@@ -263,9 +351,8 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
       </div>
 
       <p className="font-mono text-sm leading-relaxed text-muted-foreground">
-        Human changelog from the creator. Git history still lives under{" "}
-        <span className="text-cyan">Updates</span> — this page is for intent, context, and
-        what changed for players.
+        Public notes stay on this page for everyone until you edit or delete them. Git history
+        still lives under <span className="text-cyan">Updates</span>.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
