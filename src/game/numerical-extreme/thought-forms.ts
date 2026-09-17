@@ -71,8 +71,8 @@ export const COLOUR_KEY_GRID: ColourKeyCell[] = [
 ];
 
 export function colourKeyCellsForNumber(n: number): ColourKeyCell[] {
-  const number = n >= 1 && n <= 9 ? n : 9;
-  return COLOUR_KEY_GRID.filter((c) => c.pathHint.includes(number));
+  const digit = baseDigitFromPath(n);
+  return COLOUR_KEY_GRID.filter((c) => c.pathHint.includes(digit));
 }
 
 export type ThoughtFormKind =
@@ -475,6 +475,9 @@ export const COLOUR_COMBINATIONS: ColourCombination[] = [
 
 export type PathThoughtFormBundle = {
   number: number;
+  /** Reduced 1–9 ray this path rides (masters keep their double but share the ray). */
+  baseDigit: number;
+  isMaster: boolean;
   colorName: string;
   hex: string;
   musicalNote: string;
@@ -482,11 +485,161 @@ export type PathThoughtFormBundle = {
   /** Always included — frontispiece key for scrambles / combinations. */
   generalColourKey: typeof COLOUR_KEY_GENERAL_SOURCE;
   gridCells: ColourKeyCell[];
+  /** Primary book figure for this digit (Fig. 1–9) or master plate. */
+  primaryFigure: ThoughtFormFigure;
   figures: ThoughtFormFigure[];
   combinations: ColourCombination[];
   laws: typeof THOUGHT_FORM_THREE_LAWS;
   doubleEffect: typeof THOUGHT_FORM_DOUBLE_EFFECT;
   blurb: string;
+};
+
+/** Classic + extended master numbers kept unreduced in numerology. */
+export const MASTER_NUMBERS = [11, 22, 33, 44, 55, 66, 77, 88, 99] as const;
+
+export function isMasterNumber(n: number): boolean {
+  return (MASTER_NUMBERS as readonly number[]).includes(n);
+}
+
+/** 11→2, 22→4, 33→6, 44→8, 55→1, … (digital root of the master). */
+export function baseDigitFromPath(n: number): number {
+  if (n >= 1 && n <= 9) return n;
+  if (isMasterNumber(n)) {
+    const d = n % 9;
+    return d === 0 ? 9 : d;
+  }
+  let value = Math.abs(Math.trunc(n));
+  if (value === 0) return 9;
+  while (value > 9) {
+    value = String(value)
+      .split("")
+      .reduce((acc, d) => acc + Number(d), 0);
+  }
+  return value === 0 ? 9 : value;
+}
+
+/**
+ * One primary Thought-Forms plate per base digit 1–9 (Fig. N ↔ path N).
+ * Colour + emotion come from the Meaning of the Colours key for that ray.
+ */
+export const PRIMARY_FIGURE_BY_DIGIT: Record<number, ThoughtFormFigure> = {
+  1: {
+    id: "primary-1",
+    fig: "Fig. 1",
+    bookPage: 28,
+    emotion: "Anger / passion ray · vibration → form",
+    shape: "Chladni sound plate (single-tone geometry)",
+    colours: "Red ray (scarlet · dragon’s blood)",
+    quote:
+      "“A Chladni’s sound plate (fig. 1)… By touching the edge of the plate at different points… different notes, and hence varying forms, are obtained.” Path 1 = red anger/passion on the colour key (pp. 28–29, 32).",
+    src: "/numerology/thought-forms/fig1.png",
+    kind: "vibration",
+    pathNumbers: [1],
+  },
+  2: {
+    id: "primary-2",
+    fig: "Fig. 2",
+    bookPage: 28,
+    emotion: "Pride / ambition · dual rate",
+    shape: "Sand nodal pattern (one definite vibration-figure)",
+    colours: "Orange ray (pride · ambition)",
+    quote:
+      "“The fact of the creation by vibrations of a distinct form… is already familiar… ‘Chladni’s’ figures are continually reproduced…” (fig. 2). Path 2 = deep orange pride/ambition (pp. 28, 33).",
+    src: "/numerology/thought-forms/fig2.png",
+    kind: "vibration",
+    pathNumbers: [2],
+  },
+  3: {
+    id: "primary-3",
+    fig: "Fig. 3",
+    bookPage: 29,
+    emotion: "Intellect · changing notes → forms",
+    shape: "Alternate sand figure from a different note",
+    colours: "Yellow ray (intellect · gamboge · primrose)",
+    quote:
+      "“…different notes, and hence varying forms, are obtained (fig. 3).” Path 3 = yellow intellect on the colour key (pp. 29, 33).",
+    src: "/numerology/thought-forms/fig3.png",
+    kind: "vibration",
+    pathNumbers: [3],
+  },
+  4: {
+    id: "primary-4",
+    fig: "Fig. 4",
+    bookPage: 29,
+    emotion: "Adaptability / sympathy · compound swing",
+    shape: "Pendulum curve (first compound oscillation)",
+    colours: "Green ray (adaptability · sympathy · grey-green deceit)",
+    quote:
+      "“Substitute for the swing of the pendulum the vibrations set up in the mental or astral body…” Figs. 4–7. Path 4 = green adaptability/sympathy (pp. 28–29, 33).",
+    src: "/numerology/thought-forms/figs4-7.png",
+    kind: "vibration",
+    pathNumbers: [4],
+  },
+  5: {
+    id: "primary-5",
+    fig: "Fig. 5",
+    bookPage: 29,
+    emotion: "Religious feeling / devotion",
+    shape: "Pendulum interlacing (second compound rate)",
+    colours: "Blue ray (devotion · religious feeling)",
+    quote:
+      "Pendulum forms (figs. 4–7) show how several rates build one outline. Path 5 = blue religious feeling / devotion (pp. 29, 33–34).",
+    src: "/numerology/thought-forms/figs4-7.png",
+    kind: "vibration",
+    pathNumbers: [5],
+  },
+  6: {
+    id: "primary-6",
+    fig: "Fig. 6",
+    bookPage: 29,
+    emotion: "Indigo band · devotion + affection mix",
+    shape: "Pendulum figure comparable to living thought-form (cf. fig. 25)",
+    colours: "Indigo / violet-leaning blue",
+    quote:
+      "Compare fig. 6 with living thought-forms later in the book. Path 6 = indigo band (deep blue→violet) and six-directions geometry (pp. 29, 33–34, 68).",
+    src: "/numerology/thought-forms/figs4-7.png",
+    kind: "vibration",
+    pathNumbers: [6],
+  },
+  7: {
+    id: "primary-7",
+    fig: "Fig. 7",
+    bookPage: 29,
+    emotion: "Violet · affection + devotion",
+    shape: "Highest pendulum compound (many rates)",
+    colours: "Violet (rose + blue mix)",
+    quote:
+      "“A mixture of affection and devotion is manifested by a tint of violet…” Path 7 = violet / septenary (pp. 29, 34).",
+    src: "/numerology/thought-forms/figs4-7.png",
+    kind: "vibration",
+    pathNumbers: [7],
+  },
+  8: {
+    id: "primary-8",
+    fig: "Fig. 8",
+    bookPage: 40,
+    emotion: "Vague Pure Affection",
+    shape: "Revolving rose-crimson cloud (odd nebulous oval)",
+    colours: "Clear rose / carmine",
+    quote:
+      "“Vague Pure Affection.—Fig. 8 is a revolving cloud of pure affection…” Path 8 = rose/carmine affection (pp. 40–41, 33).",
+    src: "/numerology/thought-forms/book/p22_x360.png",
+    kind: "emotion",
+    pathNumbers: [8],
+  },
+  9: {
+    id: "primary-9",
+    fig: "Fig. 9",
+    bookPage: 41,
+    emotion: "Vague Selfish Affection · chord of many rates",
+    shape: "Murky brown-stained crimson cloud",
+    colours: "Rose stained with brown-grey · multi-colour synthesis",
+    quote:
+      "Vague Selfish Affection contrasts with pure rose when brown-grey selfishness stains the cloud (fig. 9). Path 9 = chord / synthesis of rates (pp. 40–41, 22).",
+    src: "/numerology/thought-forms/book/p22_x360.png",
+    kind: "emotion",
+    pathNumbers: [9],
+  },
 };
 
 const PATH_META: Record<
@@ -498,80 +651,188 @@ const PATH_META: Record<
     hex: "#E53935",
     musicalNote: "Do",
     blurb:
-      "Path 1 · Red (pp. 32–33) — anger / passion key; flash and projectile anger shapes; Chladni single-tone geometry.",
+      "Path 1 · Red (pp. 32–33) — anger / passion key; Fig. 1 Chladni single-tone geometry.",
   },
   2: {
     colorName: "Orange",
     hex: "#FB8C00",
     musicalNote: "Re",
     blurb:
-      "Path 2 · Orange (p. 33) — pride/ambition; hooked acquisitive odd-forms (Figs. 20–21, p. 52); dual pendulum rates.",
+      "Path 2 · Orange (p. 33) — pride/ambition; Fig. 2 vibration-form; hooked acquisitive plates.",
   },
   3: {
     colorName: "Yellow",
     hex: "#FDD835",
     musicalNote: "Mi",
     blurb:
-      "Path 3 · Yellow intellect (p. 33); Cosmic Order hexagram Fig. 40 (p. 68); threefold Logos plates.",
+      "Path 3 · Yellow intellect (p. 33); Fig. 3 changing-note form; Cosmic Order hexagram Fig. 40.",
   },
   4: {
     colorName: "Green",
     hex: "#43A047",
     musicalNote: "Fa",
     blurb:
-      "Path 4 · Green adaptability/sympathy (p. 33); deceit/jealousy stains when greyed; compound vibration curves.",
+      "Path 4 · Green adaptability/sympathy (p. 33); Fig. 4 pendulum compound; deceit/jealousy when greyed.",
   },
   5: {
     colorName: "Blue",
     hex: "#1E88E5",
     musicalNote: "Sol",
     blurb:
-      "Path 5 · Blue religious feeling (pp. 33–34); vague devotion cloud Fig. 14 (p. 44); Logos-in-man star Fig. 41; Gounod music.",
+      "Path 5 · Blue religious feeling (pp. 33–34); Fig. 5 compound rate; devotion clouds Figs. 14–16.",
   },
   6: {
     colorName: "Indigo",
     hex: "#3949AB",
     musicalNote: "La",
     blurb:
-      "Path 6 · Indigo band (deep blue→violet, pp. 33–34); six-directions / Cosmic Order hexagram Fig. 40 (p. 68); sevenfold plates; Mendelssohn filigree.",
+      "Path 6 · Indigo band (pp. 33–34); Fig. 6; six-directions / Cosmic Order Fig. 40; Mendelssohn.",
   },
   7: {
     colorName: "Violet",
     hex: "#8E24AA",
     musicalNote: "Si",
     blurb:
-      "Path 7 · Violet = affection+devotion mix (p. 34); sevenfold manifestation; Wagner densest music-form (p. 82).",
+      "Path 7 · Violet affection+devotion (p. 34); Fig. 7; sevenfold manifestation; Wagner.",
   },
   8: {
     colorName: "Rose",
     hex: "#EC407A",
     musicalNote: "Do′",
     blurb:
-      "Path 8 · Rose/carmine affection (p. 33); Figs. 8–10 affection clouds & projectile (pp. 40–42); octave after violet.",
+      "Path 8 · Rose/carmine affection (p. 33); Fig. 8 pure-affection cloud; projectile Figs. 10–12.",
   },
   9: {
     colorName: "White-Gold",
     hex: "#FFD54F",
     musicalNote: "Chord",
     blurb:
-      "Path 9 · Chord of many rates (p. 22 complex thoughts); colour-key synthesis; sevenfold + Wagner multi-colour mass.",
+      "Path 9 · Chord of many rates (p. 22); Fig. 9 stained affection / synthesis; sevenfold + Wagner.",
   },
 };
 
+/** Master numbers: doubled ray — same colour key, elevated / compound plates. */
+const MASTER_META: Record<
+  number,
+  { colorName: string; hex: string; musicalNote: string; blurb: string }
+> = {
+  11: {
+    colorName: "Orange · Master 11",
+    hex: "#FB8C00",
+    musicalNote: "Re′′",
+    blurb:
+      "Master 11 · illuminates path 2 (orange pride/ambition→higher vocation). Colour key + Fig. 2 + Logos/intellect plates.",
+  },
+  22: {
+    colorName: "Green · Master 22",
+    hex: "#43A047",
+    musicalNote: "Fa′′",
+    blurb:
+      "Master 22 · master builder on path 4 (green adaptability). Colour key + Fig. 4 + compound pendulum / cosmic-order forms.",
+  },
+  33: {
+    colorName: "Indigo · Master 33",
+    hex: "#3949AB",
+    musicalNote: "La′′",
+    blurb:
+      "Master 33 · teacher/healer on path 6 (indigo). Colour key + Fig. 6 + six-directions hexagram + sevenfold plates.",
+  },
+  44: {
+    colorName: "Rose · Master 44",
+    hex: "#EC407A",
+    musicalNote: "Do′′",
+    blurb:
+      "Master 44 · disciplined affection on path 8 (rose). Colour key + Fig. 8 + definite affection projectiles.",
+  },
+  55: {
+    colorName: "Red · Master 55",
+    hex: "#E53935",
+    musicalNote: "Do′′",
+    blurb:
+      "Master 55 · elevated path 1 (red). Colour key + Fig. 1 + will/projectile forms.",
+  },
+  66: {
+    colorName: "Yellow · Master 66",
+    hex: "#FDD835",
+    musicalNote: "Mi′′",
+    blurb:
+      "Master 66 · elevated path 3 (yellow intellect). Colour key + Fig. 3 + Cosmic Order Fig. 40.",
+  },
+  77: {
+    colorName: "Blue · Master 77",
+    hex: "#1E88E5",
+    musicalNote: "Sol′′",
+    blurb:
+      "Master 77 · elevated path 5 (blue devotion). Colour key + Fig. 5 + religious-feeling plates.",
+  },
+  88: {
+    colorName: "Violet · Master 88",
+    hex: "#8E24AA",
+    musicalNote: "Si′′",
+    blurb:
+      "Master 88 · elevated path 7 (violet). Colour key + Fig. 7 + sevenfold / Wagner density.",
+  },
+  99: {
+    colorName: "White-Gold · Master 99",
+    hex: "#FFD54F",
+    musicalNote: "Chord′′",
+    blurb:
+      "Master 99 · elevated path 9 (chord of rates). Colour key + Fig. 9 + multi-colour synthesis plates.",
+  },
+};
+
+const COLOUR_KEY_AS_FIGURE =
+  THOUGHT_FORM_FIGURES.find((f) => f.id === "colour-key") ?? THOUGHT_FORM_FIGURES[0]!;
+
+function masterExtraFigures(master: number, base: number): ThoughtFormFigure[] {
+  return THOUGHT_FORM_FIGURES.filter(
+    (f) =>
+      f.id === "colour-key" ||
+      f.id === "fig40-41" ||
+      f.id === "sevenfold-plate" ||
+      (master >= 33 && (f.id === "mendelssohn" || f.id === "wagner")) ||
+      f.pathNumbers.includes(base),
+  );
+}
+
 export function thoughtFormBundleForNumber(n: number): PathThoughtFormBundle {
-  const number = n >= 1 && n <= 9 ? n : 9;
-  const meta = PATH_META[number]!;
-  const colourKeys = COLOUR_KEY.filter((c) => c.pathNumbers.includes(number));
-  const figures = THOUGHT_FORM_FIGURES.filter((f) => f.pathNumbers.includes(number));
+  const raw = Math.abs(Math.trunc(n));
+  const isMaster = isMasterNumber(raw);
+  const baseDigit = baseDigitFromPath(raw);
+  const number = isMaster ? raw : baseDigit;
+  const meta = isMaster
+    ? (MASTER_META[number] ?? {
+        ...PATH_META[baseDigit]!,
+        colorName: `${PATH_META[baseDigit]!.colorName} · Master ${number}`,
+        blurb: `Master ${number} · rides path ${baseDigit} colour/emotion on the Thought-Forms key.`,
+      })
+    : PATH_META[baseDigit]!;
+
+  const primaryFigure = PRIMARY_FIGURE_BY_DIGIT[baseDigit]!;
+  const colourKeys = COLOUR_KEY.filter((c) => c.pathNumbers.includes(baseDigit));
+  const related = THOUGHT_FORM_FIGURES.filter((f) => f.pathNumbers.includes(baseDigit));
+  const extras = isMaster ? masterExtraFigures(number, baseDigit) : [];
+  const seen = new Set<string>();
+  const figures: ThoughtFormFigure[] = [];
+  for (const f of [primaryFigure, COLOUR_KEY_AS_FIGURE, ...related, ...extras]) {
+    if (seen.has(f.id)) continue;
+    seen.add(f.id);
+    figures.push(f);
+  }
   const combinations = COLOUR_COMBINATIONS.filter((c) =>
-    c.numberCombos.some((combo) => combo.includes(String(number))),
+    c.numberCombos.some(
+      (combo) => combo.includes(String(baseDigit)) || combo.includes(String(number)),
+    ),
   );
   return {
     number,
+    baseDigit,
+    isMaster,
     ...meta,
     colourKeys,
     generalColourKey: COLOUR_KEY_GENERAL_SOURCE,
-    gridCells: colourKeyCellsForNumber(number),
+    gridCells: colourKeyCellsForNumber(baseDigit),
+    primaryFigure,
     figures,
     combinations,
     laws: THOUGHT_FORM_THREE_LAWS,

@@ -2779,7 +2779,13 @@ function RelevantThoughtForms({
 }) {
   const bundle = thoughtFormBundleForNumber(number);
   const key = COLOUR_KEY_GENERAL_SOURCE;
-  const emotionPlates = bundle.figures.filter((f) => f.id !== "colour-key");
+  const primary = bundle.primaryFigure;
+  const emotionPlates = bundle.figures.filter(
+    (f) => f.id !== "colour-key" && f.id !== primary.id,
+  );
+  const pathLabel = bundle.isMaster
+    ? `Master ${bundle.number} · ray ${bundle.baseDigit}`
+    : `Path ${bundle.number}`;
 
   return (
     <Panel
@@ -2789,6 +2795,32 @@ function RelevantThoughtForms({
       <p className="mb-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
         {bundle.blurb}
       </p>
+
+      {/* Primary Fig. N plate — every digit 1–9 (and master ray) has colour + emotion */}
+      <figure className="mb-4 overflow-hidden rounded-sm border border-cyan/40 bg-black/50">
+        <div className="border-b border-cyan/25 bg-cyan/10 px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-cyan">
+            Primary plate · {pathLabel} · {primary.fig}
+          </p>
+          <p className="font-mono text-[12px] text-amber">
+            {bundle.colorName} · {primary.emotion}
+          </p>
+        </div>
+        <div className="relative max-h-[min(55vh,640px)] overflow-auto bg-black/70 p-2">
+          <img
+            src={primary.src}
+            alt={`${primary.fig} · ${primary.emotion}`}
+            className="mx-auto h-auto w-full max-w-3xl object-contain"
+            loading="eager"
+          />
+        </div>
+        <figcaption className="space-y-1 border-t border-cyan/20 px-3 py-2.5">
+          <p className="font-mono text-[9px] text-muted-foreground">
+            {primary.shape} · {primary.colours} · book p. {primary.bookPage}
+          </p>
+          <p className="font-mono text-[10px] leading-relaxed text-moon/90">{primary.quote}</p>
+        </figcaption>
+      </figure>
 
       {/* Always-visible general source for every path / scramble / combination */}
       <figure className="mb-4 overflow-hidden rounded-sm border border-amber/40 bg-black/50">
@@ -2808,8 +2840,8 @@ function RelevantThoughtForms({
             decoding="async"
             onError={(e) => {
               const img = e.currentTarget;
-              if (img.dataset.fallback === "1") return;
-              img.dataset.fallback = "1";
+              if (img.dataset["fallback"] === "1") return;
+              img.dataset["fallback"] = "1";
               img.src = "/numerology/thought-forms/colorchart.jpg";
             }}
           />
@@ -2840,7 +2872,7 @@ function RelevantThoughtForms({
       {bundle.colourKeys.length > 0 && (
         <div className="mb-4 space-y-1.5">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-magenta">
-            Meaning of the Colours · pp. 32–35 · path {number}
+            Meaning of the Colours · pp. 32–35 · {pathLabel}
           </p>
           {bundle.colourKeys.map((entry) => (
             <div

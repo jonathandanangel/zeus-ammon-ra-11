@@ -485,7 +485,13 @@ export const PHILOSOPHER_ORDER = [
 ] as const;
 
 export function philosophyForNumber(n: number): NumberPhilosophy {
-  const key = n >= 1 && n <= 9 ? n : 9;
+  // Masters 11/22/33… ride their base ray (2/4/6…) for sacred-geometry colour.
+  let key = Math.abs(Math.trunc(n));
+  if (key > 9) {
+    const d = key % 9;
+    key = d === 0 ? 9 : d;
+  }
+  if (key < 1) key = 9;
   return NUMBER_PHILOSOPHY[key]!;
 }
 

@@ -5,10 +5,14 @@ and the user’s 1905 PDF scan (book/ subfolder).
 GENERAL SOURCE (all words / path numbers / scrambles / colour combinations):
 key-to-meanings-of-colours.png
   — Frontispiece “Key to the Meanings of Colours” (Besant & Leadbeater),
-    high-resolution crop from the 1905 PDF (left plate only, ~2340×3490).
-    Always shown in the Numerology tab for every path digit. Use this chart
-    when decoding colour mixes, word–number anagrams, and combination rates.
+    Wikimedia / Gutenberg Colorchart (~1030×1561). Always shown for every
+    path digit 1–9 and master 11/22/33… (masters ride their base ray).
+    Use this chart for colour mixes, word–number anagrams, and combinations.
     Fallback: colorchart.jpg (Project Gutenberg plate).
+
+PRIMARY FIGURE PER DIGIT (Fig. N ↔ path N colour + emotion):
+  1→fig1.png  2→fig2.png  3→fig3.png  4–7→figs4-7.png  8–9→book/p22_x360.png
+  Masters keep 11/22/33… and reuse the base-digit primary plate + elevated forms.
 
 colorchart.jpg  — Alternate / Gutenberg colour chart scan
 fig1.png        — Fig. 1: Chladni's Sound Plate (vibration → form)

@@ -5,6 +5,7 @@ import {
   philosophyForNumber,
   type NumberPhilosophy,
 } from "./philosopher-numbers";
+import { baseDigitFromPath, isMasterNumber } from "./thought-forms";
 
 export type { NumberPhilosophy, PhilosopherThought, SacredGeometry } from "./philosopher-numbers";
 export {
@@ -486,10 +487,15 @@ export function bruteForceJohnsonExpand(...texts: string[]): JohnsonExpansion[] 
   });
 }
 
+/**
+ * Reduce to a single digit, preserving master numbers 11, 22, 33, 44…99
+ * when they appear as an intermediate (or final) sum.
+ */
 export function digitalRoot(n: number): { number: number; steps: number[] } {
   const steps: number[] = [n];
   let value = Math.abs(Math.trunc(n));
   while (value > 9) {
+    if (isMasterNumber(value)) break;
     value = String(value)
       .split("")
       .reduce((acc, d) => acc + Number(d), 0);
@@ -531,10 +537,17 @@ export function wordToNumerology(word: string): NumerologyResult {
   }
 
   const remainder = sumPositions % 9;
-  const number = remainder === 0 ? 9 : remainder;
-  const { steps: reductionSteps } = digitalRoot(sumPositions);
-  const meaning = MEANINGS[number] ?? MEANINGS[9]!;
-  const tarot = TAROT[number] ?? TAROT[9]!;
+  const { number, steps: reductionSteps } = digitalRoot(sumPositions);
+  const baseDigit = baseDigitFromPath(number);
+  const baseMeaning = MEANINGS[baseDigit] ?? MEANINGS[9]!;
+  const meaning = isMasterNumber(number)
+    ? {
+        title: `Master ${number} · ${baseMeaning.title}`,
+        traits: baseMeaning.traits,
+        note: `Master path on ray ${baseDigit} (${baseMeaning.title}). ${baseMeaning.note}`,
+      }
+    : baseMeaning;
+  const tarot = TAROT[baseDigit] ?? TAROT[9]!;
   const philosophy = philosophyForNumber(number);
 
   const johnsonExpansions = bruteForceJohnsonExpand(
