@@ -1388,9 +1388,10 @@ export function generateBabelBooks(input: {
 
     for (const [index, ch] of drafts.entries()) {
       // Silent local preference: denser prose combination for the coherent island
+      // Maximize local Writing IQ (~approach 190) from located title/excerpt/phrase/colour tokens
       const coherentBlock = pickBestRelevantProse(
-        [ch.title, ch.excerpt, ch.phrase],
-        8,
+        [ch.title, ch.excerpt, ch.phrase, ...ch.highlight.map((h) => h.word)],
+        14,
       ).prose || `${ch.title}. ${ch.excerpt}. ${ch.phrase}`;
       const woven = weaveBabelPageText(
         coherentBlock,
@@ -1548,7 +1549,8 @@ export async function quietlyPolishBabelBooks(
           leaf.excerpt,
           ...leaf.highlight.map((h) => h.word).slice(0, 6),
         ];
-        const candidates = babelProseCandidates(parts).slice(0, 3);
+        // Prefer highest-IQ candidates first (sorted in babelProseCandidates)
+        const candidates = babelProseCandidates(parts).slice(0, light ? 4 : 8);
         const bodyPad = leaf.bodyText
           .split("\n")
           .filter((l) => l.trim().length > 40 && !l.startsWith("["))
@@ -1559,10 +1561,10 @@ export async function quietlyPolishBabelBooks(
         let coherent = candidates[0] ?? leaf.excerpt;
         try {
           coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
-            // Full Free ensemble (ModernBERT + stylometrics + all consensus rules)
+            // Full Free ensemble + maximize Writing IQ toward ~190
             neural: light ? "none" : "modernbert",
             localOnly: light,
-            maxCandidates: light ? 2 : 3,
+            maxCandidates: light ? 3 : 6,
           });
         } catch {
           coherent = pickBestRelevantProse(parts, 4).prose || leaf.excerpt;
