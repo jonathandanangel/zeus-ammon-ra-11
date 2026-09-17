@@ -228,7 +228,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Instrument benches",
       title: "Numerical Extreme & Vanity",
       blurb:
-        "Brute force definitions, run various math calculations with same original functionality from the numerical analysis project (and more extended features not revealed and was thinking about doing), do heat transfer testing, access official Samuel Johnson Dictionary, engineering economy, component design usability, library of babel functional and optimized for high complexity and order for information scramble using AI detector as filter, and various scientific tools from MATLAB and Octave.",
+        "Brute force definitions, run various math calculations with same original functionality from a numerical analysis project in Octave (and more extended features not revealed and was thinking about doing), do heat transfer testing, access official Samuel Johnson Dictionary, engineering economy, component design usability, library of babel functional and optimized for high complexity and order for information scramble using AI detector as filter, and various scientific tools from MATLAB and Octave.",
       accentClass: "from-[#ff4d00]/40 via-[#ff2a2a]/20 to-[#ffcc00]/20 border-[#ff6b2a]/85",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff4d6d] hover:bg-[#ff2a2a]/15 numerical-extreme-menu-item vanity-app-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
