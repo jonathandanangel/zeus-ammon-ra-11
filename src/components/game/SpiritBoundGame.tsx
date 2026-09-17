@@ -505,7 +505,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
   return (
     <div
       className={cn(
-        "spirit-bound-shell legend-terminal mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-2 py-4 font-pixel",
+        "spirit-bound-shell mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-2 py-4 font-pixel",
         mode === "splash" || mode === "hatch" || mode === "title"
           ? "min-h-[100dvh] justify-center"
           : "extreme-shell",

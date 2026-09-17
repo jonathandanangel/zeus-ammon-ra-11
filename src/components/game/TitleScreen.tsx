@@ -23,7 +23,6 @@ export interface TitleScreenProps {
   onNumericalExtreme: () => void;
   onVanityApp: () => void;
   onAiDetector: () => void;
-  onWhoAmI: () => void;
   onUniversityProjects: () => void;
   onSettings: () => void;
   onValidate: () => void;
@@ -251,13 +250,6 @@ export function TitleScreen(p: TitleScreenProps) {
           onClick: p.onAiDetector,
           buttonClass:
             "border-cyan/55 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(34,211,238,0.22)]",
-        },
-        {
-          label: "Who Am I?",
-          sub: "Akinator · yes/no character guess",
-          onClick: p.onWhoAmI,
-          buttonClass:
-            "border-amber/55 text-amber hover:bg-amber/15 shadow-[0_0_24px_rgba(255,200,87,0.2)]",
         },
       ],
     },
