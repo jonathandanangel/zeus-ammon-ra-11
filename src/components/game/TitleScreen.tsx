@@ -23,6 +23,7 @@ export interface TitleScreenProps {
   onNumericalExtreme: () => void;
   onVanityApp: () => void;
   onAiDetector: () => void;
+  onUniversityProjects: () => void;
   onSettings: () => void;
   onValidate: () => void;
 }
@@ -221,6 +222,17 @@ export function TitleScreen(p: TitleScreenProps) {
         { label: "Numerical Extreme", onClick: p.onNumericalExtreme },
         { label: "Vanity App", onClick: p.onVanityApp },
       ],
+    },
+    {
+      id: "university",
+      eyebrow: "Coursework labs",
+      title: "University Projects",
+      blurb:
+        "MATLABProject-1 data plotter in the browser: load lab tables, pick X/Y columns, scatter+line, equal axes, start/end markers, engineering click-picks → CSV. Also browses PyCharm Misc Python labs and your MATLABProject-1.m source.",
+      accentClass: "from-[#60a5fa]/25 via-transparent to-[#93c5fd]/20 border-[#60a5fa]/60",
+      buttonClass:
+        "border-[#60a5fa]/80 text-[#93c5fd] hover:bg-[#60a5fa]/15 shadow-[0_0_24px_rgba(96,165,250,0.22)]",
+      actions: [{ label: "Open University Projects", onClick: p.onUniversityProjects }],
     },
     {
       id: "system",

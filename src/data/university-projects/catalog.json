@@ -1,0 +1,780 @@
+{
+  "title": "University Projects",
+  "count": 76,
+  "projects": [
+    {
+      "id": "matlab/MATLABProject-1.m",
+      "collection": "matlab",
+      "collectionTitle": "MATLAB coursework",
+      "name": "MATLABProject-1.m",
+      "path": "/university-projects/matlab/MATLABProject-1.m",
+      "kind": "matlab",
+      "lines": 377,
+      "preview": "filepath = input(\"Enter file name: \",'s');\n%filepath = \"Sample Data 01.txt\";\n\nif ~isfile(filepath)\n    error(\"notworking\")\n\nend\n\nlines = readlines(filepath);\n\nnewlines = strtrim(lines);\n\ntesting = splitlines(newlines);\n"
+    },
+    {
+      "id": "python-misc/2_dimensional_list_pattern.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "2_dimensional_list_pattern.py",
+      "path": "/university-projects/python/misc/2_dimensional_list_pattern.py",
+      "kind": "python",
+      "lines": 21,
+      "preview": "grid_size = int(input())\n\npattern_2d = []\nfor m in range(grid_size):\n    row = []\n    for n in range(grid_size):\n        row.append(0)\n    pattern_2d.append(row)\n\n\"\"\" Your code goes here \"\"\"\n\n\n\n"
+    },
+    {
+      "id": "python-misc/HW05_01.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "HW05_01.py",
+      "path": "/university-projects/python/misc/HW05_01.py",
+      "kind": "python",
+      "lines": 30,
+      "preview": "currency = [\n    [1, 5, 10],  # US Dollars\n    [0.75, 3.77, 7.53],  # Euros\n    [0.65, 3.25, 6.50]  # British pounds\n]\n\nnew_currency = []\nfor row_index, row in enumerate(currency):\n    # The fix is here: You are already using `row_index` for the index\n    # and `row` for the inner list.\n    # The `if` statement logic is incorrect and should be removed.\n\n    # You can directly use `row` in the inner loop.\n    print(f\"Row {row_index}:\")  # Or print(f\"{row}\") to see the whole inner list"
+    },
+    {
+      "id": "python-misc/anothe.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "anothe.py",
+      "path": "/university-projects/python/misc/anothe.py",
+      "kind": "python",
+      "lines": 12,
+      "preview": "beverage_choices = input()\nnew_index = int(input())\n\n\nbeverage_list = beverage_choices.split(\";\")\n\nbeverage_list.pop(new_index)\n\nbeverage_list.insert(new_index, \"eggnog\")\n\n\nprint(beverage_list)"
+    },
+    {
+      "id": "python-misc/bumps.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "bumps.py",
+      "path": "/university-projects/python/misc/bumps.py",
+      "kind": "python",
+      "lines": 13,
+      "preview": "# Read input and split into integers\ntokens = input().split()\ntrend_data = [int(t) for t in tokens]\n\n# Collect all bumps as (left, peak, right)\nbumps = []\nfor i in range(1, len(trend_data) - 1):\n    if trend_data[i] > trend_data[i - 1] and trend_data[i] > trend_data[i + 1]:\n        bumps.append((trend_data[i - 1], trend_data[i], trend_data[i + 1]))\n\n# Print only the last two bumps (if fewer exist, print those)\nfor x, y, z in bumps[-2:]:\n    print(f'Bump: {x} {y} {z}')"
+    },
+    {
+      "id": "python-misc/deletion.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "deletion.py",
+      "path": "/university-projects/python/misc/deletion.py",
+      "kind": "python",
+      "lines": 27,
+      "preview": "user_input = input(\"Enter numbers:\")\n\ntokens = user_input.split()  # Split into separate strings\n\n# Convert strings to integers\nnums = []\nfor token in tokens:\n    nums.append(int(token))\n\n# Print each position and number\nprint()  # Print a single newline\nfor index in range(len(nums)):\n    value = nums[index]\n"
+    },
+    {
+      "id": "python-misc/dicts.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "dicts.py",
+      "path": "/university-projects/python/misc/dicts.py",
+      "kind": "python",
+      "lines": 23,
+      "preview": "student_grades = {}  # Create an empty dict\ngrade_prompt = \"Enter name and grade (Ex. \\\"Bob A+\\\"):\"\ndel_prompt = \"Enter a name to delete:\"\nmenu_prompt = (\"1. Add/modify student grade\\n\"\n               \"2. Delete student grade\\n\"\n               \"3. Print student grades\\n\"\n               \"4. Quit\\n\")\n\nwhile True:\n    command = input(menu_prompt).lower().strip()\n    if command == \"1\":\n        name, grade = input(grade_prompt).split()\n        student_grades[name] = grade\n    elif command == \"2\":"
+    },
+    {
+      "id": "python-misc/dicts_challenges.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "dicts_challenges.py",
+      "path": "/university-projects/python/misc/dicts_challenges.py",
+      "kind": "python",
+      "lines": 3,
+      "preview": "my_string = \"Hello world how are you?\"\nword_list = my_string.split()\nprint(word_list)"
+    },
+    {
+      "id": "python-misc/directly_accessing_list_using_i.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "directly_accessing_list_using_i.py",
+      "path": "/university-projects/python/misc/directly_accessing_list_using_i.py",
+      "kind": "python",
+      "lines": 38,
+      "preview": "import math\n\nq = 5\nr= q -2\nq=2*q\n\ns= q -r\n\nprint(\"s = \", s)\n\n# quiz example\nprint(\"quiz example 2\\n\")\n\n#quiz example 2"
+    },
+    {
+      "id": "python-misc/efkoejreoreo knbjg.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "efkoejreoreo knbjg.py",
+      "path": "/university-projects/python/misc/efkoejreoreo knbjg.py",
+      "kind": "python",
+      "lines": 19,
+      "preview": "k = int(input())\nwaiting_room = input().split()\n\n\nif k == 1:\n    print(f'{waiting_room[k - 1]} is the {k}st client in line.')\nelif k == 2:\n    print(f'{waiting_room[k - 1]} is the {k}nd client in line.')\nelif k == 3:\n    print(f'{waiting_room[k - 1]} is the {k}rd client in line.')\nelif k == 4:\n    print(f'{waiting_room[k - 1]} is the {k}th client in line.')\nelif k == 5:\n    print(f'{waiting_room[k - 1]} is the {k}th client in line.')"
+    },
+    {
+      "id": "python-misc/eodwefmoe.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "eodwefmoe.py",
+      "path": "/university-projects/python/misc/eodwefmoe.py",
+      "kind": "python",
+      "lines": 12,
+      "preview": "key_value_pair = input()\n\n\n\n\ntokens_list = key_value_pair.split(\": \")\n\n\n\n\n\nprint(tokens_list)"
+    },
+    {
+      "id": "python-misc/example.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "example.py",
+      "path": "/university-projects/python/misc/example.py",
+      "kind": "python",
+      "lines": 14,
+      "preview": "x = float(input(\"Enter percent: \"))\n\nif x >= 90:\n    print('A')\nelif x >= 80:\n    print('B')\nelif x >= 70:\n    print('C')\nelif x >= 60:\n    print('D')\nelse:\n    print('unknown')\n\n"
+    },
+    {
+      "id": "python-misc/exampleruntest.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "exampleruntest.py",
+      "path": "/university-projects/python/misc/exampleruntest.py",
+      "kind": "python",
+      "lines": 34,
+      "preview": "\n# Read the first line of integers\nnums_input = input().split()\nnums = []\nfor n in nums_input:\n    nums.append(int(n))\n\n# Read the lower and upper bounds\nbounds_input = input().split()\nlow = int(bounds_input[0])\nhigh = int(bounds_input[1])\n\n# Print numbers within the range, followed by a comma\nfor n in nums:"
+    },
+    {
+      "id": "python-misc/exist.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "exist.py",
+      "path": "/university-projects/python/misc/exist.py",
+      "kind": "python",
+      "lines": 13,
+      "preview": "from os import WCONTINUED\n\na=2\nif a > 1:\n\n    print(a)\n\n\nwhile a>1:\n    continue\n    print(a)\n\n"
+    },
+    {
+      "id": "python-misc/experi_mental_data_i_one.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "experi_mental_data_i_one.py",
+      "path": "/university-projects/python/misc/experi_mental_data_i_one.py",
+      "kind": "python",
+      "lines": 23,
+      "preview": "experimental_data = []\nfor token in input().split():\n\texperimental_data.append(int(token))\n\n\"\"\" Your code goes here \"\"\"\n\n\n\n\n\nbackup_data = experimental_data[:]\n\nsamples_picked = experimental_data[1::3]\n"
+    },
+    {
+      "id": "python-misc/experiment_al_data.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "experiment_al_data.py",
+      "path": "/university-projects/python/misc/experiment_al_data.py",
+      "kind": "python",
+      "lines": 18,
+      "preview": "experimental_data = []\nfor token in input().split():\n\texperimental_data.append(int(token))\n\nslice_length = len(experimental_data) // 3\n\nmorning_group = experimental_data[0:slice_length]\n\nafternoon_group = experimental_data[slice_length:(2*slice_length)]\n\nevening_group = experimental_data[(2*slice_length):]\n\n\nprint(f\"Number of data in each third: {slice_length}\")"
+    },
+    {
+      "id": "python-misc/food_available_list.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "food_available_list.py",
+      "path": "/university-projects/python/misc/food_available_list.py",
+      "kind": "python",
+      "lines": 29,
+      "preview": "food_available = input().split()\nallergies_list = input().split()\n\nprint(\"Food on menu:\", end=\" \")\nfor food in food_available:\n    print(food, end=\" \")\nprint()\n\nprint(\"Food allergies:\", end=\" \")\nfor food in allergies_list:\n    print(food, end=\" \")\nprint()\n\n\"\"\" Your code goes here \"\"\""
+    },
+    {
+      "id": "python-misc/game_scoring_files.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "game_scoring_files.py",
+      "path": "/university-projects/python/misc/game_scoring_files.py",
+      "kind": "python",
+      "lines": 244,
+      "preview": "import os\n\n\ntokens = \"/Users/jonathanangel10312002/PyCharmMiscProject/.venv/bin/python /Users/jonathanangel10312002/PyCharmMiscProject/HW04b_TeamData.txt\".split(os.path.sep)\nprint(tokens)\n\nfile_path = \"/Users/jonathanangel10312002/PyCharmMiscProject/\"\n\nfile = input(\"Enter a score data file name: \")\n\npath = os.path.join(file_path, file)\nwith open(path, \"r\") as f:\n    all_lines = f.readlines()                          # raw (includes \\n)\n    clean_lines = [line.rstrip(\"\\n\") for line in all_lines]  # clean (no \\n)"
+    },
+    {
+      "id": "python-misc/hangman.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "hangman.py",
+      "path": "/university-projects/python/misc/hangman.py",
+      "kind": "python",
+      "lines": 32,
+      "preview": "word = \"onomatopoeia\"\nnum_guesses = 10\n\nhidden_word = \"-\" * len(word)\n\nguess = 1\n\nwhile guess <= num_guesses and \"-\" in hidden_word:\n    print(hidden_word)\n    user_input = input(f\"Enter a character (guess #{guess}): \")\n\n    if len(user_input) == 1:\n        # Count the number of times the character occurs in the word\n        num_occurrences = word.count(user_input)"
+    },
+    {
+      "id": "python-misc/hw2.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "hw2.py",
+      "path": "/university-projects/python/misc/hw2.py",
+      "kind": "python",
+      "lines": 28,
+      "preview": "# Calculate the extension (stretch) of a simple uniform steel rod\n# of circular cross section when subject to a constant tension\n# force. Assume that we are given\n#   d = the rod diameter (milimeters)\n#   l = the rod length (meters)\n#   F = the force on the rod (Newtons)\n\n# User enters these values\n\nimport math\n\nd = float(input('rod diameter in mm: '))    # we will need to convert this to m\nl = float(input('rod length in m: '))\nF = float(input('force in Newtons: '))"
+    },
+    {
+      "id": "python-misc/iteration_test.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "iteration_test.py",
+      "path": "/university-projects/python/misc/iteration_test.py",
+      "kind": "python",
+      "lines": 10,
+      "preview": "nums = [\n    [0, 2, 4, 6],\n    [0, 3, 6, 9, 12]\n]\n\n\nfor n1 in nums:\n   for n2 in n1:\n      print(n2, end=\" \")\n   print()"
+    },
+    {
+      "id": "python-misc/k.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "k.py",
+      "path": "/university-projects/python/misc/k.py",
+      "kind": "python",
+      "lines": 12,
+      "preview": "x = float(input('Enter x'))\ny = float(input('Enter y'))\n\ntest1 = ( ( x >= 0 ) and ( y >= 0 ) )\ntest2 = ( ( x < 0 ) and ( y >= 0 ) )\ntest3 = ( ( x >= 0 ) and ( y < 0 ) )\ntest4 = ( ( x < 0 ) and ( y < 0 ) )\n\nf = test1*(x + y) + test2*(x**2 + y) + \\\ntest3*(x + y**2) + test4*(x**2 + y**2)\n\nprint('f(',x,',',y,') = ',f)"
+    },
+    {
+      "id": "python-misc/levelslslsl.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "levelslslsl.py",
+      "path": "/university-projects/python/misc/levelslslsl.py",
+      "kind": "python",
+      "lines": 21,
+      "preview": "# Read input and split input into tokens\ntokens = input().split()\n\nsamples_list = []\nfor token in tokens:\n    samples_list.append(int(token))\n\nprint(f\"Raw samples: {samples_list}\")\n\nnum_rejected = 0\nindex_num = 0\nfor i in samples_list:\n    if i < 65 and i != 65:\n        print(f'{i} at index {index_num} is accepted')"
+    },
+    {
+      "id": "python-misc/lists level higher.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "lists level higher.py",
+      "path": "/university-projects/python/misc/lists level higher.py",
+      "kind": "python",
+      "lines": 13,
+      "preview": "m = int(input())\nplus_one_animal = input()\nanimal_names = input().split()\n\ndel animal_names[m]\n\n\nanimal_names[0] = plus_one_animal\n\n\n\n\nprint(f\"My favorite animals: {animal_names}\")"
+    },
+    {
+      "id": "python-misc/model_sol_two.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "model_sol_two.py",
+      "path": "/university-projects/python/misc/model_sol_two.py",
+      "kind": "python",
+      "lines": 16,
+      "preview": "import math\n\nx = int(input())\n\nif x >= 0:\n    print(f'value of x is {x}, and abs is {math.fabs(x)}')\nelif x < 0:\n    print(f'value of x is {x}, and abs is {math.fabs(x)}')\nelse:\n    print(\"dne\")\n\n\n\n"
+    },
+    {
+      "id": "python-misc/model_solution.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "model_solution.py",
+      "path": "/university-projects/python/misc/model_solution.py",
+      "kind": "python",
+      "lines": 3,
+      "preview": "import math\n\nprint(math.factorial(3))"
+    },
+    {
+      "id": "python-misc/modifying_lists_while_iterating.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "modifying_lists_while_iterating.py",
+      "path": "/university-projects/python/misc/modifying_lists_while_iterating.py",
+      "kind": "python",
+      "lines": 33,
+      "preview": "nums1 = []\nnums2 = []\n\nuser_input = input(\"Enter first set of numbers: \")\ntokens = user_input.split()  # Split into separate strings\n\n# Convert strings to integers\nprint()\nfor pos, val in enumerate(tokens):\n    nums1.append(int(val))\n    print(f\"{pos}: {val}\")\n\nuser_input = input(\"Enter second set of numbers: \")\ntokens = user_input.split()"
+    },
+    {
+      "id": "python-misc/n.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "n.py",
+      "path": "/university-projects/python/misc/n.py",
+      "kind": "python",
+      "lines": 13,
+      "preview": "x = float(input('Enter x '))\ny = float(input('Enter y '))\n\n\nif ( ( x >= 0 ) and ( y >= 0 ) ):\n    f = x + y\nelif ( ( x < 0 ) and ( y >= 0 ) ):\n    f = x**2 + y\nelif ( ( x >= 0 ) and ( y < 0 ) ):\n    f = x + y**2\nelse:\n    f = x**2 + y**2\n    print('f(',x,',',y,') = ',f)"
+    },
+    {
+      "id": "python-misc/numsRejecQues.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "numsRejecQues.py",
+      "path": "/university-projects/python/misc/numsRejecQues.py",
+      "kind": "python",
+      "lines": 65,
+      "preview": "# Read input and split input into tokens\ntokens = input().split()\n\ninput_list = []\nfor token in tokens:\n    input_list.append(int(token))\n\nprint(f\"All data: {input_list}\")\n\n#largest_diff = None\n#element_index = 0\n#subtraction_index = 0\n#largest_diff = 0\n"
+    },
+    {
+      "id": "python-misc/nums_removal.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "nums_removal.py",
+      "path": "/university-projects/python/misc/nums_removal.py",
+      "kind": "python",
+      "lines": 35,
+      "preview": "bacteria_colonies = []\n\ntokens = input().split()\nfor token in tokens:\n    bacteria_colonies.append(int(token))\n\nprint(\"Original samples:\", end=\" \")\nfor sample in bacteria_colonies:\n    print(sample, end=\" \")\nprint()\n\n\n\nfor i in range(len(bacteria_colonies)):"
+    },
+    {
+      "id": "python-misc/oirfjioewrfj.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "oirfjioewrfj.py",
+      "path": "/university-projects/python/misc/oirfjioewrfj.py",
+      "kind": "python",
+      "lines": 12,
+      "preview": "# twelve times table, very basic\nfor i in range(1,13):\n    for j in range(1,13):\n        print('%4d' % (i*j), end='')\n    print()\n\n    #multiplication table\n\n\n#Example: Creating Tabular Output\n\n"
+    },
+    {
+      "id": "python-misc/op.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "op.py",
+      "path": "/university-projects/python/misc/op.py",
+      "kind": "python",
+      "lines": 7,
+      "preview": "# repeat some math until user quits\nDoMore = 'y' # do at least the first one\nwhile ( DoMore[0].lower()=='y' ):\n    x = float(input('Enter a value: '))\n    sqrt_x = x**0.5\n    print('The square root of',x,'=',sqrt_x,'\\n')\n    DoMore = input('Do another (y/n) ? ')"
+    },
+    {
+      "id": "python-misc/os_file.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "os_file.py",
+      "path": "/university-projects/python/misc/os_file.py",
+      "kind": "python",
+      "lines": 98,
+      "preview": "import os\n\ntokens = \"/Users/jonathanangel10312002/PyCharmMiscProject/.venv/bin/python /Users/jonathanangel10312002/PyCharmMiscProject/text.tsv\".split(os.path.sep)\nprint(tokens)\n\nfile_path = \"/Users/jonathanangel10312002/PyCharmMiscProject/\"\n\n#with open(file_path, \"r+\") as f:\n#    print(f.read())\n#    print(f.write())\n\nfile = input(\"Enter file name: \")\npath = os.path.join(file_path, file)\nwith open(path, \"r\") as f:   # read-only is enough"
+    },
+    {
+      "id": "python-misc/ostime.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "ostime.py",
+      "path": "/university-projects/python/misc/ostime.py",
+      "kind": "python",
+      "lines": 306,
+      "preview": "\nimport os\ntokens = \"/Users/jonathanangel10312002/PyCharmMiscProject/.venv/bin/python /Users/jonathanangel10312002/PyCharmMiscProject/text.tsv\".split(os.path.sep)\nprint(tokens)\n\n\n\n\nfile_path = \"/Users/jonathanangel10312002/PyCharmMiscProject/\"\n\n#with open(file_path, \"r+\") as f:\n#    print(f.read())\n#    print(f.write())\n"
+    },
+    {
+      "id": "python-misc/passenger database.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "passenger database.py",
+      "path": "/university-projects/python/misc/passenger database.py",
+      "kind": "python",
+      "lines": 41,
+      "preview": "menu_prompt = (\"Available commands:\\n\"\n               \"  (add) Add passenger\\n\"\n               \"  (del) Delete passenger\\n\"\n               \"  (print) Print passenger list\\n\"\n               \"  (exit) Exit the program\\n\"\n               \"Enter command:\\n\")\n\ndestinations = [\"PHX\", \"AUS\", \"LAS\"]\n\ndestination_prompt = (\"Available destinations:\\n\"\n                      \"(PHX) Phoenix\\n\"\n                      \"(AUS) Austin\\n\"\n                      \"(LAS) Las Vegas\\n\"\n                      \"Enter destination:\\n\")"
+    },
+    {
+      "id": "python-misc/patient_ages.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "patient_ages.py",
+      "path": "/university-projects/python/misc/patient_ages.py",
+      "kind": "python",
+      "lines": 106,
+      "preview": "patient_ages = []\n\ntokens = input().split()\nfor token in tokens:\n    patient_ages.append(int(token))\n\nprint(\"Original ages:\", end=\" \")\nfor age in patient_ages:\n    print(age, end=\" \")\nprint()\n\n\"\"\" Your code goes here \"\"\"\n\n"
+    },
+    {
+      "id": "python-misc/py_roll.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "py_roll.py",
+      "path": "/university-projects/python/misc/py_roll.py",
+      "kind": "python",
+      "lines": 10,
+      "preview": "def cm_to_mm(cm):\n    \"\"\"Converts centimeters to millimeters where 1 cm = 10 mm\n\n    Arguments:\n    cm -- numeric value representing the number of centimeters\n    \"\"\"\n    return 10 * cm\n\n\nhelp(cm_to_mm)"
+    },
+    {
+      "id": "python-misc/python hw02b.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "python hw02b.py",
+      "path": "/university-projects/python/misc/python hw02b.py",
+      "kind": "python",
+      "lines": 41,
+      "preview": "x = int(input())\ndolla = 100\nquarters = 25\ndimes = 10\nnickels = 5\npennies = 1\n\ncount_dollar = 0\ncount_quarters = 0\ncount_dimes = 0\ncount_nickels = 0\ncount_pennies = 0\n\n"
+    },
+    {
+      "id": "python-misc/randomfile.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "randomfile.py",
+      "path": "/university-projects/python/misc/randomfile.py",
+      "kind": "python",
+      "lines": 51,
+      "preview": "my_flower1 = input()\nmy_flower2 = input()\nmy_flower3 = input()\n\nyour_flower1 = input()\nyour_flower2 = input()\n\ntheir_flower = input()\n\n# 1. TODO: Define my_list containing my_flower1, my_flower2, and my_flower3\n# in that order\n\nmy_list = [my_flower1, my_flower2, my_flower3]\n"
+    },
+    {
+      "id": "python-misc/replace_string.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "replace_string.py",
+      "path": "/university-projects/python/misc/replace_string.py",
+      "kind": "python",
+      "lines": 16,
+      "preview": "replace_string = input()\nsentence = input()\n\n\nif replace_string in sentence:\n    position = sentence.find(replace_string)\n    print(\"At position:\", position)\n    new_string_sentence = sentence.replace(replace_string, \"(deleted)\", 1)\n    print(new_string_sentence)\nelse:\n    print(\"None found\")\n\n\n"
+    },
+    {
+      "id": "python-misc/script.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "script.py",
+      "path": "/university-projects/python/misc/script.py",
+      "kind": "python",
+      "lines": 16,
+      "preview": "# This is a sample Python script.\n\n# Press \u2303R to execute it or replace it with your code.\n# Press Double \u21e7 to search everywhere for classes, files, tool windows, actions, and settings.\n\n\ndef print_hi(name):\n    # Use a breakpoint in the code line below to debug your script.\n    print(f'Hi, {name}')  # Press \u2318F8 to toggle the breakpoint.\n\n\n# Press the green button in the gutter to run the script.\nif __name__ == '__main__':\n    print_hi('PyCharm')"
+    },
+    {
+      "id": "python-misc/secondtolast.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "secondtolast.py",
+      "path": "/university-projects/python/misc/secondtolast.py",
+      "kind": "python",
+      "lines": 48,
+      "preview": "# Read input and split input into tokens\ntokens = input().split()\n\ntrend_data = []\nfor token in tokens:\n    trend_data.append(int(token))\n\nprint(f\"Sequence: {trend_data}\")\n\ndata_trend = []\n\nx=0\ny=0\nz=0"
+    },
+    {
+      "id": "python-misc/slicing exmaple.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "slicing exmaple.py",
+      "path": "/university-projects/python/misc/slicing exmaple.py",
+      "kind": "python",
+      "lines": 8,
+      "preview": "usr_text = input(\"Enter a string: \")\nprint()\n\nfirst_half = usr_text[:len(usr_text) // 2]\nlast_half = usr_text[len(usr_text) // 2:]\n\nprint(f\"The first half of the string is \\\"{first_half}\\\"\")\nprint(f\"The second half of the string is \\\"{last_half}\\\"\")"
+    },
+    {
+      "id": "python-misc/smapleslist.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "smapleslist.py",
+      "path": "/university-projects/python/misc/smapleslist.py",
+      "kind": "python",
+      "lines": 53,
+      "preview": "# Read input and split input into tokens\ntokens = input().split()\n\nsamples_list = []\nfor token in tokens:\n    samples_list.append(int(token))\n\nprint(f\"All data: {samples_list}\")\n\n\n\nodd = samples_list[:]\nactual_odd = []\nreal_odd = []"
+    },
+    {
+      "id": "python-misc/splitting.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "splitting.py",
+      "path": "/university-projects/python/misc/splitting.py",
+      "kind": "python",
+      "lines": 7,
+      "preview": "color_names = input()\n\ncolors_list = color_names.split()\n\nprint(colors_list)\n\nprint(len(colors_list))"
+    },
+    {
+      "id": "python-misc/splitting_joining_strings_level3.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "splitting_joining_strings_level3.py",
+      "path": "/university-projects/python/misc/splitting_joining_strings_level3.py",
+      "kind": "python",
+      "lines": 8,
+      "preview": "beverage_spelled = input().split()\n\n\nresult_word = \"\".join(beverage_spelled)\n\n\n\nprint(f\"The beverage is: {result_word}\")"
+    },
+    {
+      "id": "python-misc/store.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "store.py",
+      "path": "/university-projects/python/misc/store.py",
+      "kind": "python",
+      "lines": 113,
+      "preview": "import os\ntokens = \"/Users/jonathanangel10312002/PyCharmMiscProject/.venv/bin/python /Users/jonathanangel10312002/PyCharmMiscProject/text.tsv\".split(os.path.sep)\nprint(tokens)\n\n\n\n\nfile_path = \"/Users/jonathanangel10312002/PyCharmMiscProject/\"\n\n#with open(file_path, \"r+\") as f:\n#    print(f.read())\n#    print(f.write())\n\nfile = \"StudentInfo copy 2.tsv\""
+    },
+    {
+      "id": "python-misc/storing.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "storing.py",
+      "path": "/university-projects/python/misc/storing.py",
+      "kind": "python",
+      "lines": 279,
+      "preview": "import os\n\ntokens = \"/Users/jonathanangel10312002/PyCharmMiscProject/.venv/bin/python /Users/jonathanangel10312002/PyCharmMiscProject/text.tsv\".split(os.path.sep)\nprint(tokens)\n\n\n\n\nfile_path = \"/Users/jonathanangel10312002/PyCharmMiscProject/\"\n\n#with open(file_path, \"r+\") as f:\n#    print(f.read())\n#    print(f.write())\n"
+    },
+    {
+      "id": "python-misc/string methods.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "string methods.py",
+      "path": "/university-projects/python/misc/string methods.py",
+      "kind": "python",
+      "lines": 13,
+      "preview": "course1 = input()\ncourse2 = input()\n\nif course1 < course2:\n    print(course1)\nelif course2 < course1:\n    print(course2)\nelse:\n    print(\"Same value\")\n\n\n\n"
+    },
+    {
+      "id": "python-misc/string user input.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "string user input.py",
+      "path": "/university-projects/python/misc/string user input.py",
+      "kind": "python",
+      "lines": 11,
+      "preview": "user_input = input()\n\nif user_input == user_input.capitalize():\n    print(\"Valid\")\nelse:\n    print(\"Invalid\")\n\n\n\n\n"
+    },
+    {
+      "id": "python-misc/string_in_class.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "string_in_class.py",
+      "path": "/university-projects/python/misc/string_in_class.py",
+      "kind": "python",
+      "lines": 17,
+      "preview": "name = \"Alice\"\nage = 30\nheight = 5.789\n\n# Using %s for string, %d for integer, %f for float\nmessage1 = \"Hello, %s! You are %d years old.\" % (name, age)\nprint(message1)\n\n# Using width specifiers and precision for floats\nmessage2 = \"Your height is %7.3f feet.\" % height\nprint(message2)\n\n# Left-justification with negative width\nitem = \"Book\""
+    },
+    {
+      "id": "python-misc/string_methods_user_string_cap_input.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "string_methods_user_string_cap_input.py",
+      "path": "/university-projects/python/misc/string_methods_user_string_cap_input.py",
+      "kind": "python",
+      "lines": 18,
+      "preview": "user_string = input()\n\n#strip().title() - to take off leading and trailing whitespace and\n# capitalize every first sentence like a title to something\n# Takes off spaces strip()\n\nif \"Paint color:\" in user_string:\n    print(user_string.strip().title())\nelse:\n    print(user_string.strip().upper())\n\n\n\n"
+    },
+    {
+      "id": "python-misc/tac.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "tac.py",
+      "path": "/university-projects/python/misc/tac.py",
+      "kind": "python",
+      "lines": 28,
+      "preview": "tictactoe = [\n  input().split(),\n  input().split(),\n  input().split()\n]\n\nnew_tictactoe = []\nfor row_index, row in enumerate(tictactoe):\n    # The fix is here: You are already using `row_index` for the index\n    # and `row` for the inner list.\n    # The `if` statement logic is incorrect and should be removed.\n\n    # You can directly use `row` in the inner loop.\n    print(f\"Row {row_index}:\")  # Or print(f\"{row}\") to see the whole inner list"
+    },
+    {
+      "id": "python-misc/test.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "test.py",
+      "path": "/university-projects/python/misc/test.py",
+      "kind": "python",
+      "lines": 9,
+      "preview": "x = float(input(\"input a number: \"))\n\nif x < 0:\n    x = -x\nelse:\n    x = x\n\n\nprint(f'the abs value is', x)"
+    },
+    {
+      "id": "python-misc/testrun.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "testrun.py",
+      "path": "/university-projects/python/misc/testrun.py",
+      "kind": "python",
+      "lines": 8,
+      "preview": "my_string = input()\n\nfirst_half = my_string[:len(my_string) // 2]\n\nsliced_lyric = first_half[::3]\n\n\nprint(sliced_lyric)"
+    },
+    {
+      "id": "python-misc/the hierarchy of coins.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "the hierarchy of coins.py",
+      "path": "/university-projects/python/misc/the hierarchy of coins.py",
+      "kind": "python",
+      "lines": 63,
+      "preview": "x = int(input())\ndolla = 100\nquarters = 25\ndimes = 10\nnickels = 5\npennies = 1\n\ncount_dollar = 0\ncount_quarters = 0\ncount_dimes = 0\ncount_nickels = 0\ncount_pennies = 0\n\nif x == 0:"
+    },
+    {
+      "id": "python-misc/tic_tac_toe.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "tic_tac_toe.py",
+      "path": "/university-projects/python/misc/tic_tac_toe.py",
+      "kind": "python",
+      "lines": 43,
+      "preview": "game_board = [\n  input().split(),\n  input().split(),\n  input().split()\n]\n\n#print(game_board[0])\n\nrow1 = []\nrow2 = []\nrow3 = []\n\nrow1.append(game_board[0])\nrow2.append(game_board[1])"
+    },
+    {
+      "id": "python-misc/two_dimensional_list.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "two_dimensional_list.py",
+      "path": "/university-projects/python/misc/two_dimensional_list.py",
+      "kind": "python",
+      "lines": 109,
+      "preview": "num_lines = int(input())\nvals_2d = []\nfor row_index in range(num_lines):\n    row_elements = []\n    for x in input().split():\n        row_elements.append(int(x))\n    vals_2d.append(row_elements)\n\n\n#print(vals_2d)\n\n#vals1 = []\n\"\"\"\n"
+    },
+    {
+      "id": "python-misc/unique_items.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "unique_items.py",
+      "path": "/university-projects/python/misc/unique_items.py",
+      "kind": "python",
+      "lines": 14,
+      "preview": "my_list = [['dark', 'blue'], ['light', 'orange'], ['dark', 'blue'], ['light', 'orange'], ['red'], ['dark', 'blue'], ['dark', 'blue'], ['light', 'orange'], ['red'], ['red'], ['light', 'orange'], ['light', 'orange'], ['dark', 'blue'], ['dark', 'blue'], ['red']]\n\nunique_list = []\nseen = set()\n\nfor sublist in my_list:\n    # Create a hashable version of the sublist to check if it's been seen.\n    sublist_as_tuple = tuple(sublist)\n    if sublist_as_tuple not in seen:\n        unique_list.append(sublist)\n        seen.add(sublist_as_tuple)\n\nprint(unique_list)\n# Output: [['dark', 'blue'], ['light', 'orange'], ['red']]"
+    },
+    {
+      "id": "python-misc/unms.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "unms.py",
+      "path": "/university-projects/python/misc/unms.py",
+      "kind": "python",
+      "lines": 15,
+      "preview": "kids_list = input().split()\n\n\n\n\nselected_kids = kids_list[1:-2]\n\n\nprint(f\"Original list of kids: {kids_list}\")\nprint(f\"Selected list of kids: {selected_kids}\")\n\n\n\n"
+    },
+    {
+      "id": "python-misc/userstring.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "userstring.py",
+      "path": "/university-projects/python/misc/userstring.py",
+      "kind": "python",
+      "lines": 57,
+      "preview": "#[item[0]\n\n# name_of_person = list(input(\"Enter your name: \"))\n\n\n# print(len(name_of_person))\n\n# print(name_of_person\n\n\n# The colors_list is created from user input\ncolor_names = input()\ncolors_list = color_names.split()\n"
+    },
+    {
+      "id": "python-misc/whitespace.py",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Project",
+      "name": "whitespace.py",
+      "path": "/university-projects/python/misc/whitespace.py",
+      "kind": "python",
+      "lines": 3,
+      "preview": "import string\n\nprint(string.whitespace)"
+    },
+    {
+      "id": "python-test/NumericalAnalysisToolboxGUI_Octave.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "NumericalAnalysisToolboxGUI_Octave.m",
+      "path": "/university-projects/python/test/NumericalAnalysisToolboxGUI_Octave.m",
+      "kind": "matlab",
+      "lines": 681,
+      "preview": "\nfunction NumericalAnalysisToolboxGUI_Octave_V2\n% NumericalAnalysisToolboxGUI_Octave_V2\n% Octave-compatible GUI (Qt) using figure/uicontrol/axes.\n% Improvements vs first Octave port:\n%   - Output uses LISTBOX with scrollbar (easy to view long logs)\n%   - Fixes MVT integral logical-scalar issues (forces scalar double)\n%   - Adds \"Save Log\" button (writes output to .txt)\n%   - Cleans up any HTML entity artifacts in displayed text\n%\n% Requirements (Octave):\n%   pkg load symbolic\n%\n"
+    },
+    {
+      "id": "python-test/NumericalAnalysisToolboxGUI_Octave_V2.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "NumericalAnalysisToolboxGUI_Octave_V2.m",
+      "path": "/university-projects/python/test/NumericalAnalysisToolboxGUI_Octave_V2.m",
+      "kind": "matlab",
+      "lines": 680,
+      "preview": "function NumericalAnalysisToolboxGUI_Octave_V2\n% NumericalAnalysisToolboxGUI_Octave_V2\n% Octave-compatible GUI (Qt) using figure/uicontrol/axes.\n% Improvements vs first Octave port:\n%   - Output uses LISTBOX with scrollbar (easy to view long logs)\n%   - Fixes MVT integral logical-scalar issues (forces scalar double)\n%   - Adds \"Save Log\" button (writes output to .txt)\n%   - Cleans up any HTML entity artifacts in displayed text\n%\n% Requirements (Octave):\n%   pkg load symbolic\n%\n\n  if exist('OCTAVE_VERSION','builtin')"
+    },
+    {
+      "id": "python-test/NumericalAnalysisToolboxGUI_Octave_V3.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "NumericalAnalysisToolboxGUI_Octave_V3.m",
+      "path": "/university-projects/python/test/NumericalAnalysisToolboxGUI_Octave_V3.m",
+      "kind": "matlab",
+      "lines": 773,
+      "preview": "\nfunction NumericalAnalysisToolboxGUI_Octave_V3\n% NumericalAnalysisToolboxGUI_Octave_V3\n% Octave-compatible GUI that DOES NOT require the symbolic package.\n%\n% Why this version:\n%  - Your Octave install cannot load the symbolic package, so the analysis part errors.\n%  - This V3 uses numeric parsing (string -> function handle) + finite differences.\n%  - Vibrations module remains numeric (works as before).\n%  - Output uses LISTBOX (scrollbar) + Save Log.\n%\n% Notes:\n%  - Because this is non-symbolic, sections like exact factorization and exact symbolic\n%    derivative expressions are replaced with numeric approximations."
+    },
+    {
+      "id": "python-test/NumericalAnalysisToolboxGUI_V2.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "NumericalAnalysisToolboxGUI_V2.m",
+      "path": "/university-projects/python/test/NumericalAnalysisToolboxGUI_V2.m",
+      "kind": "matlab",
+      "lines": 712,
+      "preview": "function NumericalAnalysisToolboxGUI_V2\n% NumericalAnalysisToolboxGUI_V2\n% V2 GUI: Function analyzer + starter vibrations + interactive plot clicking.\n% Fixes:\n% - Robust plot click coordinate acquisition (uses event.IntersectionPoint).\n% - onPlotClick is a nested function (has access to ax and UI state).\n% - No row collisions (click controls no longer overwrite TOL/MAXIT fields).\n% - User-friendly uialert validation for common input errors.\n%\n% Requires: Symbolic Math Toolbox.\n% Optional: hompackDenseZero.m on MATLAB path.\n\n    % ---------------- UI ----------------\n    fig = uifigure('Name','Numerical Analysis Toolbox GUI (V2)','Position',[100 100 1300 740]);"
+    },
+    {
+      "id": "python-test/bisect_box.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "bisect_box.m",
+      "path": "/university-projects/python/test/bisect_box.m",
+      "kind": "matlab",
+      "lines": 48,
+      "preview": "function [box1, curpt, box2, errflg, errval] = bisect_box(box1, ip, dp)\n%BISECT_BOX  Octave version of Algorithm 681 BISECT.\n%   box1 is 2xN: box1(1,i)=left endpoint, box1(2,i)=right endpoint.\n%   ip is coordinate index to bisect (1..N).\n%   dp selects which half becomes new current box:\n%      dp = true  -> LEFT half becomes box1 (right endpoint set to midpoint)\n%      dp = false -> RIGHT half becomes box1 (left endpoint set to midpoint)\n%\n% Returns:\n%   box1 : updated current box\n%   curpt: midpoint of updated box1\n%   box2 : the \"other\" half (to put on stack)\n%   errflg/errval: compatible with Fortran style errors\n"
+    },
+    {
+      "id": "python-test/ijoiioiojoij.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "ijoiioiojoij.m",
+      "path": "/university-projects/python/test/ijoiioiojoij.m",
+      "kind": "matlab",
+      "lines": 10,
+      "preview": "func = @(x) [ x(1)^2 + x(2)^2 - 1;\n             x(1) - x(2) ];\n\njac  = @(x) [ 2*x(1), 2*x(2);\n             1,      -1 ];\n\nx0 = [0.7; 0.6];\n[x, nitr, ierr] = newton_nd(func, jac, x0, 1e-10, 1e-10, 25);\n\nx, nitr, ierr"
+    },
+    {
+      "id": "python-test/is_master.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "is_master.m",
+      "path": "/university-projects/python/test/is_master.m",
+      "kind": "matlab",
+      "lines": 86,
+      "preview": "% Numerology (Pythagorean) for a single word\n% - Prompts for a word (letters only; non-letters are ignored)\n% - Maps A=1..I=9, J=1..R=9, S=1..Z=8\n% - Sums letter values, then reduces to a single digit\n% - Keeps master numbers 11, 22, 33, 44 (stops reducing if reached)\n% - Shows the full addition/reduction process\n\nclear; clc;\n\nfunction tf = is_master(n)\n  tf = any(n == [11, 22, 33, 44]);\nendfunction\n\nfunction s = digit_sum(n)"
+    },
+    {
+      "id": "python-test/newton_nd.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "newton_nd.m",
+      "path": "/university-projects/python/test/newton_nd.m",
+      "kind": "matlab",
+      "lines": 33,
+      "preview": "function [x, nitr, ierr] = newton_nd(func, jac, x0, eps_res, delt_step, maxit)\n  x = x0(:);\n  ierr = 0;\n  nitr = 0;\n\n  v = func(x);\n\n  for k = 1:maxit\n    nitr = k;\n    J = jac(x);\n\n    [L, U, P] = lu(J);\n    if (rcond(U) < eps)\n      ierr = 1; % linear solve failure / near singular"
+    },
+    {
+      "id": "python-test/num.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "num.m",
+      "path": "/university-projects/python/test/num.m",
+      "kind": "matlab",
+      "lines": 205,
+      "preview": " % Save as: num.m\n% Usage:\n%   num(\"alternative\")\n%   num(\"vibration\")\n%   num()                    % prompts for input\n%\n% Auto-saving behavior (to base workspace):\n%   After each call, the cleaned word is appended to a cell-array variable:\n%     num1, num2, ... num9, num11, num20, num22, num33, num44\n%\n% Special/master numbers (kept without further reduction):\n%   11, 20, 22, 33, 44\n%\n% Optional utility commands:"
+    },
+    {
+      "id": "python-test/numerology.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "numerology.m",
+      "path": "/university-projects/python/test/numerology.m",
+      "kind": "matlab",
+      "lines": 101,
+      "preview": "% Save this as: numerology.m\n% Usage (Command Window):\n%   numerology(\"Jonathan\")\n%   n = numerology(\"Angel\")\n%   numerology()            % prompts for input\n\nfunction final = numbers(word)\n  % Numerology (Pythagorean) for a single word\n  % - Maps A=1..I=9 repeating (J=1..R=9, S=1..Z=8)\n  % - Sums letter values, then reduces to a single digit\n  % - Keeps master numbers 11, 22, 33, 44 (stops reducing if reached)\n  % - Prints the full addition/reduction process\n  %\n  % Returns:"
+    },
+    {
+      "id": "python-test/numerology_V2.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "numerology_V2.m",
+      "path": "/university-projects/python/test/numerology_V2.m",
+      "kind": "matlab",
+      "lines": 204,
+      "preview": "% Save as: numerology.m\n% Usage:\n%   numerology(\"alternative\")\n%   numerology(\"vibration\")\n%   numerology()                 % prompts for input\n%\n% Auto-saving behavior (to base workspace):\n%   After each call, the cleaned word is appended to a cell-array variable:\n%     num1, num2, ... num9, num11, num20, num22, num33, num44\n%\n% Special/master numbers (kept without further reduction):\n%   11, 20, 22, 33, 44\n%\n% Optional utility commands:"
+    },
+    {
+      "id": "python-test/script.py",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "script.py",
+      "path": "/university-projects/python/test/script.py",
+      "kind": "python",
+      "lines": 16,
+      "preview": "# This is a sample Python script.\n\n# Press \u2303R to execute it or replace it with your code.\n# Press Double \u21e7 to search everywhere for classes, files, tool windows, actions, and settings.\n\n\ndef print_hi(name):\n    # Use a breakpoint in the code line below to debug your script.\n    print(f'Hi, {name}')  # Press \u2318F8 to toggle the breakpoint.\n\n\n# Press the green button in the gutter to run the script.\nif __name__ == '__main__':\n    print_hi('PyCharm')"
+    },
+    {
+      "id": "python-test/scriptTest.py",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "scriptTest.py",
+      "path": "/university-projects/python/test/scriptTest.py",
+      "kind": "python",
+      "lines": 66,
+      "preview": "# Complete the following program\n\nnum_in_tens = int(input(\"Enter the tens digit: \"))\nnum_in_ones = int(input(\"Enter the ones digit: \"))\n\nnum_in = num_in_tens * 10 + num_in_ones\n\nprint(\"You entered\", num_in)\nprint(num_in, \"* 11 is\", num_in * 11)\n\n# num_out_hundreds = num_in_tens + ((num_in_tens + num_in_ones) // 10)\nnum_out_hundreds = num_in_tens + ((num_in_tens + num_in_ones) // 10)\n\n# print(num_out_hundreds, num_in_tens)"
+    },
+    {
+      "id": "python-test/testing.m",
+      "collection": "python-test",
+      "collectionTitle": "PyCharm Misc Project Test",
+      "name": "testing.m",
+      "path": "/university-projects/python/test/testing.m",
+      "kind": "matlab",
+      "lines": 3,
+      "preview": "x = 12;\n\n"
+    }
+  ],
+  "samples": [
+    {
+      "name": "HW04b_TeamData.txt",
+      "path": "/university-projects/samples/HW04b_TeamData.txt"
+    },
+    {
+      "name": "Sample_Data_01.txt",
+      "path": "/university-projects/samples/Sample_Data_01.txt"
+    },
+    {
+      "name": "TeamData.txt",
+      "path": "/university-projects/samples/TeamData.txt"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+Team data for games on 2023 Feb 10
+  Game                      Team Name :  Score
+------ ------------------------------ :    ---
+     1                         indigo :     55
+     2                           blue :     93
+     3                    dark orange :     76
+     4                         indigo :     93
+     5                           blue :    100
+     6                    dark yellow :     78
+     7                    dark orange :     92
+     8                         indigo :     61
+     9                    light green :     54
+    10                    dark orange :     96
+    11                           blue :     55
+    12                    dark orange :     97
+    13                    dark orange :     65
+    14                    light green :     98
+    15                    light green :     73
+    16                    dark orange :     73
+    17                    dark orange :     80
+    18                           blue :     71
+    19                    light green :     86
+    20                         indigo :     92
+    21                    dark yellow :     92
+    22                    light green :     62
+    23                    dark yellow :     73
+    24                         indigo :    100
+    25                         indigo :     85

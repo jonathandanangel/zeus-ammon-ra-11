@@ -46,6 +46,7 @@ import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
 import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
+import { UniversityProjectsApp } from "./UniversityProjectsApp";
 import { WorldBackground } from "./WorldBackground";
 
 type Screen =
@@ -66,7 +67,8 @@ type Screen =
   | "spirit-bound"
   | "numerical-extreme"
   | "vanity-app"
-  | "ai-detector";
+  | "ai-detector"
+  | "university-projects";
 type Mode =
   | "campaign"
   | "practice"
@@ -80,7 +82,8 @@ type Mode =
   | "spirit-bound"
   | "numerical-extreme"
   | "vanity-app"
-  | "ai-detector";
+  | "ai-detector"
+  | "university-projects";
 type Phase = "answering" | "revealed" | "recall";
 type IntermissionGame = "lightcycle" | "maze";
 
@@ -191,6 +194,7 @@ export function AeroGrid() {
       case "numerical-extreme":
       case "vanity-app":
       case "ai-detector":
+      case "university-projects":
         return [];
       case "mastery":
         return stableShuffle(allQuestions, "mastery");
@@ -279,7 +283,7 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "ai-detector" || mode === "spirit-bound") {
+    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "ai-detector" || mode === "university-projects" || mode === "spirit-bound") {
       // Legend / Numerical / Vanity / AI Detector manage their own beds — no title or Extreme track.
       return undefined;
     }
@@ -824,6 +828,28 @@ export function AeroGrid() {
             setPsychedelicActive(false);
             setScreen("ai-detector");
           }}
+          onUniversityProjects={() => {
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
+            setMode("university-projects");
+            setReviewIds([]);
+            setLocalIndex(0);
+            setAnswer([]);
+            setPhase("answering");
+            setShowHint(false);
+            setExtremeScore(0);
+            setExtremeCorrectCount(0);
+            setV2Log([]);
+            setHtLog([]);
+            setHtiLog([]);
+            setPendingIntermission(null);
+            setGauntletRecovery(false);
+            setOverloadBurst(0);
+            setPsychedelicActive(false);
+            setScreen("university-projects");
+          }}
           onSettings={() => setScreen("settings")}
           onValidate={() => setScreen("validate")}
         />
@@ -846,6 +872,10 @@ export function AeroGrid() {
       {screen === "vanity-app" && <VanityApp onMenu={() => setScreen("title")} />}
 
       {screen === "ai-detector" && <AiDetectorApp onMenu={() => setScreen("title")} />}
+
+      {screen === "university-projects" && (
+        <UniversityProjectsApp onMenu={() => setScreen("title")} />
+      )}
 
       {screen === "settings" && <SettingsPanel onBack={() => setScreen("title")} />}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}

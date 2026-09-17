@@ -1,0 +1,18 @@
+Team data for games on 2023 Feb 10
+  Game                      Team Name :  Score
+------ ------------------------------ :    ---
+     1                      dark blue :     56
+     2                   light orange :     89
+     3                      dark blue :     98
+     4                   light orange :     66
+     5                            red :     83
+     6                      dark blue :    100
+     7                      dark blue :     72
+     8                   light orange :     93
+     9                            red :     84
+    10                            red :     93
+    11                   light orange :     76
+    12                   light orange :     79
+    13                      dark blue :     91
+    14                      dark blue :     99
+    15                            red :     60
