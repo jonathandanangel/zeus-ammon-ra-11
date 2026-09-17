@@ -224,10 +224,17 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         venue: "Sauer, Numerical Analysis — Program 3.7 (bezierdraw)",
       },
       {
+        title: "Numerical Analysis — companion MATLAB Programs",
+        authors: "Timothy Sauer",
+        detail:
+          "Full Pearson companion Program folder (bisect, fpi, newtdd, splinecoeff, romberg, adapquad, euler/predcorr, heatfd/crank/poisson, QR/power methods, DFT, Tacoma, etc.) bundled under Numerical Extreme → SAUER MATLAB. Plus user Octave symbolic GUI scripts integrationOctave.m and derivativesOfFunctions.m / _V2.m wired into the SYMBOLIC tab (int(f,x) · diff(f,x,n)).",
+        venue: "Pearson companion code · ZEUS NUMERICAL EXTREME SAUER MATLAB / SYMBOLIC",
+      },
+      {
         title: "Numerical Analysis",
         authors: "Timothy Sauer",
         detail:
-          "Intermediate Value Theorem bracketing, bisection checks, and classroom-style root-finding workflow mirrored in MAIN sections 3–8. Program 3.7 supplies the BEZIER freehand spline lab.",
+          "Intermediate Value Theorem bracketing, bisection checks, and classroom-style root-finding workflow mirrored in MAIN sections 3–8. Program 3.7 supplies the BEZIER freehand spline lab; the full companion .m set is browsable in SAUER MATLAB.",
         venue: "Pearson / textbook editions",
       },
       {

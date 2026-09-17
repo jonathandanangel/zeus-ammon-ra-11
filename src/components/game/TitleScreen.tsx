@@ -1,6 +1,8 @@
 import * as React from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { cn } from "@/lib/utils";
+import { FEATURED_HEAT_ALBUMS } from "@/game/audio";
+import { HeatAlbumCredits } from "./NowPlayingAlbum";
 import magentaBrain from "@/assets/winged-brain.png";
 import cyanBrain from "@/assets/winged-brain-cyan.png";
 import solarBrain from "@/assets/winged-brain-solar.png";
@@ -71,6 +73,7 @@ type ModeSection = {
     show?: boolean;
     buttonClass?: string;
   }>;
+  albums?: typeof FEATURED_HEAT_ALBUMS;
 };
 
 export function TitleScreen(p: TitleScreenProps) {
@@ -181,7 +184,7 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Thermal",
       title: "Heat Transfer",
       blurb:
-        "Music: Iasos – Crystal Vista (1981); Das Armageddon (2026) by キ aerzengel (@AERZENGEL). Related: Berdysh (@Berdysh66), Occult Tripping KVLT (@OccultTrippingCult), Shypunch (@Shypunch120), SERAPHRID (@seraphrid78787), Luxen (@Luxen420). Intro bed from Portal 2. Game is extremely hard meant to increase learning rate rapidly for general agency related questions for heat transfer and thermodynamics.",
+        "Now playing by album title: Crystal Vista (Iasos, 1981) and Das Armageddon (キ aerzengel, 2026). Related: Berdysh (@Berdysh66), Occult Tripping KVLT (@OccultTrippingCult), Shypunch (@Shypunch120), SERAPHRID (@seraphrid78787), Luxen (@Luxen420). Intro bed from Portal 2. Extremely hard — built to raise learning rate fast for heat transfer and thermodynamics.",
       accentClass: "from-[#ff8c1a]/25 via-transparent to-[#ff2a2a]/25 border-[#ff8c1a]/55",
       buttonClass:
         "border-[#ff2a2a]/80 text-[#ff2a2a] hover:bg-[#ff2a2a]/15 ht-extreme-menu-item shadow-[0_0_24px_rgba(255,42,42,0.28)]",
@@ -192,6 +195,7 @@ export function TitleScreen(p: TitleScreenProps) {
           onClick: p.onHeatTransferExtreme,
         },
       ],
+      albums: FEATURED_HEAT_ALBUMS,
     },
     {
       id: "story",
@@ -300,8 +304,7 @@ export function TitleScreen(p: TitleScreenProps) {
             trivia, labs, heat, story, and tools
           </p>
           <p className="mt-3 max-w-lg font-mono text-[11px] leading-relaxed text-muted-foreground">
-            Music: Iasos – Crystal Vista (1981) · Das Armageddon (2026) by キ aerzengel (@AERZENGEL) ·
-            Heat Transfer Intro from Portal 2
+            Albums: Crystal Vista · Das Armageddon · Portal 2 OST
           </p>
           <button
             type="button"
@@ -343,6 +346,9 @@ export function TitleScreen(p: TitleScreenProps) {
             <p className="mt-3 max-w-2xl font-mono text-[12px] leading-relaxed text-muted-foreground sm:text-sm">
               {section.blurb}
             </p>
+            {section.albums && section.albums.length > 0 ? (
+              <HeatAlbumCredits albums={section.albums} />
+            ) : null}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {section.actions
                 .filter((a) => a.show !== false)

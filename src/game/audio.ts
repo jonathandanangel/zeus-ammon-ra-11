@@ -91,23 +91,85 @@ const HT_BED_URL = {
   intro: "/audio/ht-portal-bed.mp3",
 } as const;
 
-/** Bananza: Armageddon (from 34:20) → Portal OST → repeat.
- *  Das Armageddon (2026) — キ aerzengel (@AERZENGEL).
- *  Related: Berdysh, Occult Tripping KVLT, Shypunch, SERAPHRID, Luxen.
- */
+/** Bananza: Armageddon (from 34:20) → Portal OST → repeat. */
 const BANANZA_PLAYLIST = [
   "/audio/ht-bananza-bed.mp3",
   "/audio/ht-bananza-portal.mp3",
 ] as const;
 
-/** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats.
- *  Iasos – Crystal Vista (1981); Das Armageddon (2026) — キ aerzengel (@AERZENGEL).
- */
+/** Title-screen playlist (low volume): Crystal Vista → Armageddon → Portal, then repeats. */
 const TITLE_PLAYLIST = [
   "/audio/title-crystal-vista.mp3",
   "/audio/title-armageddon.mp3",
   "/audio/title-portal.mp3",
 ] as const;
+
+/** Album / track credits shown in Heat Transfer Extreme (and title) for the active bed. */
+export type MusicAlbumCredit = {
+  id: string;
+  albumTitle: string;
+  trackTitle: string;
+  artist: string;
+  year?: string;
+  coverUrl?: string;
+  related?: string;
+};
+
+export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
+  "/audio/ht-bananza-bed.mp3": {
+    id: "das-armageddon",
+    albumTitle: "Das Armageddon",
+    trackTitle: "Das Armageddon",
+    artist: "キ aerzengel",
+    year: "2026",
+    coverUrl: "/audio/albums/das-armageddon.jpg",
+    related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
+  },
+  "/audio/title-armageddon.mp3": {
+    id: "das-armageddon",
+    albumTitle: "Das Armageddon",
+    trackTitle: "Das Armageddon",
+    artist: "キ aerzengel",
+    year: "2026",
+    coverUrl: "/audio/albums/das-armageddon.jpg",
+    related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
+  },
+  "/audio/title-crystal-vista.mp3": {
+    id: "crystal-vista",
+    albumTitle: "Crystal Vista",
+    trackTitle: "Crystal Vista",
+    artist: "Iasos",
+    year: "1981",
+  },
+  "/audio/ht-bananza-portal.mp3": {
+    id: "portal-2",
+    albumTitle: "Portal 2 OST",
+    trackTitle: "Portal 2",
+    artist: "Valve",
+    year: "2011",
+  },
+  "/audio/ht-portal-bed.mp3": {
+    id: "portal-2",
+    albumTitle: "Portal 2 OST",
+    trackTitle: "Portal 2",
+    artist: "Valve",
+    year: "2011",
+  },
+  "/audio/title-portal.mp3": {
+    id: "portal-2",
+    albumTitle: "Portal 2 OST",
+    trackTitle: "Portal 2",
+    artist: "Valve",
+    year: "2011",
+  },
+};
+
+export const FEATURED_HEAT_ALBUMS: MusicAlbumCredit[] = [
+  MUSIC_ALBUM_BY_URL["/audio/title-crystal-vista.mp3"]!,
+  MUSIC_ALBUM_BY_URL["/audio/title-armageddon.mp3"]!,
+];
+
+type BedListener = (credit: MusicAlbumCredit | null) => void;
 
 const semitone = (root: number, steps: number) => root * Math.pow(2, steps / 12);
 
@@ -131,6 +193,7 @@ class AudioManager {
   private bedPlaylist: readonly string[] | null = null;
   private bedPlaylistIndex = 0;
   private bedEndedHandler: (() => void) | null = null;
+  private bedListeners = new Set<BedListener>();
   private windTimer: number | null = null;
   private windActive = false;
   private windTrack = 0;
@@ -244,6 +307,28 @@ class AudioManager {
     }
   }
 
+  /** Current bed album credit (Heat Transfer / title playlist). */
+  getNowPlaying(): MusicAlbumCredit | null {
+    if (!this.bedActive || !this.bedUrl) return null;
+    return MUSIC_ALBUM_BY_URL[this.bedUrl] ?? null;
+  }
+
+  /** Subscribe to bed track changes. Returns unsubscribe. */
+  onNowPlaying(listener: BedListener): () => void {
+    this.bedListeners.add(listener);
+    listener(this.getNowPlaying());
+    return () => {
+      this.bedListeners.delete(listener);
+    };
+  }
+
+  private notifyNowPlaying() {
+    const credit = this.getNowPlaying();
+    for (const listener of this.bedListeners) {
+      listener(credit);
+    }
+  }
+
   /**
    * Heat Transfer bed tracks.
    * Bananza: Armageddon (from 34:20) then Portal OST, looping between the two.
@@ -338,6 +423,7 @@ class AudioManager {
           this.bedUrl = next;
           this.bedEl.load();
           void this.bedEl.play().catch(() => undefined);
+          this.notifyNowPlaying();
           return;
         }
         this.bedEl.currentTime = 0;
@@ -361,6 +447,7 @@ class AudioManager {
     const wasPlaying = this.bedActive && !el.paused && !el.ended && this.bedUrl === url;
     this.bedActive = true;
     this.syncBedGain();
+    this.notifyNowPlaying();
     if (wasPlaying) return;
     if (el.ended || el.paused) {
       el.currentTime = 0;
@@ -379,6 +466,7 @@ class AudioManager {
     if (this.bedGain && this.ctx) {
       this.bedGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
     }
+    this.notifyNowPlaying();
   }
 
   /**

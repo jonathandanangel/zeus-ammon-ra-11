@@ -47,6 +47,7 @@ import {
   solveNonlinearSystem,
   SYMBOLIC_PRESETS,
   symbolicIntegrate,
+  symbolicDifferentiate,
   TOOLBOX_REFERENCES,
   vectorizeExpression,
   wordToNumerology,
@@ -78,6 +79,7 @@ import {
 import { audio } from "@/game/audio";
 import { useGame } from "@/game/store";
 import { cn } from "@/lib/utils";
+import sauerMatlabCatalog from "@/data/numerical-extreme/sauer-matlab-catalog.json";
 
 type Mode =
   | "main"
@@ -89,6 +91,7 @@ type Mode =
   | "acm"
   | "bezier"
   | "symbolic"
+  | "sauer"
   | "genetic"
   | "heat"
   | "numerology"
@@ -104,6 +107,7 @@ const MODES: Array<{ id: Mode; label: string }> = [
   { id: "acm", label: "ACM SPARS" },
   { id: "bezier", label: "BEZIER" },
   { id: "symbolic", label: "SYMBOLIC" },
+  { id: "sauer", label: "SAUER MATLAB" },
   { id: "genetic", label: "GENETIC" },
   { id: "heat", label: "HEAT" },
   { id: "numerology", label: "NUMEROLOGY" },
@@ -2116,13 +2120,170 @@ function BezierPanel() {
   );
 }
 
+function SauerMatlabPanel() {
+  const catalog = sauerMatlabCatalog as {
+    title: string;
+    count: number;
+    matlabCount: number;
+    projects: Array<{
+      id: string;
+      collection: string;
+      collectionTitle: string;
+      source: string;
+      name: string;
+      path: string;
+      kind: string;
+      chapter: string;
+      lines: number;
+      header: string;
+      preview: string;
+    }>;
+  };
+  const [filter, setFilter] = React.useState<"all" | "sauer" | "octave-gui">("all");
+  const [query, setQuery] = React.useState("");
+  const [selectedId, setSelectedId] = React.useState(catalog.projects.find((p) => p.kind === "matlab")?.id ?? "");
+  const [source, setSource] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return catalog.projects.filter((p) => {
+      if (filter !== "all" && p.collection !== filter) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.chapter.toLowerCase().includes(q) ||
+        p.header.toLowerCase().includes(q)
+      );
+    });
+  }, [catalog.projects, filter, query]);
+
+  const selected = catalog.projects.find((p) => p.id === selectedId) ?? filtered[0] ?? null;
+
+  React.useEffect(() => {
+    if (!selected) {
+      setSource("");
+      return;
+    }
+    let cancelled = false;
+    setBusy(true);
+    setError("");
+    fetch(selected.path)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Could not load ${selected.name} (${res.status})`);
+        return res.text();
+      })
+      .then((text) => {
+        if (!cancelled) setSource(text);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setSource(selected.preview);
+          setError(err instanceof Error ? err.message : "Load failed");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]">
+      <Panel title="Pearson · Sauer MATLAB" eyebrow={`${catalog.matlabCount} programs · ${catalog.count} files`}>
+        <div className="space-y-3">
+          <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Full companion Program set from Timothy Sauer, <em>Numerical Analysis</em> (Pearson),
+            plus your Octave symbolic GUI scripts (<code>integrationOctave.m</code>,{" "}
+            <code>derivativesOfFunctions.m</code>, <code>_V2.m</code>). Browse and copy into MATLAB/Octave.
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                { id: "all" as const, label: "All" },
+                { id: "sauer" as const, label: "Sauer" },
+                { id: "octave-gui" as const, label: "Octave GUI" },
+              ] as const
+            ).map((item) => (
+              <GhostButton
+                key={item.id}
+                type="button"
+                onClick={() => setFilter(item.id)}
+                className={filter === item.id ? "border-cyan/70 bg-cyan/20 text-cyan" : undefined}
+              >
+                {item.label}
+              </GhostButton>
+            ))}
+          </div>
+          <Field label="Search">
+            <TextInput
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="bisect, romberg, heatfd…"
+            />
+          </Field>
+          <div className="max-h-[min(55vh,520px)] space-y-1 overflow-y-auto pr-1">
+            {filtered.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelectedId(p.id)}
+                className={cn(
+                  "w-full rounded-sm border px-2.5 py-2 text-left transition",
+                  selected?.id === p.id
+                    ? "border-cyan/60 bg-cyan/15"
+                    : "border-cyan/20 bg-black/30 hover:border-cyan/40",
+                )}
+              >
+                <p className="font-mono text-[11px] text-cyan">{p.name}</p>
+                <p className="font-mono text-[9px] text-muted-foreground">
+                  {p.kind} · {p.chapter} · {p.lines} lines
+                </p>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="font-mono text-[11px] text-muted-foreground">No matches.</p>
+            )}
+          </div>
+        </div>
+      </Panel>
+
+      <div className="space-y-3">
+        {selected && (
+          <Panel title={selected.name} eyebrow={selected.collectionTitle}>
+            <div className="mb-2 space-y-1 font-mono text-[10px] text-muted-foreground">
+              <p>{selected.source}</p>
+              <p>
+                {selected.chapter}
+                {selected.header ? ` · ${selected.header}` : ""}
+              </p>
+              <p className="text-moon/80">{selected.path}</p>
+            </div>
+            {error && <ErrorBanner message={error} />}
+            <pre className="max-h-[min(65vh,640px)] overflow-auto rounded-sm border border-cyan/20 bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre">
+              {busy ? "Loading…" : source || selected.preview}
+            </pre>
+          </Panel>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SymbolicPanel() {
+  const [op, setOp] = React.useState<"int" | "diff">("int");
   const [expression, setExpression] = React.useState("x*cos(x)");
   const [variable, setVariable] = React.useState("x");
+  const [order, setOrder] = React.useState(1);
   const [definite, setDefinite] = React.useState(false);
   const [lower, setLower] = React.useState(0);
   const [upper, setUpper] = React.useState(Math.PI / 2);
-  const [log, setLog] = React.useState("(run int(f, x) — Octave-style session appears on the right)");
+  const [log, setLog] = React.useState(
+    "(run int(f, x) or diff(f, x, n) — Octave-style session appears on the right)",
+  );
   const [octave, setOctave] = React.useState(
     "pkg load symbolic\nsyms x\nf = x*cos(x);\nintegral_f = int(f, x);",
   );
@@ -2132,6 +2293,13 @@ function SymbolicPanel() {
   function run() {
     setError("");
     try {
+      if (op === "diff") {
+        const result = symbolicDifferentiate(expression, variable.trim() || "x", order);
+        setAnti(result.derivativePretty);
+        setLog(result.sessionLog);
+        setOctave(result.octaveEcho);
+        return;
+      }
       const result = symbolicIntegrate(
         expression,
         variable.trim() || "x",
@@ -2146,18 +2314,57 @@ function SymbolicPanel() {
       setLog(result.sessionLog);
       setOctave(result.octaveEcho);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Symbolic integration failed.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : op === "diff"
+            ? "Symbolic differentiation failed."
+            : "Symbolic integration failed.",
+      );
     }
   }
 
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
-      <Panel title="Symbolic integration" eyebrow="pkg load symbolic">
+      <Panel title="Symbolic calculus GUI" eyebrow="integrationOctave · derivativesOfFunctions">
         <div className="space-y-3">
           <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-            Browser elementary CAS mirroring Octave&apos;s <code>syms</code> / <code>int(f,x)</code>.
-            Side panel shows the equivalent script.
+            Browser elementary CAS mirroring Octave <code>pkg load symbolic</code>:{" "}
+            <code>int(f,x)</code> (integrationOctave.m) and <code>diff(f,x,n)</code>{" "}
+            (derivativesOfFunctions.m / _V2.m).
           </p>
+          <div className="flex gap-1">
+            {(
+              [
+                { id: "int" as const, label: "int(f,x)" },
+                { id: "diff" as const, label: "diff(f,x,n)" },
+              ] as const
+            ).map((item) => (
+              <GhostButton
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setOp(item.id);
+                  setAnti("");
+                  if (item.id === "diff") {
+                    setExpression("exp(-x^2/2)");
+                    setOrder(1);
+                    setOctave(
+                      "pkg load symbolic\nsyms x\nf = exp((-x^2)/(2));\nn = 1;\nDn_f = diff(f, x, n);",
+                    );
+                  } else {
+                    setExpression("x*cos(x)");
+                    setOctave(
+                      "pkg load symbolic\nsyms x\nf = x*cos(x);\nintegral_f = int(f, x);",
+                    );
+                  }
+                }}
+                className={op === item.id ? "border-cyan/70 bg-cyan/20 text-cyan" : undefined}
+              >
+                {item.label}
+              </GhostButton>
+            ))}
+          </div>
           <Field label="Variable">
             <TextInput value={variable} onChange={(e) => setVariable(e.target.value)} />
           </Field>
@@ -2165,41 +2372,72 @@ function SymbolicPanel() {
             <TextInput value={expression} onChange={(e) => setExpression(e.target.value)} />
           </Field>
           <div className="flex flex-wrap gap-1">
-            {SYMBOLIC_PRESETS.map((p) => (
+            {(op === "diff"
+              ? [
+                  { label: "exp(-x²/2)", expr: "exp(-x^2/2)" },
+                  { label: "1", expr: "1" },
+                  { label: "x·cos(x)", expr: "x*cos(x)" },
+                  { label: "sin(x)", expr: "sin(x)" },
+                  { label: "x^3", expr: "x^3" },
+                ]
+              : SYMBOLIC_PRESETS
+            ).map((p) => (
               <GhostButton key={p.expr} type="button" onClick={() => setExpression(p.expr)}>
                 {p.label}
               </GhostButton>
             ))}
           </div>
-          <label className="flex items-center gap-2 font-mono text-[10px] text-moon">
-            <input
-              type="checkbox"
-              checked={definite}
-              onChange={(e) => setDefinite(e.target.checked)}
-              className="accent-cyan"
-            />
-            Definite integral int(f, x, a, b)
-          </label>
-          {definite && (
-            <GraphBoundsFields
-              a={lower}
-              b={upper}
-              onAChange={setLower}
-              onBChange={setUpper}
-              aLabel="Lower"
-              bLabel="Upper"
-            />
+          {op === "diff" ? (
+            <Field label="Order n (diff depth)">
+              <TextInput
+                type="number"
+                min={1}
+                max={12}
+                value={order}
+                onChange={(e) => setOrder(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </Field>
+          ) : (
+            <>
+              <label className="flex items-center gap-2 font-mono text-[10px] text-moon">
+                <input
+                  type="checkbox"
+                  checked={definite}
+                  onChange={(e) => setDefinite(e.target.checked)}
+                  className="accent-cyan"
+                />
+                Definite integral int(f, x, a, b)
+              </label>
+              {definite && (
+                <GraphBoundsFields
+                  a={lower}
+                  b={upper}
+                  onAChange={setLower}
+                  onBChange={setUpper}
+                  aLabel="Lower"
+                  bLabel="Upper"
+                />
+              )}
+            </>
           )}
           <RunButton type="button" onClick={run}>
-            Run int(f, {variable || "x"})
+            {op === "diff"
+              ? `Run diff(f, ${variable || "x"}, ${order})`
+              : `Run int(f, ${variable || "x"})`}
           </RunButton>
-          {anti && <Metric label="Result" value={anti} accent="amber" />}
+          {anti && (
+            <Metric
+              label={op === "diff" ? `${order}-th derivative` : "Result"}
+              value={anti}
+              accent="amber"
+            />
+          )}
           {error && <ErrorBanner message={error} />}
         </div>
       </Panel>
 
       <div className="space-y-3">
-        <Panel title="Octave session echo" eyebrow="Off to the side">
+        <Panel title="Octave session echo" eyebrow={op === "diff" ? "diff(f,x,n)" : "int(f,x)"}>
           <pre className="max-h-64 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {octave}
           </pre>
@@ -3754,6 +3992,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
           {mode === "acm" && <AcmLabPanel />}
           {mode === "bezier" && <BezierPanel />}
           {mode === "symbolic" && <SymbolicPanel />}
+          {mode === "sauer" && <SauerMatlabPanel />}
           {mode === "genetic" && <GeneticPanel />}
           {mode === "heat" && <HeatAerospacePanel />}
           {mode === "numerology" && <NumerologyPanel />}

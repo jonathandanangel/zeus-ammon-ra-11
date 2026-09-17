@@ -91,11 +91,12 @@ export type { Point2, BezierSegment } from "./bezier";
 
 export {
   symbolicIntegrate,
+  symbolicDifferentiate,
   parseSymbolic,
   symPretty,
   SYMBOLIC_PRESETS,
 } from "./symbolic";
-export type { SymNode, SymbolicIntegralResult } from "./symbolic";
+export type { SymNode, SymbolicIntegralResult, SymbolicDerivativeResult } from "./symbolic";
 
 export { runGeneticRootFinder } from "./genetic";
 export type { GeneticRootParams, GeneticRootResult } from "./genetic";

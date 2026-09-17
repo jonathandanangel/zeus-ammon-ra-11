@@ -712,6 +712,166 @@ export function symbolicIntegrate(
   };
 }
 
+function differentiateNode(node: SymNode, variable: string): SymNode {
+  if (isConstIndep(node, variable)) return num(0);
+  if (isVar(node, variable)) return num(1);
+
+  if (node.type === "unary") {
+    const d = differentiateNode(node.arg, variable);
+    return node.op === "-" ? neg(d) : d;
+  }
+
+  if (node.type === "bin") {
+    const { left, right, op } = node;
+    switch (op) {
+      case "+":
+        return add(differentiateNode(left, variable), differentiateNode(right, variable));
+      case "-":
+        return sub(differentiateNode(left, variable), differentiateNode(right, variable));
+      case "*":
+        // product rule
+        return add(
+          mul(differentiateNode(left, variable), right),
+          mul(left, differentiateNode(right, variable)),
+        );
+      case "/":
+        // quotient rule
+        return div(
+          sub(
+            mul(differentiateNode(left, variable), right),
+            mul(left, differentiateNode(right, variable)),
+          ),
+          pow(right, num(2)),
+        );
+      case "^": {
+        // a^b: if b constant → b·a^(b-1)·a'; if a constant → a^b·ln(a)·b'
+        if (isConstIndep(right, variable)) {
+          return mul(
+            mul(right, pow(left, sub(right, num(1)))),
+            differentiateNode(left, variable),
+          );
+        }
+        if (isConstIndep(left, variable)) {
+          return mul(
+            mul(pow(left, right), call("log", call("abs", left))),
+            differentiateNode(right, variable),
+          );
+        }
+        // general: a^b · (b' ln a + b a'/a)
+        return mul(
+          pow(left, right),
+          add(
+            mul(differentiateNode(right, variable), call("log", call("abs", left))),
+            mul(right, div(differentiateNode(left, variable), left)),
+          ),
+        );
+      }
+    }
+  }
+
+  if (node.type === "call" && node.args.length === 1) {
+    const u = node.args[0]!;
+    const du = differentiateNode(u, variable);
+    const chain = (outer: SymNode) => mul(outer, du);
+    switch (node.name) {
+      case "sin":
+        return chain(call("cos", u));
+      case "cos":
+        return chain(neg(call("sin", u)));
+      case "tan":
+        return chain(pow(call("cos", u), num(-2))); // sec^2
+      case "exp":
+        return chain(call("exp", u));
+      case "log":
+      case "ln":
+        return chain(div(num(1), u));
+      case "log10":
+        return chain(div(num(1), mul(u, call("log", num(10)))));
+      case "sqrt":
+        return chain(div(num(1), mul(num(2), call("sqrt", u))));
+      case "abs":
+        // d/dx |u| ≈ u/|u| · u' (sign)
+        return mul(div(u, call("abs", u)), du);
+      case "asin":
+        return chain(div(num(1), call("sqrt", sub(num(1), pow(u, num(2))))));
+      case "acos":
+        return chain(neg(div(num(1), call("sqrt", sub(num(1), pow(u, num(2)))))));
+      case "atan":
+        return chain(div(num(1), add(num(1), pow(u, num(2)))));
+      case "sinh":
+        return chain(call("cosh", u));
+      case "cosh":
+        return chain(call("sinh", u));
+      case "tanh":
+        return chain(sub(num(1), pow(call("tanh", u), num(2))));
+      default:
+        break;
+    }
+  }
+
+  throw new ExpressionError(
+    `Cannot differentiate '${symPretty(node)}' symbolically in this elementary CAS.`,
+  );
+}
+
+export type SymbolicDerivativeResult = {
+  variable: string;
+  expression: string;
+  expressionPretty: string;
+  order: number;
+  derivative: string;
+  derivativePretty: string;
+  sessionLog: string;
+  octaveEcho: string;
+};
+
+/** Octave-style `diff(f, x, n)` — mirrors derivativesOfFunctions.m / _V2.m. */
+export function symbolicDifferentiate(
+  expression: string,
+  variable = "x",
+  order = 1,
+): SymbolicDerivativeResult {
+  const n = Math.max(1, Math.min(12, Math.trunc(order)));
+  let ast = parseSymbolic(expression, variable);
+  const expressionPretty = symPretty(ast);
+  for (let i = 0; i < n; i += 1) {
+    ast = simplify(differentiateNode(ast, variable));
+  }
+  const derivativePretty = symPretty(ast);
+
+  const octaveEcho = [
+    "pkg load symbolic",
+    `syms ${variable}`,
+    `f = ${expressionPretty};`,
+    "",
+    `n = ${n};                 % n = number of derivatives to take`,
+    `Dn_f = diff(f, ${variable}, n);  % compute the n-th derivative`,
+    "",
+    "disp(['n = ' num2str(n)])",
+    "disp('n-th derivative:')",
+    "Dn_f",
+  ].join("\n");
+
+  const sessionLog = [
+    "=== SYMBOLIC DIFF SESSION (derivativesOfFunctions_V2.m style) ===",
+    `syms ${variable}`,
+    `f = ${expressionPretty}`,
+    `n = ${n}`,
+    `diff(f, ${variable}, n) = ${derivativePretty}`,
+  ].join("\n");
+
+  return {
+    variable,
+    expression,
+    expressionPretty,
+    order: n,
+    derivative: symToString(ast),
+    derivativePretty,
+    sessionLog,
+    octaveEcho,
+  };
+}
+
 export const SYMBOLIC_PRESETS: Array<{ label: string; expr: string }> = [
   { label: "x·cos(x)", expr: "x*cos(x)" },
   { label: "x·sin(x)", expr: "x*sin(x)" },

@@ -31,6 +31,7 @@ import { HeatTransferExtremeReview, type HtLogEntry } from "./HeatTransferExtrem
 import { HeatTransferIntroBriefing } from "./HeatTransferIntroBriefing";
 import { HeatTransferIntroReview, type HtIntroLogEntry } from "./HeatTransferIntroReview";
 import { HeatTransferChapterJump } from "./HeatTransferChapterJump";
+import { NowPlayingAlbum } from "./NowPlayingAlbum";
 import { getHtBananzaChapters, htChapterAtIndex } from "@/game/ht-chapters";
 import { Diagram } from "./Diagram";
 import { ElectricRecall } from "./ElectricRecall";
@@ -1348,6 +1349,13 @@ export function AeroGrid() {
       )}
 
       {sceneFading && <div className="scene-fade" aria-hidden />}
+
+      {(mode === "ht-extreme" || mode === "ht-intro") &&
+        screen !== "title" &&
+        screen !== "settings" &&
+        screen !== "validate" && (
+          <NowPlayingAlbum accent={mode === "ht-extreme" ? "#ff2a2a" : "#ff8c1a"} />
+        )}
     </div>
   );
 }
