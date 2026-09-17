@@ -104,6 +104,35 @@ export function BabelEpubPanel() {
           <EquationBox label="Paths">
             {`Entry: ${THE_BABEL_LIBRARY.entry}\nGlossaries: ${THE_BABEL_LIBRARY.glossaryDir}\nBooks out: tools/the-babel-library/books/ (gitignored)`}
           </EquationBox>
+
+          <EquationBox label="Demo translation (EN→FR · no Codex)">
+            {`npm run babel:epub:demo\n→ /numerology/babel/epub-library/samples/zeus-babel-seed-fr.epub\nFull AI translate needs: codex login`}
+          </EquationBox>
+
+          <div className="flex flex-wrap gap-2 font-mono text-[9px]">
+            <a
+              className="text-amber underline-offset-2 hover:underline"
+              href="/numerology/babel/epub-library/samples/zeus-babel-seed.epub"
+            >
+              EN seed EPUB
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a
+              className="text-amber underline-offset-2 hover:underline"
+              href="/numerology/babel/epub-library/samples/zeus-babel-seed-fr.epub"
+            >
+              FR translated EPUB
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a
+              className="text-cyan underline-offset-2 hover:underline"
+              href="/numerology/babel/epub-library/samples/zeus-babel-seed-fr.seeds.json"
+              target="_blank"
+              rel="noreferrer"
+            >
+              FR locate seeds JSON
+            </a>
+          </div>
         </div>
       </Panel>
 

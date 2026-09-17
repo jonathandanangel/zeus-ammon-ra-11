@@ -24,7 +24,7 @@ export const OFFICIAL_BABELIA = {
   home: OFFICIAL_BABEL.babelia,
   about: "https://babelia.libraryofbabel.info/about.html",
   search: "https://babelia.libraryofbabel.info/imagesearch.html",
-  slideshow: "https://babelia.libraryofbabel.info/",
+  slideshow: "https://babelia.libraryofbabel.info/slideshow.html",
 } as const;
 
 export type BabeliaPlate = {

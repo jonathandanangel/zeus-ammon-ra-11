@@ -13,6 +13,7 @@ import {
   RETRO_GRIMOIRE_SRC,
   babeliaFromLocation,
   babeliaHierarchyForWord,
+  babeliaLocateFromImageData,
   babeliaRandom,
   babeliaStep,
   composeGrimoireWithBabelText,
@@ -414,6 +415,128 @@ function BookReader({
   );
 }
 
+function ProveOnOfficialBabel({ defaultText }: { defaultText: string }) {
+  const [textSeed, setTextSeed] = React.useState(defaultText);
+  const [twinNote, setTwinNote] = React.useState("");
+  const [imageTwin, setImageTwin] = React.useState<BabeliaPlate | null>(null);
+
+  React.useEffect(() => {
+    setTextSeed(defaultText);
+  }, [defaultText]);
+
+  const officialTextUrl = `${OFFICIAL_BABEL.search}?find=${encodeURIComponent(
+    textSeed.trim().slice(0, 3200),
+  )}`;
+
+  function onImageFile(file: File | null) {
+    if (!file || typeof document === "undefined") return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const plate = babeliaLocateFromImageData(data);
+        setImageTwin(plate);
+        setTwinNote(
+          `ZEUS twin located a plate (${plate.location.length} digits). Official Babelia needs their Image Search upload for the true Basile address.`,
+        );
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => URL.revokeObjectURL(url);
+    img.src = url;
+  }
+
+  return (
+    <Panel
+      title="Prove it · official Library of Babel"
+      eyebrow="text / image seed → Basile search (true archive) + ZEUS twin"
+    >
+      <div className="space-y-3">
+        <p className="font-mono text-[10px] leading-relaxed text-amber">
+          To <span className="text-cyan">know it’s true</span> on the real site: paste a text
+          phrase → Official text search finds exact matches in Basile’s Library. For images, use
+          Official Babelia Image Search (upload). ZEUS still shows an educational twin plate so
+          you can practice locate locally — same idea, not the same pixels/pages.
+        </p>
+
+        <label className="block font-mono text-[10px] text-muted-foreground">
+          Text seed (exact phrase to prove)
+          <textarea
+            value={textSeed}
+            onChange={(e) => setTextSeed(e.target.value)}
+            rows={3}
+            spellCheck={false}
+            className="mt-1 w-full rounded-sm border border-cyan/30 bg-black/50 px-2 py-1.5 font-mono text-[11px] text-moon"
+            placeholder="paste a sentence or word…"
+          />
+        </label>
+
+        <div className="flex flex-wrap gap-2">
+          <a
+            className="inline-flex items-center rounded-sm border border-amber/50 bg-amber/15 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-amber hover:bg-amber/25"
+            href={officialTextUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Find text on libraryofbabel.info ↗
+          </a>
+          <a
+            className="inline-flex items-center rounded-sm border border-cyan/40 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-cyan hover:bg-cyan/10"
+            href={OFFICIAL_BABELIA.search}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Official Babelia image search ↗
+          </a>
+          <a
+            className="inline-flex items-center rounded-sm border border-cyan/40 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-cyan hover:bg-cyan/10"
+            href={OFFICIAL_BABELIA.slideshow}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Babelia slideshow ↗
+          </a>
+        </div>
+
+        <label className="block font-mono text-[10px] text-muted-foreground">
+          Image seed (optional · ZEUS twin locate)
+          <input
+            type="file"
+            accept="image/*"
+            className="mt-1 block w-full text-[10px] text-moon"
+            onChange={(e) => onImageFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+
+        {twinNote && (
+          <p className="font-mono text-[9px] leading-relaxed text-moon/80">{twinNote}</p>
+        )}
+        {imageTwin && (
+          <figure className="overflow-hidden rounded-sm border border-cyan/30 bg-black/50">
+            <img
+              src={imageTwin.dataUrl}
+              alt={imageTwin.shortId}
+              className="mx-auto max-h-48 w-auto"
+              style={{ imageRendering: "pixelated" }}
+            />
+            <figcaption className="break-all px-2 py-1.5 font-mono text-[8px] text-muted-foreground">
+              {imageTwin.shortId} · {imageTwin.location.length} digits (ZEUS twin only)
+            </figcaption>
+          </figure>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
 function BabeliaArchiveBrowser({
   seedWord,
   pathNumber,
@@ -443,7 +566,7 @@ function BabeliaArchiveBrowser({
   React.useEffect(() => {
     setTierIdx(0);
     setPlate(hierarchy[0] ?? babeliaRandom());
-    setSeekDraft(hierarchy[0]?.location.slice(0, 80) ?? "");
+    setSeekDraft(hierarchy[0]?.location ?? "");
   }, [hierarchy]);
 
   const active = plate ?? hierarchy[0];
@@ -456,18 +579,20 @@ function BabeliaArchiveBrowser({
     >
       <div className="space-y-3">
         <p className="font-mono text-[10px] leading-relaxed text-amber">
-          Same idea as{" "}
+          Same <span className="text-moon">idea</span> as{" "}
           <a
             className="underline underline-offset-2"
-            href={OFFICIAL_BABELIA.home}
+            href="https://babelia.libraryofbabel.info/slideshow.html"
             target="_blank"
             rel="noreferrer"
           >
-            babelia.libraryofbabel.info
+            babelia slideshow
           </a>
-          : every plate is regenerated from a location number (scaled 160×104 educational archive,
-          12-bit palette). Hierarchy below runs high-coherence search hits → ordinary noise — like
-          the text Library’s rare coherent pages.
+          . Pasting digits <span className="text-cyan">does work</span> here: same seed → same ZEUS
+          plate (deterministic). It will <span className="text-moon">not</span> match Basile’s
+          pixels — we use a scaled twin (160×104 + local PRNG), not their GMP generator. Real
+          Babelia locations are ~960,000 digits; a ~120-digit paste is only a stub for the official
+          site (click their truncated “babelia #” to copy the full string).
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -476,7 +601,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaRandom();
               setPlate(next);
-              setSeekDraft(next.location.slice(0, 120));
+              setSeekDraft(next.location);
             }}
           >
             Random
@@ -486,7 +611,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaStep(active.location, -1);
               setPlate(next);
-              setSeekDraft(next.location.slice(0, 120));
+              setSeekDraft(next.location);
             }}
           >
             Prev location
@@ -496,7 +621,7 @@ function BabeliaArchiveBrowser({
             onClick={() => {
               const next = babeliaStep(active.location, 1);
               setPlate(next);
-              setSeekDraft(next.location.slice(0, 120));
+              setSeekDraft(next.location);
             }}
           >
             Next location
@@ -521,24 +646,34 @@ function BabeliaArchiveBrowser({
 
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-[220px] flex-1 font-mono text-[10px] text-muted-foreground">
-            Seek location (digits)
+            Seek location (ZEUS twin · full digits)
             <TextInput
               value={seekDraft}
-              onChange={(e) => setSeekDraft(e.target.value)}
+              onChange={(e) => setSeekDraft(e.target.value.replace(/[^\d]/g, ""))}
               spellCheck={false}
               className="mt-1"
-              placeholder="paste babelia location digits…"
+              placeholder="paste location digits…"
             />
           </label>
           <GhostButton
             type="button"
             onClick={() => {
-              const next = babeliaFromLocation(seekDraft || "1", 0);
+              const digits = seekDraft.replace(/\D/g, "") || "1";
+              const next = babeliaFromLocation(digits, 0);
               setPlate(next);
+              setSeekDraft(next.location);
             }}
           >
             Seek
           </GhostButton>
+          <a
+            className="inline-flex items-center font-mono text-[9px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+            href={`https://babelia.libraryofbabel.info/imagebookmark2.cgi?babelia_${seekDraft.replace(/\D/g, "") || "1"}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Try digits on official Babelia ↗
+          </a>
         </div>
 
         <figure className="overflow-hidden rounded-sm border border-cyan/30 bg-black/60">
@@ -551,7 +686,7 @@ function BabeliaArchiveBrowser({
           <figcaption className="space-y-1 border-t border-cyan/20 px-3 py-2 font-mono text-[10px]">
             <p className="text-cyan">{active.shortId}</p>
             <p className="break-all text-[8px] text-muted-foreground">
-              full location · {active.location.slice(0, 180)}
+              {active.location.length} digits · {active.location.slice(0, 180)}
               {active.location.length > 180 ? "…" : ""}
             </p>
             <p className="text-amber">
@@ -579,7 +714,7 @@ function BabeliaArchiveBrowser({
                 onClick={() => {
                   setTierIdx(i);
                   setPlate(p);
-                  setSeekDraft(p.location.slice(0, 120));
+                  setSeekDraft(p.location);
                 }}
                 className={`flex w-full gap-3 overflow-hidden rounded-sm border text-left transition ${
                   tierIdx === i ? "border-amber/60 bg-amber/10" : "border-cyan/20 bg-black/40"
@@ -998,6 +1133,13 @@ export function BabelSecretPanel({
 
       {activeBook && (
         <>
+          <ProveOnOfficialBabel
+            defaultText={
+              activeBook.pages[0]?.excerpt ||
+              activeBook.combination.slice(0, 6).join(" ") ||
+              result.normalized
+            }
+          />
           <Panel
             title="Generated books · from foundational sources"
             eyebrow={`${books.length} volume${books.length === 1 ? "" : "s"} · coherent→noise`}
