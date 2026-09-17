@@ -8,8 +8,12 @@ type Aki = InstanceType<typeof AkiClass>;
 
 /** aki-api is Node-only; load it lazily so it never enters the SSR/client module graph. */
 async function loadAki(): Promise<typeof AkiClass> {
-  const mod = await import("aki-api");
-  return mod.Aki;
+  // Import the class module directly: aki-api's index.js reads a CA bundle file
+  // at import time that does not exist here (postinstall scripts are skipped).
+  const mod = (await import("aki-api/dist/src/Akinator")) as unknown as {
+    default: typeof AkiClass;
+  };
+  return mod.default;
 }
 
 export const AKI_CREDIT = "Powered by Akinator via aki-api (jgoralcz/aki-api)";
