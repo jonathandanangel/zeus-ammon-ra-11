@@ -10,17 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiWritingIqRouteImport } from './routes/api/writing-iq'
 import { Route as ApiAnuQrngRouteImport } from './routes/api/anu-qrng'
+import { Route as ApiWritingIqRouteImport } from './routes/api/writing-iq'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWritingIqRoute = ApiWritingIqRouteImport.update({
-  id: '/api/writing-iq',
-  path: '/api/writing-iq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAnuQrngRoute = ApiAnuQrngRouteImport.update({
@@ -28,35 +23,40 @@ const ApiAnuQrngRoute = ApiAnuQrngRouteImport.update({
   path: '/api/anu-qrng',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWritingIqRoute = ApiWritingIqRouteImport.update({
+  id: '/api/writing-iq',
+  path: '/api/writing-iq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/writing-iq': typeof ApiWritingIqRoute
   '/api/anu-qrng': typeof ApiAnuQrngRoute
+  '/api/writing-iq': typeof ApiWritingIqRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/writing-iq': typeof ApiWritingIqRoute
   '/api/anu-qrng': typeof ApiAnuQrngRoute
+  '/api/writing-iq': typeof ApiWritingIqRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/writing-iq': typeof ApiWritingIqRoute
   '/api/anu-qrng': typeof ApiAnuQrngRoute
+  '/api/writing-iq': typeof ApiWritingIqRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/writing-iq' | '/api/anu-qrng'
+  fullPaths: '/' | '/api/anu-qrng' | '/api/writing-iq'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/writing-iq' | '/api/anu-qrng'
-  id: '__root__' | '/' | '/api/writing-iq' | '/api/anu-qrng'
+  to: '/' | '/api/anu-qrng' | '/api/writing-iq'
+  id: '__root__' | '/' | '/api/anu-qrng' | '/api/writing-iq'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiWritingIqRoute: typeof ApiWritingIqRoute
   ApiAnuQrngRoute: typeof ApiAnuQrngRoute
+  ApiWritingIqRoute: typeof ApiWritingIqRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,13 +68,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/writing-iq': {
-      id: '/api/writing-iq'
-      path: '/api/writing-iq'
-      fullPath: '/api/writing-iq'
-      preLoaderRoute: typeof ApiWritingIqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/anu-qrng': {
       id: '/api/anu-qrng'
       path: '/api/anu-qrng'
@@ -82,13 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAnuQrngRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/writing-iq': {
+      id: '/api/writing-iq'
+      path: '/api/writing-iq'
+      fullPath: '/api/writing-iq'
+      preLoaderRoute: typeof ApiWritingIqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiWritingIqRoute: ApiWritingIqRoute,
   ApiAnuQrngRoute: ApiAnuQrngRoute,
+  ApiWritingIqRoute: ApiWritingIqRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

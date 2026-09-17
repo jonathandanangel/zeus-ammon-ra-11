@@ -54,7 +54,7 @@ export const defaultSettings: Settings = {
   interstitials: "full",
   noTimer: false,
   photosensitiveAck: false,
-  matrixRain: false,
+  matrixRain: true,
   uiGlitch: false,
 };
 
