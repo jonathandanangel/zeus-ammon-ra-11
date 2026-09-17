@@ -29,6 +29,7 @@ export interface TitleScreenProps {
   onSettings: () => void;
   onValidate: () => void;
   onUpdates: () => void;
+  onBlog: () => void;
 }
 
 const BRAIN_ASSETS = [
@@ -290,6 +291,13 @@ export function TitleScreen(p: TitleScreenProps) {
           onClick: p.onUpdates,
           buttonClass:
             "border-mint/55 text-mint hover:bg-mint/15 shadow-[0_0_24px_rgba(52,211,153,0.18)]",
+        },
+        {
+          label: "Creator Blog",
+          sub: "Why ZEUS was made · notes over time",
+          onClick: p.onBlog,
+          buttonClass:
+            "border-amber/55 text-amber hover:bg-amber/15 shadow-[0_0_24px_rgba(251,191,36,0.18)]",
         },
         {
           label: "AI Detector",

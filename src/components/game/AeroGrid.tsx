@@ -46,6 +46,7 @@ import { SpiritBoundGame } from "./SpiritBoundGame";
 import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
 import { UpdatesPanel } from "./UpdatesPanel";
+import { BlogPanel } from "./BlogPanel";
 import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
 import { UniversityProjectsApp } from "./UniversityProjectsApp";
@@ -66,6 +67,7 @@ type Screen =
   | "about-creator"
   | "validate"
   | "updates"
+  | "blog"
   | "finale"
   | "gameover"
   | "lightcycle"
@@ -330,7 +332,8 @@ export function AeroGrid() {
     screen !== "settings" &&
     screen !== "about-creator" &&
     screen !== "validate" &&
-    screen !== "updates"
+    screen !== "updates" &&
+    screen !== "blog"
       ? mode
       : null;
 
@@ -379,7 +382,7 @@ export function AeroGrid() {
   }, [htAudioSession, localIndex]);
 
   React.useEffect(() => {
-    if (screen === "title" || screen === "settings" || screen === "about-creator" || screen === "validate" || screen === "updates") {
+    if (screen === "title" || screen === "settings" || screen === "about-creator" || screen === "validate" || screen === "updates" || screen === "blog") {
       return undefined;
     }
     if (mode === "ht-intro" || mode === "ht-extreme") {
@@ -1031,6 +1034,7 @@ export function AeroGrid() {
           onSettings={() => setScreen("settings")}
           onValidate={() => setScreen("validate")}
           onUpdates={() => setScreen("updates")}
+          onBlog={() => setScreen("blog")}
         />
       )}
 
@@ -1071,6 +1075,7 @@ export function AeroGrid() {
         <SettingsPanel
           onBack={() => setScreen("title")}
           onAboutCreator={() => setScreen("about-creator")}
+          onBlog={() => setScreen("blog")}
         />
       )}
       {screen === "about-creator" && (
@@ -1078,6 +1083,7 @@ export function AeroGrid() {
       )}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}
       {screen === "updates" && <UpdatesPanel onBack={() => setScreen("title")} />}
+      {screen === "blog" && <BlogPanel onBack={() => setScreen("title")} />}
 
       {screen === "finale" && (
         <Finale
@@ -1552,7 +1558,8 @@ export function AeroGrid() {
         screen !== "settings" &&
         screen !== "about-creator" &&
         screen !== "validate" &&
-        screen !== "updates" && (
+        screen !== "updates" &&
+        screen !== "blog" && (
           <NowPlayingAlbum accent={mode === "ht-extreme" ? "#ff2a2a" : "#ff8c1a"} />
         )}
     </div>

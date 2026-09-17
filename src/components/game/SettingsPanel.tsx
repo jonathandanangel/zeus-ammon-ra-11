@@ -48,9 +48,11 @@ function Toggle({
 export function SettingsPanel({
   onBack,
   onAboutCreator,
+  onBlog,
 }: {
   onBack: () => void;
   onAboutCreator?: () => void;
+  onBlog?: () => void;
 }) {
   const { settings, setSettings } = useGame();
   const set = (patch: Partial<Settings>) => setSettings(patch);
@@ -89,6 +91,18 @@ export function SettingsPanel({
           <option value="off">Off</option>
         </select>
       </label>
+      {onBlog ? (
+        <button
+          type="button"
+          onClick={onBlog}
+          className="w-full rounded-sm border border-amber/50 bg-deepblue/50 px-4 py-3 text-left font-display text-xs uppercase tracking-[0.18em] text-amber transition hover:bg-amber/15"
+        >
+          Creator Blog
+          <span className="mt-1 block font-mono text-[10px] normal-case tracking-normal text-muted-foreground">
+            Why ZEUS was made · updates over time · creator login to post
+          </span>
+        </button>
+      ) : null}
       {onAboutCreator ? (
         <button
           type="button"
