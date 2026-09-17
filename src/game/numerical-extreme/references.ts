@@ -540,8 +540,16 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         authors:
           "Jorge Luis Borges (1941); Jonathan Basile (libraryofbabel.info / babelia / algo); antique plates: Bruegel (1563), Kircher Turris Babel (1679), Doré (1866)",
         detail:
-          "No usable public LoB HTTP API (LoB-API is LICENSE-only). Panel locates 29-letter pages from the typed word plus Johnson, Blavatsky, Graves anagrams, philosophy, tarot, and Thought-Forms; generates multi-leaf books from word/combinations; amber-highlights matches like Greek Myths; deep-links official Search. Antique PD art under public/numerology/babel/.",
+          "No usable public LoB HTTP API (LoB-API is LICENSE-only). Panel locates 29-letter pages from the typed word plus Johnson, Blavatsky, Graves anagrams, philosophy, tarot, and Thought-Forms; generates multi-leaf books from word/combinations; amber-highlights matches like Greek Myths; deep-links official Search. Antique PD art under public/numerology/babel/. Companion EPUB translator (not Basile LoB): clcreuso/the-babel-library — glossary-style seed expansion in babel-library-companion.ts.",
         venue: "NUMEROLOGY · Babel Secret Library · babel-pathfinder.ts · BabelSecretPanel.tsx",
+      },
+      {
+        title: "The Babel Library (EPUB companion · vendored)",
+        authors: "clcreuso (MIT); vendored into ZEUS AMMON-RA 11",
+        detail:
+          "Full snapshot at tools/the-babel-library/ (nested git removed). Codex-powered EPUB translation with per-source glossaries for Johnson, Secret Doctrine, Greek Myths, Thought-Forms, Ruckman×KJV, Borges/Babelia. University Projects → Babel EPUB tab lists every integrated source. Distinct from Borges/Basile Library of Babel.",
+        venue:
+          "tools/the-babel-library · University Projects · Babel EPUB · public/numerology/babel/epub-library/",
       },
     ],
   },

@@ -235,6 +235,18 @@ export {
 } from "./babelia-archive";
 export type { BabeliaPlate } from "./babelia-archive";
 
+export {
+  THE_BABEL_LIBRARY,
+  BABEL_NUMEROLOGY_GLOSSARY,
+  BABEL_INTEGRATED_SOURCES,
+  expandWithBabelGlossary,
+  expandPhraseWithBabelGlossary,
+  seedsFromAllIntegratedSources,
+  formatBabelLibraryCompanionBlurb,
+  formatEpubTranslateExample,
+} from "./babel-library-companion";
+export type { BabelGlossaryEntry, BabelIntegratedSource } from "./babel-library-companion";
+
 /** Format a number for display (null-safe). */
 export function formatNumber(
   value: number | null | undefined,

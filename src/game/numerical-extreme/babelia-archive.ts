@@ -11,6 +11,7 @@
  */
 
 import { OFFICIAL_BABEL } from "./babel-pathfinder";
+import { expandWithBabelGlossary } from "./babel-library-companion";
 
 /** Official babelia proportions scaled ×0.25 for browser speed. */
 export const BABELIA_W = 160;
@@ -268,6 +269,8 @@ export function babeliaHierarchyForWord(input: {
   colorHex: string;
   combination: string[];
 }): BabeliaPlate[] {
+  const glossary = expandWithBabelGlossary(input.seedWord, 8);
+  const combo = [...new Set([...input.combination, ...glossary, input.seedWord])];
   const tiers = [
     { coherence: 92, salt: "foundational-path", label: "path colour seal" },
     { coherence: 78, salt: "johnson-band", label: "lexicon band" },
@@ -277,7 +280,7 @@ export function babeliaHierarchyForWord(input: {
   ];
   return tiers.map((t, i) => {
     const plate = babeliaLocateSearch({
-      seedWord: input.combination[i] ?? input.seedWord,
+      seedWord: combo[i] ?? input.seedWord,
       pathNumber: input.pathNumber,
       colorHex: input.colorHex,
       coherence: t.coherence,

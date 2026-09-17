@@ -14,6 +14,8 @@
     "build:johnson-1773": "python3 scripts/build-johnson-1773.py",
     "build:secret-doctrine": "python3 scripts/build-secret-doctrine.py",
     "build:kjv-ruckman": "python3 scripts/build-kjv-ruckman.py",
+    "babel:epub": "python3 tools/the-babel-library/epub_translate.py",
+    "babel:epub:help": "python3 tools/the-babel-library/epub_translate.py --help",
     "cap:sync": "npx cap sync android",
     "cap:open:android": "npx cap open android",
     "android:apk": "cd android && ./gradlew assembleDebug"

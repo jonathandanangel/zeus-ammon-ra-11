@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Chart } from "@/components/game/numerical-extreme/Chart";
 import { ProjectGuiPanel } from "@/components/game/university-projects/ProjectGuiPanel";
+import { BabelEpubPanel } from "@/components/game/university-projects/BabelEpubPanel";
 import { cn } from "@/lib/utils";
 import catalogJson from "@/data/university-projects/catalog.json";
 import {
@@ -29,7 +30,7 @@ type Catalog = {
   samples: Array<{ name: string; path: string }>;
 };
 
-type Tab = "plotter" | "sources" | "me021";
+type Tab = "plotter" | "sources" | "me021" | "babel-epub";
 
 /**
  * University Projects — web port of MATLABProject-1.m (column pick → scatter/line plot
@@ -234,6 +235,7 @@ export function UniversityProjectsApp({ onMenu }: { onMenu: () => void }) {
             ["plotter", "Data plotter"],
             ["sources", "Source files"],
             ["me021", "project_gui.py"],
+            ["babel-epub", "Babel EPUB"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -248,6 +250,7 @@ export function UniversityProjectsApp({ onMenu }: { onMenu: () => void }) {
       </nav>
 
       {tab === "me021" && <ProjectGuiPanel />}
+      {tab === "babel-epub" && <BabelEpubPanel />}
 
       {tab === "plotter" && (
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">

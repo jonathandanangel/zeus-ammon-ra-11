@@ -1,0 +1,12 @@
+The Babel Library — vendored copy for ZEUS AMMON-RA 11 / aero-flight-trivia
+
+Upstream: https://github.com/clcreuso/the-babel-library
+License: MIT (see LICENSE in this directory)
+Vendor date: 2026-09-16
+Method: git clone --depth 1; nested .git removed so history lives in the host repo
+
+This software is an EPUB translation pipeline. It is not affiliated with
+libraryofbabel.info / Jonathan Basile’s Library of Babel project.
+
+ZEUS integration: glossaries/, ZEUS.md, src/game/numerical-extreme/babel-library-companion.ts,
+University Projects → Babel EPUB tab, NUMEROLOGY Babel Secret Library links.

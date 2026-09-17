@@ -58,3 +58,7 @@ public/johnson/1773-src/
 
 # Full KJV book dumps (optional local extract); app ships ruckman-cited.json only
 public/kjv/_full/
+
+# The Babel Library (vendored EPUB translator) — generated book projects
+tools/the-babel-library/books/*
+!tools/the-babel-library/books/.gitkeep

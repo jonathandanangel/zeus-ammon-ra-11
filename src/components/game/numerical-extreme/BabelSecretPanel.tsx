@@ -854,7 +854,25 @@ export function BabelSecretPanel({
             from your path word plus Johnson, Blavatsky, Graves anagrams, philosophy, tarot, and
             Thought-Forms — then generates multi-leaf books with call numbers, contents, and
             deterministic covers. Amber marks the same match classes as Greek Myths / Secret
-            Doctrine.
+            Doctrine. Multilingual source EPUBs:{" "}
+            <a
+              className="underline underline-offset-2"
+              href={OFFICIAL_BABEL.epubCompanion}
+              target="_blank"
+              rel="noreferrer"
+            >
+              The Babel Library (clcreuso)
+            </a>{" "}
+            vendored at{" "}
+            <a
+              className="underline underline-offset-2"
+              href={OFFICIAL_BABEL.epubCompanionLocal}
+              target="_blank"
+              rel="noreferrer"
+            >
+              tools/the-babel-library
+            </a>{" "}
+            — Codex EPUB translator integrated with all NUMEROLOGY sources (not a LoB clone).
           </p>
 
           <figure className="overflow-hidden rounded-sm border border-amber/40 bg-black/60">
@@ -937,6 +955,33 @@ export function BabelSecretPanel({
               rel="noreferrer"
             >
               Algo (GitHub)
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a
+              className="text-cyan underline-offset-2 hover:underline"
+              href={OFFICIAL_BABEL.epubCompanion}
+              target="_blank"
+              rel="noreferrer"
+            >
+              EPUB Babel Library
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a
+              className="text-cyan underline-offset-2 hover:underline"
+              href={OFFICIAL_BABEL.epubCompanionLocal}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Vendored guide
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a
+              className="text-cyan underline-offset-2 hover:underline"
+              href="/numerology/babel/epub-companion-glossary.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              EPUB glossary
             </a>
             <span className="text-muted-foreground">·</span>
             <a

@@ -20,6 +20,7 @@ import type { SecretDoctrinePassage } from "./secret-doctrine";
 import type { GreekMythPassage } from "./greek-myths";
 import type { RuckmanVerse } from "./ruckman-kjv";
 import { thoughtFormBundleForNumber } from "./thought-forms";
+import { expandPhraseWithBabelGlossary, expandWithBabelGlossary } from "./babel-library-companion";
 
 /** Basile / Borges library alphabet — 29 glyphs. */
 export const BABEL_ALPHABET = "abcdefghijklmnopqrstuvwxyz, .";
@@ -39,6 +40,9 @@ export const OFFICIAL_BABEL = {
   babelia: "https://babelia.libraryofbabel.info/",
   algo: "https://github.com/librarianofbabel/libraryofbabel.info-algo",
   borgesPdf: "/university-projects/babel/library-of-babel-borges.pdf",
+  /** EPUB translator (Codex) — vendored at tools/the-babel-library; not Basile LoB. */
+  epubCompanion: "https://github.com/clcreuso/the-babel-library",
+  epubCompanionLocal: "/numerology/babel/epub-library/README.md",
 } as const;
 
 const CHAR_INDEX: Record<string, number> = Object.fromEntries(
@@ -559,6 +563,39 @@ export function collectBabelSecrets(input: {
     });
   }
 
+  // EPUB companion glossary — widen every active source with multilingual / sibling seeds
+  const glossarySeeds = [
+    ...expandWithBabelGlossary(result.normalized, 8),
+    ...expandPhraseWithBabelGlossary(
+      [
+        result.title,
+        result.philosophy.sacredName,
+        result.tarot.name,
+        input.johnsonWord?.headword,
+        input.secretPassages?.[0]?.matched.join(" "),
+        input.mythPassages?.[0]?.matched.join(" "),
+        input.ruckmanVerses?.[0]?.text,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      10,
+    ),
+  ];
+  const uniqueGlossary = [...new Set(glossarySeeds.map((w) => normalizeWord(w)).filter((w) => w.length >= 3))];
+  if (uniqueGlossary.length) {
+    pushQuery(out, seen, {
+      kind: "synthesis",
+      label: "EPUB glossary · all sources",
+      phrase: uniqueGlossary.slice(0, 8).join(" "),
+      note: "clcreuso/the-babel-library companion — glossary expansions across Johnson, doctrine, myths, Thought-Forms, KJV, philosophy, tarot.",
+      highlight: uniqueGlossary.slice(0, 8).map((w) => ({
+        word: w,
+        reason: "glossary expansion",
+        kind: "synthesis" as const,
+      })),
+    });
+  }
+
   return out;
 }
 
@@ -856,16 +893,20 @@ function artworkForPath(pathNumber: number): BabelArtwork {
 }
 
 function combinationTokens(result: NumerologyResult, extras: string[]): string[] {
+  const glossary = expandWithBabelGlossary(result.normalized, 12);
+  const phraseExtra = expandPhraseWithBabelGlossary(extras.join(" "), 8);
   const base = [
     result.normalized,
     ...result.traits.slice(0, 3),
     result.philosophy.sacredName,
     result.tarot.name,
     ...extras,
+    ...glossary,
+    ...phraseExtra,
   ]
     .map((w) => normalizeWord(w))
     .filter((w) => w.length >= 3);
-  return [...new Set(base)].slice(0, 10);
+  return [...new Set(base)].slice(0, 16);
 }
 
 type ChapterDraft = {
