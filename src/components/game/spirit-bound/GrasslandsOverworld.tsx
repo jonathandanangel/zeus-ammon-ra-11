@@ -15,6 +15,7 @@ import { drawLegendHero } from "@/game/spirit-bound/hero";
 import { frameDt, HERO_SPEED, isWalking, moveFromKeys } from "@/game/spirit-bound/move";
 import { ensureLayer, type LayerCache } from "@/game/spirit-bound/layer-cache";
 import { pixelTriangle, px } from "@/game/spirit-bound/pixel";
+import { quantumInt } from "@/game/spirit-bound/shrine/rng";
 import { useKeys } from "@/game/spirit-bound/useKeys";
 
 type Props = {
@@ -61,7 +62,7 @@ export function GrasslandsOverworld({
   const pos = useRef({ ...spawn });
   const dir = useRef<"up" | "down" | "left" | "right">("down");
   const steps = useRef(0);
-  const budget = useRef(80 + Math.floor(Math.random() * 90));
+  const budget = useRef(80 + quantumInt(90));
   const frame = useRef(0);
   const burnFlash = useRef(0);
   const bushBurnFrame = useRef(0);
@@ -135,7 +136,7 @@ export function GrasslandsOverworld({
   useEffect(() => {
     pos.current = { ...spawn };
     steps.current = 0;
-    budget.current = 80 + Math.floor(Math.random() * 90);
+    budget.current = 80 + quantumInt(90);
   }, [spawn]);
 
   useEffect(() => {
@@ -225,7 +226,7 @@ export function GrasslandsOverworld({
               steps.current += 2;
               if (steps.current >= budget.current) {
                 steps.current = 0;
-                budget.current = 80 + Math.floor(Math.random() * 90);
+                budget.current = 80 + quantumInt(90);
                 cb.current.onWildGrass({ x: p.x, y: p.y });
                 return;
               }

@@ -9,6 +9,10 @@ export interface Settings extends AudioSettings {
   interstitials: "full" | "short" | "off";
   noTimer: boolean;
   photosensitiveAck: boolean;
+  /** Rezmason-style matrix digital rain behind the world. */
+  matrixRain: boolean;
+  /** PowerGlitch CSS glitch on titles / key chrome. */
+  uiGlitch: boolean;
 }
 
 export interface Progress {
@@ -50,6 +54,8 @@ export const defaultSettings: Settings = {
   interstitials: "full",
   noTimer: false,
   photosensitiveAck: false,
+  matrixRain: false,
+  uiGlitch: false,
 };
 
 export const defaultProgress: Progress = {

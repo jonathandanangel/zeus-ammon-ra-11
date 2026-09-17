@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { quantumFloat } from "@/game/spirit-bound/shrine/rng";
 import { pixelTriangle } from "@/game/spirit-bound/pixel";
 import { isDown, useKeys } from "@/game/spirit-bound/useKeys";
 
@@ -37,23 +38,23 @@ export function BulletBox({ pattern, duration, damage, onHit, onDone }: Props) {
 
     const spawn = () => {
       if (pattern === "seeds") {
-        const fromLeft = Math.random() < 0.5;
+        const fromLeft = quantumFloat() < 0.5;
         bullets.push({
           x: fromLeft ? -6 : W + 6,
-          y: 10 + Math.random() * (H - 20),
-          vx: (fromLeft ? 1 : -1) * (70 + Math.random() * 60),
-          vy: (Math.random() - 0.5) * 50,
+          y: 10 + quantumFloat() * (H - 20),
+          vx: (fromLeft ? 1 : -1) * (70 + quantumFloat() * 60),
+          vy: (quantumFloat() - 0.5) * 50,
           r: 4,
           kind: "dot",
         });
       } else if (pattern === "salt") {
-        const top = Math.random() < 0.5;
+        const top = quantumFloat() < 0.5;
         for (let i = 0; i < 3; i++) {
           bullets.push({
-            x: 20 + Math.random() * (W - 40),
+            x: 20 + quantumFloat() * (W - 40),
             y: top ? -6 - i * 18 : H + 6 + i * 18,
-            vx: (Math.random() - 0.5) * 30,
-            vy: (top ? 1 : -1) * (60 + Math.random() * 40),
+            vx: (quantumFloat() - 0.5) * 30,
+            vy: (top ? 1 : -1) * (60 + quantumFloat() * 40),
             r: 3,
             kind: "dot",
           });
@@ -61,10 +62,10 @@ export function BulletBox({ pattern, duration, damage, onHit, onDone }: Props) {
       } else if (pattern === "bush") {
         for (let i = 0; i < 5; i++) {
           bullets.push({
-            x: Math.random() * W,
+            x: quantumFloat() * W,
             y: -8 - i * 12,
-            vx: (Math.random() - 0.5) * 40,
-            vy: 50 + Math.random() * 40,
+            vx: (quantumFloat() - 0.5) * 40,
+            vy: 50 + quantumFloat() * 40,
             r: 3,
             kind: "dot",
           });
@@ -82,15 +83,15 @@ export function BulletBox({ pattern, duration, damage, onHit, onDone }: Props) {
             kind: "dot",
           });
         }
-        if (Math.random() < 0.4) {
-          const gapX = 40 + Math.random() * (W - 120);
+        if (quantumFloat() < 0.4) {
+          const gapX = 40 + quantumFloat() * (W - 120);
           for (let x = 4; x < W; x += 12) {
             if (x > gapX && x < gapX + 36) continue;
             bullets.push({ x, y: H + 6, vx: 0, vy: -95, r: 4, kind: "bar" });
           }
         }
       } else if (pattern === "king") {
-        const mode = Math.random();
+        const mode = quantumFloat();
         if (mode < 0.5) {
           const cx = heart.x;
           for (let i = 0; i < 8; i++) {
@@ -105,7 +106,7 @@ export function BulletBox({ pattern, duration, damage, onHit, onDone }: Props) {
             });
           }
         } else {
-          const gapY = 15 + Math.random() * (H - 50);
+          const gapY = 15 + quantumFloat() * (H - 50);
           for (let y = 4; y < H; y += 10) {
             if (y > gapY && y < gapY + 34) continue;
             bullets.push({ x: W + 8, y, vx: -120, vy: 0, r: 4, kind: "bar" });

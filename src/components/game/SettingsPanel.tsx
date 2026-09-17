@@ -63,6 +63,11 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
       <Toggle label="Mute all audio" checked={settings.muted} onChange={(muted) => set({ muted })} />
       <Toggle label="CRT scanlines" checked={settings.scanlines} onChange={(scanlines) => set({ scanlines })} />
       <Toggle label="Reduced motion" checked={settings.reducedMotion} onChange={(reducedMotion) => set({ reducedMotion })} />
+      <Toggle
+        label="Matrix rain (title background)"
+        checked={settings.matrixRain}
+        onChange={(matrixRain) => set({ matrixRain })}
+      />
       <Toggle label="No timers" checked={settings.noTimer} onChange={(noTimer) => set({ noTimer })} />
       <label className="block">
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

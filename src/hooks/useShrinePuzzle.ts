@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { STORY_DIFFICULTIES } from "@/game/spirit-bound/shrine/difficulty";
 import { generatePuzzle } from "@/game/spirit-bound/shrine/generator";
 import { applyMove, canLift, canPlace, placementMask } from "@/game/spirit-bound/shrine/rules";
-import { randomSeed } from "@/game/spirit-bound/shrine/rng";
+import { quantumInt, randomSeed } from "@/game/spirit-bound/shrine/rng";
 import { unlockAchievements, scorePuzzle, type AchievementId } from "@/game/spirit-bound/shrine/scoring";
 import type { AccessMode, Difficulty, PegIndex, Pegs, ScoreBreakdown } from "@/game/spirit-bound/shrine/types";
 import { playSfx } from "@/game/spirit-bound/shrine/audio";
@@ -11,7 +11,7 @@ import { recordShrineResult, loadShrineSave } from "@/storage/spirit-bound/shrin
 export type ShrinePhase = "intro" | "briefing" | "play" | "success" | "timeout";
 
 function rollDifficulty(): Difficulty {
-  return STORY_DIFFICULTIES[Math.floor(Math.random() * STORY_DIFFICULTIES.length)] ?? "medium";
+  return STORY_DIFFICULTIES[quantumInt(STORY_DIFFICULTIES.length)] ?? "medium";
 }
 
 export function useShrinePuzzle(options: { reducedMotionDefault: boolean }) {

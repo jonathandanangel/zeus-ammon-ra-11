@@ -1,4 +1,5 @@
 import { TILE } from "./data";
+import { quantumInt } from "./shrine/rng";
 
 /** EarthBound-style pastoral map — grass, paths, cliffs, houses, vine boss.
  * Bushes (B) are spawned randomly onto grass tiles at runtime — not fixed here.
@@ -121,7 +122,7 @@ export function generateRandomBushKeys(count = 14): Set<string> {
     }
   }
   for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = quantumInt(i + 1);
     const a = candidates[i]!;
     candidates[i] = candidates[j]!;
     candidates[j] = a;

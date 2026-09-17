@@ -4,6 +4,7 @@ import { drawTriForce, pixelTriangle, px } from "@/game/spirit-bound/pixel";
 import { drawLegendHero } from "@/game/spirit-bound/hero";
 import { frameDt, HERO_SPEED, isWalking, moveFromKeys } from "@/game/spirit-bound/move";
 import { ensureLayer, type LayerCache } from "@/game/spirit-bound/layer-cache";
+import { quantumInt } from "@/game/spirit-bound/shrine/rng";
 import { useKeys } from "@/game/spirit-bound/useKeys";
 
 type Props = {
@@ -32,7 +33,7 @@ export function Overworld({
   const pos = useRef({ ...spawn });
   const dir = useRef<"up" | "down" | "left" | "right">("down");
   const steps = useRef(0);
-  const budget = useRef(90 + Math.floor(Math.random() * 120));
+  const budget = useRef(90 + quantumInt(120));
   const frame = useRef(0);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
@@ -65,7 +66,7 @@ export function Overworld({
   useEffect(() => {
     pos.current = { ...spawn };
     steps.current = 0;
-    budget.current = 90 + Math.floor(Math.random() * 120);
+    budget.current = 90 + quantumInt(120);
   }, [spawn]);
 
   useEffect(() => {
@@ -133,8 +134,8 @@ export function Overworld({
             steps.current += 2;
             if (steps.current >= budget.current) {
               steps.current = 0;
-              budget.current = 90 + Math.floor(Math.random() * 120);
-              const id = WILD_POOL[Math.floor(Math.random() * WILD_POOL.length)] ?? "flowerling";
+              budget.current = 90 + quantumInt(120);
+              const id = WILD_POOL[quantumInt(WILD_POOL.length)] ?? "flowerling";
               cb.current.onEncounter(id, { x: p.x, y: p.y });
               return;
             }

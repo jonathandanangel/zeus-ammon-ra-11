@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { quantumInt } from "@/game/spirit-bound/shrine/rng";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,10 +23,11 @@ export const LEGEND_SPLASHES = [
 function randomSplashIndex(exclude?: number): number {
   const n = LEGEND_SPLASHES.length;
   if (n <= 1) return 0;
-  let next = Math.floor(Math.random() * n);
+  let next = quantumInt(n);
   if (exclude === undefined) return next;
   // Avoid showing the same line twice in a row.
-  while (next === exclude) next = Math.floor(Math.random() * n);
+  let guard = 0;
+  while (next === exclude && guard++ < 8) next = quantumInt(n);
   return next;
 }
 

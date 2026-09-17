@@ -25,6 +25,7 @@ import {
   stopBurnLoop,
   playSfx,
 } from "@/game/spirit-bound/shrine/audio";
+import { prefetchAnuQrng, qrngSource } from "@/game/spirit-bound/shrine/rng";
 import { ENEMIES, TILE, type Npc } from "@/game/spirit-bound/data";
 import { GRASS_TILE, VINE_MIN_LEVEL, generateRandomBushKeys, type GrassNpc } from "@/game/spirit-bound/grasslands-data";
 import { allPapersCollected, EXTREME_PUZZLE_ACCESS_CODE, type ScatteredPaper } from "@/game/spirit-bound/scattered-papers";
@@ -94,7 +95,22 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
   );
   const [accessCode, setAccessCode] = React.useState("");
   const [accessError, setAccessError] = React.useState("");
+  const [qrngReady, setQrngReady] = React.useState(false);
   const demonicLaughPlayedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void prefetchAnuQrng(1024).then(() => {
+      if (!cancelled) setQrngReady(true);
+    });
+    const id = window.setInterval(() => {
+      void prefetchAnuQrng(512);
+    }, 45_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
 
   const maxHp = MAX_HP_BY_LEVEL(level);
   const goMenu = React.useCallback(() => {
@@ -489,7 +505,7 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
   return (
     <div
       className={cn(
-        "spirit-bound-shell mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-2 py-4 font-pixel",
+        "spirit-bound-shell legend-terminal mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-2 py-4 font-pixel",
         mode === "splash" || mode === "hatch" || mode === "title"
           ? "min-h-[100dvh] justify-center"
           : "extreme-shell",
@@ -503,7 +519,9 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         <div className="flex w-full items-center justify-between gap-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-magenta">ZEUS AMMON-RA 11</p>
-            <h2 className="font-display text-xl text-cyan text-glow sm:text-2xl">THE LEGEND OF TRIANGLES</h2>
+            <h2 className="legend-header-title font-display text-xl text-cyan text-glow sm:text-2xl">
+              THE LEGEND OF TRIANGLES
+            </h2>
           </div>
           <button type="button" className={btn} onClick={goMenu}>
             Main menu
@@ -518,13 +536,19 @@ export function SpiritBoundGame({ onMenu, onVictory }: SpiritBoundGameProps) {
         )}
       >
         {mode === "title" && (
-          <section className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-md p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+          <section className="legend-title-card relative flex min-h-[420px] flex-col items-center justify-center gap-5 overflow-hidden rounded-sm border border-[#39ff14]/75 bg-deepblue/50 backdrop-blur-md p-8 text-center text-[#f8f0c8] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_80px_rgba(0,0,0,0.45)]">
+            <p className="terminal-prompt">greenvale terminal</p>
             <div className="relative flex flex-col items-center leading-none text-game-yellow">
               <span className="text-[28px]">▲</span>
               <span className="-mt-2 text-[28px] tracking-[0.55em]">▲ ▲</span>
               <MinecraftSplash className="mc-splash-title" />
             </div>
             <p className="text-[11px] leading-relaxed text-game-yellow">A tiny pixel quest through GREENVALE</p>
+            <p className="max-w-[420px] font-mono text-[8px] leading-relaxed text-[#90EE90]/70">
+              {qrngReady || qrngSource() === "anu"
+                ? "ANU quantum entropy warm"
+                : "Seeding entropy…"}
+            </p>
             <div className="space-y-2 text-[10px] leading-relaxed">
               <p>ARROW KEYS — walk & dodge</p>
               <p>Z / ENTER — talk & confirm</p>

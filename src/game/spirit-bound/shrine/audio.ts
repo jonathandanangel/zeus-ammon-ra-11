@@ -1,5 +1,6 @@
-type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic" | "arcade" | "spirits";
+import { quantumFloat } from "@/game/spirit-bound/shrine/rng";
 
+type Sfx = "select" | "move" | "invalid" | "success" | "fail" | "tick" | "burn" | "demonic" | "arcade" | "spirits";
 
 let ctx: AudioContext | null = null;
 let music: { gain: GainNode; timer: number; stop: () => void } | null = null;
@@ -552,9 +553,9 @@ export function startBurnLoop() {
     const o1 = ac.createOscillator();
     const g1 = ac.createGain();
     o1.type = "sawtooth";
-    o1.frequency.value = 45 + Math.random() * 25;
+    o1.frequency.value = 45 + quantumFloat() * 25;
     g1.gain.setValueAtTime(0.04, t);
-    g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.35 + Math.random() * 0.2);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.35 + quantumFloat() * 0.2);
     o1.connect(g1);
     g1.connect(gain);
     o1.start(t);
@@ -564,10 +565,10 @@ export function startBurnLoop() {
       const o = ac.createOscillator();
       const g = ac.createGain();
       o.type = "square";
-      o.frequency.value = 200 + Math.random() * 900;
-      const at = t + Math.random() * 0.2;
-      g.gain.setValueAtTime(0.012 + Math.random() * 0.02, at);
-      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.04 + Math.random() * 0.06);
+      o.frequency.value = 200 + quantumFloat() * 900;
+      const at = t + quantumFloat() * 0.2;
+      g.gain.setValueAtTime(0.012 + quantumFloat() * 0.02, at);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.04 + quantumFloat() * 0.06);
       o.connect(g);
       g.connect(gain);
       o.start(at);

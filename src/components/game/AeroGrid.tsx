@@ -48,6 +48,8 @@ import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
 import { UniversityProjectsApp } from "./UniversityProjectsApp";
 import { WorldBackground } from "./WorldBackground";
+import { CyberChrome } from "./CyberChrome";
+import { MatrixRainBackground } from "./MatrixRainBackground";
 
 type Screen =
   | "title"
@@ -617,6 +619,11 @@ export function AeroGrid() {
 
   if (!hydrated) return null;
 
+  React.useEffect(() => {
+    document.documentElement.classList.add("cyber-skin");
+    return () => document.documentElement.classList.remove("cyber-skin");
+  }, []);
+
   const worldProgress = progress.index / TOTAL_QUESTIONS;
   const infernoActive =
     (mode === "extreme" && index >= EXTREME_INFERNO_START_INDEX) ||
@@ -640,6 +647,19 @@ export function AeroGrid() {
         psychedelic={psychedelicActive}
         inferno={infernoActive}
       />
+
+      {/* Soft cyber grid — title only, stays under UI */}
+      {screen === "title" && !settings.reducedMotion && (
+        <CyberChrome reducedMotion={settings.reducedMotion} />
+      )}
+      {screen === "title" && settings.matrixRain && !settings.reducedMotion && (
+        <MatrixRainBackground
+          active
+          reducedMotion={settings.reducedMotion}
+          opacity={0.14}
+          palette="zeus"
+        />
+      )}
 
       <BrainCelebration burst={celebrationBurst} reducedMotion={settings.reducedMotion} />
       <BrainOverload
