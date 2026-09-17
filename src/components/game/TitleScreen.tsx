@@ -2,10 +2,7 @@ import * as React from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { cn } from "@/lib/utils";
 import { FEATURED_HEAT_ALBUMS } from "@/game/audio";
-import {
-  loadMemoryHighScores,
-  type MemoryGameId,
-} from "@/game/memory-extreme/scores";
+import { type MemoryGameId } from "@/game/memory-extreme/scores";
 import { HeatAlbumCredits } from "./NowPlayingAlbum";
 import magentaBrain from "@/assets/winged-brain.png";
 import cyanBrain from "@/assets/winged-brain-cyan.png";
@@ -92,15 +89,9 @@ export function TitleScreen(p: TitleScreenProps) {
   const [leaving, setLeaving] = React.useState(false);
   const [brain, setBrain] = React.useState(() => pickBrainLook());
   const [brainVisible, setBrainVisible] = React.useState(true);
-  const [arcadeScores, setArcadeScores] = React.useState(() => loadMemoryHighScores());
   const fadingRef = React.useRef(false);
   const done = React.useRef(false);
   const landingRef = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    if (phase !== "landing") return;
-    setArcadeScores(loadMemoryHighScores());
-  }, [phase]);
 
   const FADE_MS = 700;
 
@@ -253,33 +244,17 @@ export function TitleScreen(p: TitleScreenProps) {
       eyebrow: "Arcade",
       title: "Arcade",
       blurb:
-        "Memory games found in the trivia — solo runs with a high score for each.",
+        "Memory games found in the trivia — solo runs for each.",
       accentClass: "from-cyan/30 via-transparent to-[#38bdf8]/20 border-cyan/60",
       buttonClass:
         "border-cyan/65 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(37,217,255,0.22)]",
       wash: "rgba(37,217,255,0.36)",
       glow: "arcade",
       actions: [
-        {
-          label: "EXTREME LIGHT CYCLE",
-          sub: `High score ${arcadeScores["grid-run"]}`,
-          onClick: () => p.onArcade("grid-run"),
-        },
-        {
-          label: "EXTREME PACMAN",
-          sub: `High score ${arcadeScores["neon-maze"]}`,
-          onClick: () => p.onArcade("neon-maze"),
-        },
-        {
-          label: "EXTREME RECALL",
-          sub: `High score ${arcadeScores["electric-recall"]}`,
-          onClick: () => p.onArcade("electric-recall"),
-        },
-        {
-          label: "EXTREME GAUNTLET",
-          sub: `High score ${arcadeScores["memory-gauntlet"]}`,
-          onClick: () => p.onArcade("memory-gauntlet"),
-        },
+        { label: "EXTREME LIGHT CYCLE", onClick: () => p.onArcade("grid-run") },
+        { label: "EXTREME PACMAN", onClick: () => p.onArcade("neon-maze") },
+        { label: "EXTREME RECALL", onClick: () => p.onArcade("electric-recall") },
+        { label: "EXTREME GAUNTLET", onClick: () => p.onArcade("memory-gauntlet") },
       ],
     },
     {
