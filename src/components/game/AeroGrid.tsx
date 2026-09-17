@@ -52,6 +52,11 @@ import { ArcadeApp } from "./ArcadeApp";
 import { WorldBackground } from "./WorldBackground";
 import { MatrixRainBackground } from "./MatrixRainBackground";
 import type { MemoryGameId } from "@/game/memory-extreme/scores";
+import {
+  buildRetakeDeck,
+  prefetchAnuQrng,
+  quantumShuffleIds,
+} from "@/game/retake-deck";
 
 type Screen =
   | "title"
@@ -115,6 +120,58 @@ const selectIntermission = (correctMilestone: number, questionCheckpoint: number
 const btn =
   "rounded-sm border border-cyan/50 bg-deepblue/50 backdrop-blur-md px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-cyan transition-colors hover:bg-cyan/20 disabled:opacity-40";
 
+/** Question pools that use the shared retake / miss-first quantum deck. */
+type TriviaMode = Extract<
+  Mode,
+  | "campaign"
+  | "practice"
+  | "high-speed"
+  | "review"
+  | "mastery"
+  | "extreme"
+  | "extreme-v2"
+  | "ht-extreme"
+  | "ht-intro"
+>;
+
+function isTriviaMode(mode: Mode): mode is TriviaMode {
+  return (
+    mode === "campaign" ||
+    mode === "practice" ||
+    mode === "high-speed" ||
+    mode === "review" ||
+    mode === "mastery" ||
+    mode === "extreme" ||
+    mode === "extreme-v2" ||
+    mode === "ht-extreme" ||
+    mode === "ht-intro"
+  );
+}
+
+function poolForTriviaMode(mode: TriviaMode, reviewIds: string[]): Question[] {
+  switch (mode) {
+    case "campaign":
+    case "mastery":
+      return allQuestions;
+    case "practice":
+      return aeroQuestions;
+    case "high-speed":
+      return highSpeedQuestionsOnly;
+    case "extreme":
+      return extremeQuestions;
+    case "extreme-v2":
+      return extremeV2Questions;
+    case "ht-extreme":
+      return heatTransferExtremeQuestions;
+    case "ht-intro":
+      return heatTransferIntroQuestions;
+    case "review":
+      return allQuestions.filter((q) => reviewIds.includes(q.id));
+    default:
+      return allQuestions;
+  }
+}
+
 function Hud({
   question,
   number,
@@ -165,6 +222,14 @@ export function AeroGrid() {
   const [pendingIntermission, setPendingIntermission] = React.useState<PendingIntermission | null>(null);
   const [sceneFading, setSceneFading] = React.useState(false);
   const [reviewIds, setReviewIds] = React.useState<string[]>([]);
+  /** Quantum-ordered deck for the active trivia run (missed-first on retake). */
+  const [deckOverride, setDeckOverride] = React.useState<Question[] | null>(null);
+  /** Misses during the current run — used to build the next retake order. */
+  const [sessionMissedIds, setSessionMissedIds] = React.useState<string[]>([]);
+  /** Last finished run’s misses per trivia mode (title → play again). */
+  const [lastMissedByMode, setLastMissedByMode] = React.useState<Partial<Record<TriviaMode, string[]>>>(
+    {},
+  );
   const [extremeScore, setExtremeScore] = React.useState(0);
   const [overloadBurst, setOverloadBurst] = React.useState(0);
   const [psychedelicActive, setPsychedelicActive] = React.useState(false);
@@ -183,6 +248,7 @@ export function AeroGrid() {
   }, [setProgress]);
 
   const list = React.useMemo<Question[]>(() => {
+    if (deckOverride?.length && isTriviaMode(mode)) return deckOverride;
     switch (mode) {
       case "campaign":
         return allQuestions;
@@ -212,7 +278,30 @@ export function AeroGrid() {
       default:
         return allQuestions;
     }
-  }, [mode, reviewIds]);
+  }, [mode, reviewIds, deckOverride]);
+
+  React.useEffect(() => {
+    void prefetchAnuQrng();
+  }, []);
+
+  const rememberMissesForMode = React.useCallback(
+    (triviaMode: TriviaMode, missed: string[]) => {
+      setLastMissedByMode((prev) => ({ ...prev, [triviaMode]: missed }));
+    },
+    [],
+  );
+
+  const applyRetakeDeck = React.useCallback(
+    (triviaMode: TriviaMode, missed: readonly string[], ids: string[] = []) => {
+      const pool =
+        triviaMode === "review"
+          ? poolForTriviaMode("review", ids.length ? ids : [...missed])
+          : poolForTriviaMode(triviaMode, ids);
+      setDeckOverride(buildRetakeDeck(pool, missed));
+      setSessionMissedIds([]);
+    },
+    [],
+  );
 
   const index = mode === "campaign" ? progress.index : localIndex;
   const question = list[Math.min(index, list.length - 1)];
@@ -329,10 +418,17 @@ export function AeroGrid() {
     audio.startTitlePlaylist();
   };
 
-  const beginRun = (nextMode: Mode, ids: string[] = [], resumeMilestone = false) => {
+  const beginRun = (
+    nextMode: Mode,
+    ids: string[] = [],
+    resumeMilestone = false,
+    opts?: { missedIds?: string[]; fresh?: boolean },
+  ) => {
     startAudio();
     setMode(nextMode);
-    setReviewIds(ids);
+    const shuffledReview =
+      nextMode === "review" ? quantumShuffleIds(ids.length ? ids : progress.missedIds) : ids;
+    setReviewIds(shuffledReview);
     setLocalIndex(0);
     setAnswer([]);
     setPhase("answering");
@@ -340,6 +436,25 @@ export function AeroGrid() {
     setGauntletRecovery(false);
     setOverloadBurst(0);
     setPsychedelicActive(false);
+
+    if (isTriviaMode(nextMode)) {
+      if (opts?.fresh) {
+        setDeckOverride(null);
+        setSessionMissedIds([]);
+      } else {
+        const missed =
+          opts?.missedIds ??
+          (nextMode === "review"
+            ? shuffledReview
+            : nextMode === "campaign" || nextMode === "mastery"
+              ? progress.missedIds
+              : lastMissedByMode[nextMode] ?? sessionMissedIds);
+        applyRetakeDeck(nextMode, missed, shuffledReview);
+      }
+    } else {
+      setDeckOverride(null);
+    }
+
     const currentQuestion = allQuestions[Math.min(progress.index, allQuestions.length - 1)];
     const completedQuestionNumber = currentQuestion && progress.answeredIds.includes(currentQuestion.id)
       ? currentQuestion.globalNumber
@@ -362,6 +477,61 @@ export function AeroGrid() {
     }
   };
 
+  const beginExtremeFamily = (nextMode: "extreme" | "extreme-v2" | "ht-extreme" | "ht-intro") => {
+    startAudio();
+    setMode(nextMode);
+    setReviewIds([]);
+    setLocalIndex(0);
+    setAnswer([]);
+    setPhase("answering");
+    setShowHint(false);
+    setExtremeScore(0);
+    setExtremeCorrectCount(0);
+    setV2Log([]);
+    setHtLog([]);
+    setHtiLog([]);
+    setPendingIntermission(null);
+    setGauntletRecovery(false);
+    setOverloadBurst(0);
+    setPsychedelicActive(false);
+    if (nextMode === "ht-extreme") {
+      setEnochGatePending(false);
+      setHtJumpNeedsAdvance(false);
+    }
+    const missed = lastMissedByMode[nextMode] ?? [];
+    applyRetakeDeck(nextMode, missed);
+    setScreen("briefing");
+  };
+
+  const restartExtremeFamily = (
+    nextMode: "extreme" | "extreme-v2" | "ht-extreme" | "ht-intro",
+    log: Array<{ id: string; ok: boolean }>,
+  ) => {
+    const missed = log.filter((entry) => !entry.ok).map((entry) => entry.id);
+    rememberMissesForMode(nextMode, missed.length ? missed : sessionMissedIds);
+    startAudio();
+    setMode(nextMode);
+    setReviewIds([]);
+    setLocalIndex(0);
+    setAnswer([]);
+    setPhase("answering");
+    setShowHint(false);
+    setExtremeScore(0);
+    setExtremeCorrectCount(0);
+    setV2Log([]);
+    setHtLog([]);
+    setHtiLog([]);
+    setGauntletRecovery(false);
+    setOverloadBurst(0);
+    setPsychedelicActive(false);
+    if (nextMode === "ht-extreme") {
+      setEnochGatePending(false);
+      setHtJumpNeedsAdvance(false);
+    }
+    applyRetakeDeck(nextMode, missed.length ? missed : sessionMissedIds);
+    setScreen("briefing");
+  };
+
   const submit = () => {
     if (!question || phase !== "answering" || !isComplete(question, answer)) return;
     const ok = isCorrect(question, answer);
@@ -373,6 +543,14 @@ export function AeroGrid() {
       setWipe(true);
       window.setTimeout(() => setWipe(false), settings.interstitials === "full" ? 2000 : 800);
     }
+
+    // Track misses for every trivia quiz — retakes lead with these (quantum-shuffled).
+    if (isTriviaMode(mode)) {
+      setSessionMissedIds((prev) =>
+        ok ? prev.filter((id) => id !== question.id) : [...new Set([...prev, question.id])],
+      );
+    }
+
     if (isExtremeFamily(mode)) {
       setExtremeScore((value) => value + (ok ? question.points : 0));
       if (mode === "extreme" && ok) {
@@ -398,6 +576,18 @@ export function AeroGrid() {
       }
       return;
     }
+
+    // Review / mastery / practice / high-speed: shrink or grow the persistent miss list
+    // so the next retake reflects what the player has actually learned.
+    if (mode === "review" || mode === "mastery" || mode === "practice" || mode === "high-speed") {
+      setProgress((p) => ({
+        missedIds: ok
+          ? p.missedIds.filter((id) => id !== question.id)
+          : [...new Set([...p.missedIds, question.id])],
+      }));
+      return;
+    }
+
     if (mode !== "campaign") return;
     const nextCorrectCount = progress.correctCount + (ok ? 1 : 0);
     const milestone = Math.floor(nextCorrectCount / 15);
@@ -420,7 +610,10 @@ export function AeroGrid() {
         correctCount: p.correctCount + (ok ? 1 : 0),
         answeredCount: p.answeredCount + 1,
         answeredIds: [...new Set([...p.answeredIds, question.id])],
-        missedIds: ok ? p.missedIds : [...new Set([...p.missedIds, question.id])],
+        // Drop cleared misses so retakes shrink as the player learns
+        missedIds: ok
+          ? p.missedIds.filter((id) => id !== question.id)
+          : [...new Set([...p.missedIds, question.id])],
       };
     });
   };
@@ -432,6 +625,7 @@ export function AeroGrid() {
     const last = index + 1 >= list.length;
     if (mode === "campaign") {
       if (last) {
+        rememberMissesForMode("campaign", sessionMissedIds.length ? sessionMissedIds : progress.missedIds);
         setProgress({ completed: true });
         setScreen("finale");
         return;
@@ -439,6 +633,17 @@ export function AeroGrid() {
       setProgress((p) => ({ index: p.index + 1 }));
     } else {
       if (last) {
+        if (isTriviaMode(mode)) {
+          const fromLog =
+            mode === "extreme-v2"
+              ? v2Log.filter((e) => !e.ok).map((e) => e.id)
+              : mode === "ht-extreme"
+                ? htLog.filter((e) => !e.ok).map((e) => e.id)
+                : mode === "ht-intro"
+                  ? htiLog.filter((e) => !e.ok).map((e) => e.id)
+                  : sessionMissedIds;
+          rememberMissesForMode(mode, fromLog.length ? fromLog : sessionMissedIds);
+        }
         if (isExtremeFamily(mode)) {
           setScreen("finale");
           return;
@@ -673,90 +878,18 @@ export function AeroGrid() {
           hasSave={progress.answeredCount > 0 && !progress.gameOver}
           onUnlockAudio={unlockTitleAudio}
           onStart={() => {
+            const priorMissed = [...progress.missedIds];
             resetCampaign();
-            beginRun("campaign");
+            // Fresh campaign keeps chapter order; retake after misses uses learning deck.
+            beginRun("campaign", [], false, priorMissed.length ? { missedIds: priorMissed } : { fresh: true });
           }}
-          onResume={() => beginRun("campaign", [], true)}
+          onResume={() => beginRun("campaign", [], true, { fresh: true })}
           onPractice={() => beginRun("practice")}
           onHighSpeed={() => beginRun("high-speed")}
-          onExtreme={() => {
-            startAudio();
-            setMode("extreme");
-            setReviewIds([]);
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setV2Log([]);
-            setHtLog([]);
-            setHtiLog([]);
-            setPendingIntermission(null);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setScreen("briefing");
-          }}
-          onExtremeV2={() => {
-            startAudio();
-            setMode("extreme-v2");
-            setReviewIds([]);
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setV2Log([]);
-            setHtLog([]);
-            setHtiLog([]);
-            setPendingIntermission(null);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setScreen("briefing");
-          }}
-          onHeatTransferIntro={() => {
-            startAudio();
-            setMode("ht-intro");
-            setReviewIds([]);
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setV2Log([]);
-            setHtLog([]);
-            setHtiLog([]);
-            setPendingIntermission(null);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setScreen("briefing");
-          }}
-          onHeatTransferExtreme={() => {
-            startAudio();
-            setMode("ht-extreme");
-            setReviewIds([]);
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setV2Log([]);
-            setHtLog([]);
-            setHtiLog([]);
-            setPendingIntermission(null);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setEnochGatePending(false);
-            setHtJumpNeedsAdvance(false);
-            setScreen("briefing");
-          }}
+          onExtreme={() => beginExtremeFamily("extreme")}
+          onExtremeV2={() => beginExtremeFamily("extreme-v2")}
+          onHeatTransferIntro={() => beginExtremeFamily("ht-intro")}
+          onHeatTransferExtreme={() => beginExtremeFamily("ht-extreme")}
           onSpiritBound={() => {
             // SFX only — stop main/title beds; Legend of Triangles owns its own music.
             audio.init();
@@ -967,8 +1100,11 @@ export function AeroGrid() {
                   score: extremeScore,
                   correct: extremeCorrectCount,
                   total: list.length,
-                  continueLabel: "Main menu",
-                  onContinue: () => setScreen("title"),
+                  continueLabel: "Retake (missed first)",
+                  onContinue: () => {
+                    rememberMissesForMode("extreme", sessionMissedIds);
+                    restartExtremeFamily("extreme", sessionMissedIds.map((id) => ({ id, ok: false })));
+                  },
                 },
               }
             : mode === "extreme-v2"
@@ -979,7 +1115,13 @@ export function AeroGrid() {
                     correct: v2Log.filter((entry) => entry.ok).length,
                     total: list.length,
                     continueLabel: "Open review",
-                    onContinue: () => setScreen("v2-review"),
+                    onContinue: () => {
+                      rememberMissesForMode(
+                        "extreme-v2",
+                        v2Log.filter((e) => !e.ok).map((e) => e.id),
+                      );
+                      setScreen("v2-review");
+                    },
                   },
                 }
               : mode === "ht-extreme"
@@ -990,7 +1132,13 @@ export function AeroGrid() {
                       correct: htLog.filter((entry) => entry.ok).length,
                       total: list.length,
                       continueLabel: "Open review",
-                      onContinue: () => setScreen("ht-review"),
+                      onContinue: () => {
+                        rememberMissesForMode(
+                          "ht-extreme",
+                          htLog.filter((e) => !e.ok).map((e) => e.id),
+                        );
+                        setScreen("ht-review");
+                      },
                     },
                   }
                 : mode === "ht-intro"
@@ -1001,7 +1149,13 @@ export function AeroGrid() {
                         correct: htiLog.filter((entry) => entry.ok).length,
                         total: list.length,
                         continueLabel: "Open review",
-                        onContinue: () => setScreen("hti-review"),
+                        onContinue: () => {
+                          rememberMissesForMode(
+                            "ht-intro",
+                            htiLog.filter((e) => !e.ok).map((e) => e.id),
+                          );
+                          setScreen("hti-review");
+                        },
                       },
                     }
                   : {})}
@@ -1032,8 +1186,10 @@ export function AeroGrid() {
               type="button"
               className={btn}
               onClick={() => {
+                const missed = [...progress.missedIds, ...sessionMissedIds];
+                rememberMissesForMode("campaign", missed);
                 resetCampaign();
-                beginRun("campaign");
+                beginRun("campaign", [], false, { missedIds: missed });
               }}
             >
               Restart campaign
@@ -1104,21 +1260,7 @@ export function AeroGrid() {
           questions={extremeV2Questions}
           log={v2Log}
           score={v2Log.filter((entry) => entry.ok).length}
-          onRestart={() => {
-            startAudio();
-            setMode("extreme-v2");
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setV2Log([]);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setScreen("briefing");
-          }}
+          onRestart={() => restartExtremeFamily("extreme-v2", v2Log)}
           onMenu={() => setScreen("title")}
         />
       )}
@@ -1128,23 +1270,7 @@ export function AeroGrid() {
           questions={heatTransferExtremeQuestions}
           log={htLog}
           score={htLog.filter((entry) => entry.ok).length}
-          onRestart={() => {
-            startAudio();
-            setMode("ht-extreme");
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setHtLog([]);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setEnochGatePending(false);
-            setHtJumpNeedsAdvance(false);
-            setScreen("briefing");
-          }}
+          onRestart={() => restartExtremeFamily("ht-extreme", htLog)}
           onMenu={() => setScreen("title")}
         />
       )}
@@ -1154,38 +1280,13 @@ export function AeroGrid() {
           questions={heatTransferIntroQuestions}
           log={htiLog}
           score={htiLog.filter((entry) => entry.ok).length}
-          onRestart={() => {
-            startAudio();
-            setMode("ht-intro");
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setHtiLog([]);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setScreen("briefing");
-          }}
+          onRestart={() => restartExtremeFamily("ht-intro", htiLog)}
           onContinueExtreme={() => {
-            startAudio();
-            setMode("ht-extreme");
-            setLocalIndex(0);
-            setAnswer([]);
-            setPhase("answering");
-            setShowHint(false);
-            setExtremeScore(0);
-            setExtremeCorrectCount(0);
-            setHtLog([]);
-            setHtiLog([]);
-            setGauntletRecovery(false);
-            setOverloadBurst(0);
-            setPsychedelicActive(false);
-            setEnochGatePending(false);
-            setHtJumpNeedsAdvance(false);
-            setScreen("briefing");
+            rememberMissesForMode(
+              "ht-intro",
+              htiLog.filter((e) => !e.ok).map((e) => e.id),
+            );
+            beginExtremeFamily("ht-extreme");
           }}
           onMenu={() => setScreen("title")}
         />

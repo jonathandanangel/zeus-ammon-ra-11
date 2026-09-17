@@ -6,13 +6,15 @@ import {
   type FunctionAnalysisResult,
   type VibrationResult,
 } from "@/game/numerical-extreme";
+import { buildVibrationV18Analysis, optimizeGraphXOutputs } from "./v18-extras";
 
-/** V15-style detailed MAIN engine report (sections 1–11). */
+/** V18-style detailed MAIN engine report (sections 1–11 + graph / reasoning). */
 export function buildFunctionReport(result: FunctionAnalysisResult): string {
   const lines: string[] = [
-    "=== NumericalAnalysisToolbox_V15 · FUNCTION ANALYSIS ===",
+    "=== NumericalAnalysisToolbox_V18 · FUNCTION ANALYSIS ===",
     "Algorithms: IVT · Bisection · Newton (damped) · Secant · MVT · Taylor",
     "            Alg 695 Modified Cholesky · Alg 682 Talbot · Alg 502 DERPAR",
+    "            Ordered Spatial Reasoning · Graph-optimized X answers",
     "",
     "=== Function f(x) (numeric) ===",
     result.expression.normalized,
@@ -185,6 +187,16 @@ export function buildFunctionReport(result: FunctionAnalysisResult): string {
     lines.push("", "Warnings:", ...result.warnings.map((w) => `   · ${w}`));
   }
 
+  try {
+    lines.push("", optimizeGraphXOutputs(result));
+  } catch (error) {
+    lines.push(
+      "",
+      "=== GRAPH-OPTIMIZED X OUTPUT (unavailable) ===",
+      `   ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
   return lines.filter((line) => line !== undefined).join("\n");
 }
 
@@ -237,6 +249,15 @@ export function buildVibrationReport(result: VibrationResult): string {
   }
   if (result.notes?.length) lines.push("", ...result.notes.map((n) => `note: ${n}`));
   if (result.warnings?.length) lines.push("", ...result.warnings.map((w) => `warn: ${w}`));
+  try {
+    lines.push("", buildVibrationV18Analysis(result));
+  } catch (error) {
+    lines.push(
+      "",
+      "=== V18 ADVANCED VIBRATION WARNING ===",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
   return lines.join("\n");
 }
 

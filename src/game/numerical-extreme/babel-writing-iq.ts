@@ -7,6 +7,7 @@
 
 import { estimateWritingIqClient, writingIqWordCount } from "@/game/ai-detector/writingIq";
 import { runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
+import { scoreSequenceStructure } from "@/game/numerical-extreme/ordered-spatial-reasoning";
 
 const AI_TARGET_MAX = 10;
 /** Hard clamp — Writing-to-IQ can report near 199; we do not require hitting 200. */
@@ -189,12 +190,14 @@ export type SilentBabelProseScore = {
   text: string;
   writingIq: number;
   aiPercent: number;
-  /** Higher is better: low AI + high IQ approaching ~190. */
+  /** Ordered Spatial Reasoning structure score (high-variance recall). */
+  structureScore: number;
+  /** Higher is better: low AI + high IQ toward ~190 + coherent sequence structure. */
   rank: number;
 };
 
-function rankScore(writingIq: number, aiPercent: number): number {
-  // Prefer AI ≤ 10%; then maximize Writing IQ toward ~190; then minimize AI.
+function rankScore(writingIq: number, aiPercent: number, structureScore = 0): number {
+  // Prefer AI ≤ 10%; then maximize Writing IQ toward ~190; then OSR structure; then minimize AI.
   const underTarget = aiPercent <= AI_TARGET_MAX ? 1 : 0;
   const iq = Math.min(WRITING_IQ_PEAK, Math.max(0, writingIq));
   const nearPeak =
@@ -205,7 +208,7 @@ function rankScore(writingIq: number, aiPercent: number): number {
         : iq >= 160
           ? 280
           : 0;
-  return underTarget * 50_000 + iq * 120 + nearPeak - aiPercent * 2;
+  return underTarget * 50_000 + iq * 120 + nearPeak + structureScore * 8 - aiPercent * 2;
 }
 
 /**
@@ -248,11 +251,21 @@ export async function silentlyScoreBabelProse(
     }
   }
 
+  // V18 Ordered Spatial Reasoning — prefer coherent / low-entropy token structure for locate recall
+  const structure = scoreSequenceStructure(
+    sample
+      .split(/[\s.;,—]+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 2)
+      .slice(0, 16),
+  );
+
   return {
     text: sample,
     writingIq,
     aiPercent,
-    rank: rankScore(writingIq, aiPercent),
+    structureScore: structure.score,
+    rank: rankScore(writingIq, aiPercent, structure.score),
   };
 }
 
@@ -291,7 +304,8 @@ export async function silentlyPickBestBabelProse(
         text: row.text,
         writingIq: row.local,
         aiPercent: 50,
-        rank: rankScore(row.local, 50),
+        structureScore: 0,
+        rank: rankScore(row.local, 50, 0),
       });
     }
   }

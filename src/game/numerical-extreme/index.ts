@@ -78,6 +78,23 @@ export {
   COMPOSITE_FORMULAS,
 } from "./v15-report";
 
+export {
+  runOrderedSpatialReasoning,
+  scoreSequenceStructure,
+  tokenizeSequence,
+} from "./ordered-spatial-reasoning";
+export type {
+  OsrCandidate,
+  OsrConfidence,
+  OsrResult,
+  OrderedSpatialOptions,
+} from "./ordered-spatial-reasoning";
+
+export {
+  optimizeGraphXOutputs,
+  buildVibrationV18Analysis,
+} from "./v18-extras";
+
 export { TOOLBOX_REFERENCES } from "./references";
 export type { ReferenceEntry, ReferenceSection } from "./references";
 

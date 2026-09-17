@@ -1112,7 +1112,8 @@ export function BabelSecretPanel({
             Silent polish uses the same Free AI Detector as AI Detector Free mode: ModernBERT +
             stylometrics, higher-order lead composite, log-odds / product-of-experts fusion, and all
             ModernBERT-first rules — preferring prose under ~10% AI while maximizing Writing IQ
-            toward ~190 (approach the high band; ~200 is rare). Scores stay hidden in NUMEROLOGY.
+            toward ~190. Ordered Spatial Reasoning (V18) also scores locate-token structure for
+            high-variance recall. Scores stay hidden in NUMEROLOGY.
           </p>
           <p className="rounded-sm border border-amber/25 bg-black/40 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber/90">
             Notes / security: Free ensemble scoring runs in your browser (ONNX models cached after

@@ -44,6 +44,7 @@ import {
   runDerpar,
   runGeneticRootFinder,
   runModifiedCholesky,
+  runOrderedSpatialReasoning,
   runTalbot,
   solveNonlinearSystem,
   SYMBOLIC_PRESETS,
@@ -149,6 +150,7 @@ function MainPanel() {
   const [activeOutput, setActiveOutput] = React.useState<"function" | "vibration" | null>(null);
   const [log, setLog] = React.useState("(output will appear here)");
   const [error, setError] = React.useState("");
+  const [osrSequence, setOsrSequence] = React.useState("1, 121, 12321, ?, ?");
   const compute = React.useContext(NumericalComputeContext);
 
   function appendClickLog(line: string) {
@@ -222,6 +224,28 @@ function MainPanel() {
     setSeedStage(0);
     setLog("(output cleared)");
     setError("");
+  }
+
+  function runOrderedReasoning() {
+    setError("");
+    compute?.();
+    try {
+      const result = runOrderedSpatialReasoning(osrSequence, {
+        beamWidth: 500,
+        maxPeriod: 4,
+        maxPolyDegree: 3,
+        maxRecurrenceOrder: 3,
+        maxShown: 10,
+        combined: true,
+      });
+      setLog((prev) => {
+        const block = result.report;
+        if (prev.startsWith("(output") || prev.startsWith("(output cleared)")) return block;
+        return `${prev}\n\n${block}`;
+      });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Ordered Spatial Reasoning failed.");
+    }
   }
 
   function handleChartClick(point: { x: number; y: number }) {
@@ -401,7 +425,7 @@ function MainPanel() {
             ))}
           </div>
           <p className="font-mono text-[9px] text-muted-foreground">
-            {FUNCTION_PRESETS.length} V15 demo f(x) samples · hover for expression
+            {FUNCTION_PRESETS.length} V18 demo f(x) samples · hover for expression
           </p>
           <GraphBoundsFields a={a} b={b} onAChange={setA} onBChange={setB} />
           <Field label="Plot click mode">
@@ -493,6 +517,23 @@ function MainPanel() {
           ))}
         </div>
 
+        <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-amber">
+          Ordered Spatial Reasoning (V18)
+        </p>
+        <Field label="Sequence">
+          <TextArea
+            value={osrSequence}
+            onChange={(e) => setOsrSequence(e.target.value)}
+            rows={3}
+            className="font-mono text-[11px]"
+            placeholder="1, 121, 12321, ?, ?"
+          />
+        </Field>
+        <p className="font-mono text-[9px] leading-relaxed text-muted-foreground">
+          Comma-separated terms · use ? for blanks · hypotheses only (not an IQ score). Runs
+          locally — do not paste secrets.
+        </p>
+
         <div className="grid grid-cols-2 gap-2">
           <RunButton>Run analysis</RunButton>
           <GhostButton type="button" onClick={runVibration} className="w-full py-2.5">
@@ -500,26 +541,29 @@ function MainPanel() {
           </GhostButton>
         </div>
         <div className="grid grid-cols-2 gap-2">
+          <GhostButton type="button" onClick={runOrderedReasoning} className="w-full py-2.5">
+            Ordered Spatial Reasoning
+          </GhostButton>
           <GhostButton type="button" onClick={clearOutput} className="w-full">
             Clear output
           </GhostButton>
-          <GhostButton
-            type="button"
-            className="w-full"
-            onClick={() => {
-              setClickedPoints([]);
-              appendClickLog("Clicked points cleared.");
-            }}
-          >
-            Clear clicks
-          </GhostButton>
         </div>
+        <GhostButton
+          type="button"
+          className="w-full"
+          onClick={() => {
+            setClickedPoints([]);
+            appendClickLog("Clicked points cleared.");
+          }}
+        >
+          Clear clicks
+        </GhostButton>
         {error && <ErrorBanner message={error} />}
       </aside>
 
       <div className="min-w-0 space-y-3">
         {chart}
-        <Panel title="Engine log" eyebrow="V15 telemetry · sections 1–11">
+        <Panel title="Engine log" eyebrow="V18 telemetry · analysis · vibration · ordered reasoning">
           <pre className="max-h-80 overflow-auto rounded-sm border border-cyan/20 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-mint whitespace-pre-wrap">
             {log}
           </pre>
@@ -3887,7 +3931,7 @@ function ReferencesPanel() {
     <div className="space-y-4">
       <Panel title="People & literature that inspired the toolbox" eyebrow="REFS">
         <p className="font-mono text-xs leading-relaxed text-muted-foreground">
-          Numerical Extreme carries forward NumericalAnalysisToolbox_V15 / V11 Neon: ACM Collected
+          Numerical Extreme carries forward NumericalAnalysisToolbox_V18 / V15 / V11 Neon: ACM Collected
           Algorithms (including SPARS 618 / 619 / 740), Sauer-style root finding, classical
           quadrature & interpolation, and SDOF vibration analysis — plus the NUMEROLOGY tab’s
           people, dictionaries, Secret Doctrine, Greek Myths, Ruckman×KJV, and Thought-Forms
@@ -3985,7 +4029,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
                 NUMERICAL EXTREME
               </h1>
               <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                Local TypeScript engine · V11 / V15 ports · ACM & Sauer lineage
+                Local TypeScript engine · V18 Ordered Spatial Reasoning · V11 / V15 ports · ACM & Sauer lineage
               </p>
             </div>
             <button
