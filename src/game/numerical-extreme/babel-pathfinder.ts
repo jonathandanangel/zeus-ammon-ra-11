@@ -1544,7 +1544,7 @@ export async function quietlyPolishBabelBooks(
       let coherent = candidates[0] ?? leaf.excerpt;
       try {
         coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
-          skipNeural: true,
+          neural: light ? "none" : "modernbert",
           localOnly: light,
           maxCandidates: light ? 2 : 3,
         });

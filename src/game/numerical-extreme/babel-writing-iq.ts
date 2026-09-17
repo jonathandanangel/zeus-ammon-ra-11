@@ -114,7 +114,7 @@ function rankScore(writingIq: number, aiPercent: number): number {
  */
 export async function silentlyScoreBabelProse(
   text: string,
-  opts?: { skipNeural?: boolean; localOnly?: boolean },
+  opts?: { skipNeural?: boolean; localOnly?: boolean; neural?: "all" | "modernbert" | "none" },
 ): Promise<SilentBabelProseScore> {
   const sample = text.trim();
   let writingIq = localWritingIqScore(sample);
@@ -131,8 +131,9 @@ export async function silentlyScoreBabelProse(
   let aiPercent = Math.max(8, Math.min(55, 160 - writingIq));
   if (!opts?.localOnly) {
     try {
+      // Babel uses ModernBERT + stylometrics so consensus rules (≈99% AI, mix gaps) apply.
       const { consensus } = await runFreeEnsemble(sample, undefined, {
-        skipNeural: opts?.skipNeural ?? true,
+        ...(opts?.skipNeural ? { skipNeural: true, neural: "none" as const } : { neural: opts?.neural ?? "modernbert" }),
       });
       if (consensus.scanned > 0) {
         aiPercent = consensus.avgAiScore;
@@ -156,7 +157,12 @@ export async function silentlyScoreBabelProse(
  */
 export async function silentlyPickBestBabelProse(
   candidates: string[],
-  opts?: { skipNeural?: boolean; maxCandidates?: number; localOnly?: boolean },
+  opts?: {
+    skipNeural?: boolean;
+    maxCandidates?: number;
+    localOnly?: boolean;
+    neural?: "all" | "modernbert" | "none";
+  },
 ): Promise<string> {
   const cleaned = [...new Set(candidates.map((c) => c.trim()).filter((c) => c.length >= 12))];
   if (!cleaned.length) return "";

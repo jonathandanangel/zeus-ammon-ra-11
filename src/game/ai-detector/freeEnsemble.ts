@@ -103,23 +103,23 @@ export const FREE_DETECTORS: { id: FreeDetectorId; name: string; blurb: string }
 ];
 
 /**
- * Prefer low false positives on human student writing (GPTZero philosophy).
- * ModernBERT at 70–100% AI outranks soft stylometrics (Babel + bench).
+ * Full free suite always participates. ModernBERT custom rules have highest
+ * importance (Babel + bench); soft stylometrics stay in the mix at low weight.
  */
-const WEIGHT: Partial<Record<FreeDetectorId, number>> = {
-  "human-noise": 5.5,
-  "llm-pitch": 4.5,
-  "ai-story": 4.8,
-  "gptzero-twin": 1.4,
-  "openai-roberta": 1.8,
-  "hc3-roberta": 1.7,
-  modernbert: 6.5,
-  burstiness: 0.9,
-  "perplexity-proxy": 0.7,
-  lexical: 0.6,
-  ngram: 0.7,
-  discourse: 1.1,
-  "sentence-mix": 0.25,
+const WEIGHT: Record<FreeDetectorId, number> = {
+  modernbert: 9.5,
+  burstiness: 2.8,
+  "human-noise": 4.0,
+  "ai-story": 3.6,
+  "llm-pitch": 3.4,
+  "openai-roberta": 2.2,
+  "hc3-roberta": 2.0,
+  "gptzero-twin": 1.5,
+  discourse: 1.0,
+  ngram: 0.85,
+  "perplexity-proxy": 0.8,
+  lexical: 0.75,
+  "sentence-mix": 0.35,
 };
 
 function clamp(n: number, lo = 0, hi = 100) {
@@ -903,6 +903,8 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   // ModernBERT 70–100% AI: trust the neural call over mushy stylometrics
   const modernStrong = Boolean(modern && modern.aiScore >= 70);
   const modernHard = Boolean(modern && modern.aiScore >= 85);
+  // ~99% ModernBERT → basically AI (free detector ceiling call)
+  const modernNearCertain = Boolean(modern && modern.aiScore >= 95);
   // ModernBERT AI% < sentence-mix AI% → more likely human (trust free ModernBERT)
   const modernBelowMix = Boolean(modern && sentMix && modern.aiScore < sentMix.aiScore);
   const mixGap = modernBelowMix ? sentMix!.aiScore - modern!.aiScore : 0;
@@ -942,14 +944,15 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       modern.aiScore > sentMix.aiScore,
   );
   const modernAiLead = modernBurstAiPair || modernOverBurstMix;
-  // Authenticity veto only when NOT a clear ChatGPT pitch / AI chapterbook / strong ModernBERT / AI lead
+  // Authenticity veto only when NOT a clear ChatGPT pitch / AI chapterbook / ModernBERT lead / ≈99%
   const humanVeto = Boolean(
     noise &&
       noise.aiScore <= 18 &&
       !pitchStrong &&
       !storyStrong &&
       !modernStrong &&
-      !modernAiLead,
+      !modernAiLead &&
+      !modernNearCertain,
   );
   const humanHard = Boolean(
     noise &&
@@ -957,7 +960,8 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       !pitchStrong &&
       !storyStrong &&
       !modernStrong &&
-      !modernAiLead,
+      !modernAiLead &&
+      !modernNearCertain,
   );
 
   let wSum = 0;
@@ -979,36 +983,39 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       score = Math.max(score, 86);
       w *= 1.4;
     }
-    // ModernBERT high AI → dominate consensus (sentence-mix etc. must not dilute)
+    // ModernBERT custom rules — highest importance over the full suite
     if (r.id === "modernbert" && score >= 70) {
-      w *= score >= 85 ? 2.4 : 1.85;
-      score = Math.max(score, score >= 85 ? 90 : 78);
+      w *= score >= 95 ? 4.0 : score >= 85 ? 2.8 : 2.0;
+      score = Math.max(score, score >= 95 ? 98 : score >= 85 ? 90 : 78);
+    }
+    if (modernNearCertain && r.id !== "modernbert") {
+      w *= 0.15;
     }
     // ModernBERT + Burstiness above mix+twin (rest ~20s) → boost the AI pair
     if (modernBurstAiPair && (r.id === "modernbert" || r.id === "burstiness")) {
-      w *= 2.1;
-      score = Math.max(score, 72);
+      w *= 2.4;
+      score = Math.max(score, 74);
     }
     if (modernBurstAiPair && (r.id === "sentence-mix" || r.id === "gptzero-twin")) {
-      w *= 0.18;
+      w *= 0.15;
       if (score > 30) score = 16 + (score - 30) * 0.2;
     }
     // ModernBERT > Burstiness AND sentence-mix → boost ModernBERT, crush the lower two
     if (modernOverBurstMix && r.id === "modernbert") {
-      w *= 2.0;
-      score = Math.max(score, Math.min(92, score + 8));
+      w *= 2.5;
+      score = Math.max(score, Math.min(94, score + 10));
     }
     if (modernOverBurstMix && (r.id === "burstiness" || r.id === "sentence-mix")) {
-      w *= 0.22;
+      w *= 0.18;
       if (score > 35) score = 18 + (score - 35) * 0.25;
     }
-    // ModernBERT AI% < sentence-mix → boost human ModernBERT, crush mix
+    // ModernBERT AI% < sentence-mix → boost human ModernBERT, crush mix (still keep mix in mix)
     if (modernBelowMix && r.id === "modernbert") {
-      w *= modernHumanHard ? 2.4 : modernHumanGap ? 2.0 : 1.55;
-      score = Math.min(score, modernHumanHard ? 8 : modernHumanGap ? 16 : Math.min(score, 28));
+      w *= modernHumanHard ? 3.0 : modernHumanGap ? 2.4 : 1.8;
+      score = Math.min(score, modernHumanHard ? 6 : modernHumanGap ? 14 : Math.min(score, 26));
     }
     if (modernBelowMix && r.id === "sentence-mix") {
-      w *= modernHumanHard ? 0.1 : modernHumanGap ? 0.15 : 0.28;
+      w *= modernHumanHard ? 0.08 : modernHumanGap ? 0.12 : 0.22;
       if (score > 25) score = 14 + (score - 25) * 0.12;
     }
     if (r.id === "sentence-mix") {
@@ -1072,13 +1079,14 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   let docScore = sharpen(0.65 * avg + 0.35 * med, 1.08);
 
   // Strong student/human authenticity → force near 0% AI (Babel needs this polarity)
-  if (humanHard) {
+  // Never override ModernBERT ≈99% / AI-lead custom rules — those have highest importance.
+  if (humanHard && !modernNearCertain && !modernAiLead) {
     docScore = Math.min(docScore, noise?.aiScore ?? 0);
-  } else if (humanVeto) {
+  } else if (humanVeto && !modernNearCertain && !modernAiLead) {
     docScore = Math.min(docScore, 0.25 * docScore + 0.75 * (noise?.aiScore ?? 12));
   }
   // ModernBERT AI% < sentence-mix → percent human more likely
-  if (modernBelowMix && !modernAiLead) {
+  if (modernBelowMix && !modernAiLead && !modernNearCertain) {
     const pull = modernHumanHard ? 0.88 : modernHumanGap ? 0.75 : 0.55;
     docScore = Math.min(
       docScore,
@@ -1092,25 +1100,26 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (storyStrong && !modernHumanHard) {
     docScore = Math.max(docScore, 0.15 * docScore + 0.85 * Math.max(story?.aiScore ?? 82, 84));
   }
-  // ModernBERT 70–100% AI above other scans → pull document toward AI
-  if (modernHard) {
+  // ModernBERT custom AI leads — applied last so they win over the full suite
+  if (modernNearCertain) {
+    docScore = Math.max(docScore, 0.03 * docScore + 0.97 * Math.max(modern?.aiScore ?? 99, 97));
+  } else if (modernHard) {
     docScore = Math.max(docScore, 0.12 * docScore + 0.88 * Math.max(modern?.aiScore ?? 90, 88));
   } else if (modernStrong) {
     docScore = Math.max(docScore, 0.28 * docScore + 0.72 * Math.max(modern?.aiScore ?? 78, 74));
   }
-  // ModernBERT + Burstiness > mix & twin, rest ~20s → most likely AI
-  if (modernBurstAiPair) {
+  if (modernBurstAiPair && !modernNearCertain) {
     const pairScore = Math.max(modern?.aiScore ?? 70, burst?.aiScore ?? 70, 74);
-    docScore = Math.max(docScore, 0.2 * docScore + 0.8 * pairScore);
+    docScore = Math.max(docScore, 0.18 * docScore + 0.82 * pairScore);
   }
-  // ModernBERT > Burstiness AND sentence-mix → most likely AI
-  if (modernOverBurstMix) {
-    docScore = Math.max(docScore, 0.22 * docScore + 0.78 * Math.max(modern?.aiScore ?? 72, 70));
+  if (modernOverBurstMix && !modernNearCertain) {
+    docScore = Math.max(docScore, 0.18 * docScore + 0.82 * Math.max(modern?.aiScore ?? 72, 72));
   }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
+  if (modernNearCertain) agreement = "strong_ai";
+  else if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
   else if ((docScore < 12 || modernHumanHard) && !modernStrong && !modernAiLead)
     agreement = "strong_human";
   else if ((docScore < 40 || modernBelowMix) && !modernStrong && !modernAiLead)
@@ -1128,25 +1137,27 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = modernOverBurstMix
-    ? " ModernBERT > Burstiness & sentence-mix → lean AI."
-    : modernBurstAiPair
-      ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
-      : modernHard
-        ? " ModernBERT ≥85% AI dominates consensus."
-        : modernStrong
-          ? " ModernBERT ≥70% AI weighted above soft stylometrics."
-          : modernBelowMix
-            ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
-            : humanHard
-              ? " Strong human-noise → ~0% AI."
-              : humanVeto
-                ? " Human-noise veto applied (informal / student voice)."
-                : storyStrong
-                  ? " AI chapterbook / story fingerprints dominate."
-                  : pitchStrong
-                    ? " LLM pitch/outline fingerprints dominate."
-                    : "";
+  const vetoNote = modernNearCertain
+    ? " ModernBERT ≈99% AI → treat as AI-generated."
+    : modernOverBurstMix
+      ? " ModernBERT > Burstiness & sentence-mix → lean AI."
+      : modernBurstAiPair
+        ? " ModernBERT + Burstiness > sentence-mix & GPTZero-twin (rest ~20s) → lean AI."
+        : modernHard
+          ? " ModernBERT ≥85% AI dominates consensus."
+          : modernStrong
+            ? " ModernBERT ≥70% AI weighted above soft stylometrics."
+            : modernBelowMix
+              ? ` ModernBERT AI% (${modern!.aiScore.toFixed(0)}) < sentence-mix (${sentMix!.aiScore.toFixed(0)}) → lean human.`
+              : humanHard
+                ? " Strong human-noise → ~0% AI."
+                : humanVeto
+                  ? " Human-noise veto applied (informal / student voice)."
+                  : storyStrong
+                    ? " AI chapterbook / story fingerprints dominate."
+                    : pitchStrong
+                      ? " LLM pitch/outline fingerprints dominate."
+                      : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
     strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
@@ -1172,7 +1183,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 export async function runFreeEnsemble(
   content: string,
   onProgress?: (msg: string) => void,
-  opts?: { skipNeural?: boolean },
+  opts?: { skipNeural?: boolean; neural?: "all" | "modernbert" | "none" },
 ): Promise<{ results: DetectorScanResult[]; consensus: EnsembleConsensus }> {
   const text = content.trim();
   onProgress?.("Human-noise / authenticity check…");
@@ -1201,26 +1212,32 @@ export async function runFreeEnsemble(
     scanSentenceMix(text),
   ];
 
-  if (opts?.skipNeural) {
+  const neuralMode = opts?.skipNeural ? "none" : (opts?.neural ?? "all");
+  if (neuralMode === "none") {
     const consensus = weightedConsensus(statistical);
     return { results: statistical, consensus };
   }
 
-  onProgress?.("Loading OpenAI RoBERTa detector (cached after first run)…");
-  const openai = await runNeural(
-    "openai-roberta",
-    "OpenAI RoBERTa",
-    "onnx-community/roberta-base-openai-detector-ONNX",
-    text,
-  );
+  let openai: DetectorScanResult | null = null;
+  let hc3: DetectorScanResult | null = null;
 
-  onProgress?.("Loading HC3 RoBERTa…");
-  const hc3 = await runNeural(
-    "hc3-roberta",
-    "HC3 RoBERTa",
-    "onnx-community/chatgpt-detector-roberta-ONNX",
-    text,
-  );
+  if (neuralMode === "all") {
+    onProgress?.("Loading OpenAI RoBERTa detector (cached after first run)…");
+    openai = await runNeural(
+      "openai-roberta",
+      "OpenAI RoBERTa",
+      "onnx-community/roberta-base-openai-detector-ONNX",
+      text,
+    );
+
+    onProgress?.("Loading HC3 RoBERTa…");
+    hc3 = await runNeural(
+      "hc3-roberta",
+      "HC3 RoBERTa",
+      "onnx-community/chatgpt-detector-roberta-ONNX",
+      text,
+    );
+  }
 
   onProgress?.("Loading ModernBERT AI detector…");
   const modern = await runNeural(
@@ -1230,7 +1247,10 @@ export async function runFreeEnsemble(
     text,
   );
 
-  const results = [noise, pitch, story, twin, openai, hc3, modern, ...statistical.slice(4)];
+  const results =
+    neuralMode === "modernbert"
+      ? [noise, pitch, story, twin, modern, ...statistical.slice(4)]
+      : [noise, pitch, story, twin, openai!, hc3!, modern, ...statistical.slice(4)];
   const consensus = weightedConsensus(results);
   return { results, consensus };
 }
