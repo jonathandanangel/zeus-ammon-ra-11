@@ -219,7 +219,7 @@ function fuseProductOfExperts(pairs: Array<{ score: number; weight: number }>): 
  * Higher-order lead composite — generalizes discrete patterns like
  * “ModernBERT ~90% > story ~55%” without needing exact percents.
  * Soft-OR over logistic gap × floor × soft-backdrop evidence.
- * `polarity: "human"` patterns push toward elegant / strong-human evidence.
+ * `polarity: "human"` patterns push toward convergent / balanced / strong-human evidence.
  */
 type LeadCompositeSpec = {
   id: string;
@@ -235,7 +235,7 @@ type LeadCompositeSpec = {
   supportFloor?: number;
   /** Optional amplifier: another detector should be “strangely elevated” (~30–50). */
   elevatedSupport?: { id: FreeDetectorId; lo: number; hi: number };
-  /** Detectors that must sit near 0 (≤ ~12) — elegant-human stack. */
+  /** Detectors that must sit near 0 (≤ ~12) — convergent-human stack. */
   nearZero?: FreeDetectorId[];
   /** Cap for every non-exempt detector (e.g. rest ≤20%). */
   elseMax?: number;
@@ -246,10 +246,10 @@ type LeadCompositeSpec = {
   /**
    * `lead` (default): ModernBERT-style gap patterns.
    * `all-under`: every scanner below elseMax (default 40) → most-likely-human.
-   * (Not the elegant-human lead-gap method.)
+   * (Not the convergent-human lead-gap method.)
    */
   mode?: "lead" | "all-under";
-  /** AI lead (default) vs human / elegant-human evidence. */
+  /** AI lead (default) vs human / convergent-human evidence. */
   polarity?: "ai" | "human";
   weight: number;
 };
@@ -298,9 +298,9 @@ const LEAD_COMPOSITES: LeadCompositeSpec[] = [
     elevatedSupport: { id: "sentence-mix", lo: 28, hi: 54 },
     weight: 1.25,
   },
-  // Elegant human writing — ModernBERT > OpenAI (~56%) & mix (~53%), rest ≤20%, near-zero stack
+  // Convergent human writing — ModernBERT > OpenAI (~56%) & mix (~53%), rest ≤20%, near-zero stack
   {
-    id: "elegant-human-mix",
+    id: "convergent-human-mix",
     polarity: "human",
     leads: ["modernbert"],
     above: ["openai-roberta", "sentence-mix"],
@@ -325,7 +325,7 @@ const LEAD_COMPOSITES: LeadCompositeSpec[] = [
     weight: 1.55,
   },
   {
-    id: "elegant-human-openai>burst",
+    id: "convergent-human-openai>burst",
     polarity: "human",
     leads: ["modernbert"],
     above: ["openai-roberta", "sentence-mix"],
@@ -350,9 +350,9 @@ const LEAD_COMPOSITES: LeadCompositeSpec[] = [
     requireSoftBackdrop: true,
     weight: 1.5,
   },
-  // All scanners under ~40% (often teens/20s) — most likely human (not elegant-human method)
+  // All scanners under ~40% (often teens/20s) — balanced human writing (not convergent-human method)
   {
-    id: "all-under-40-human",
+    id: "balanced-human-under-40",
     mode: "all-under",
     polarity: "human",
     leads: [],
@@ -452,7 +452,7 @@ function scoreLeadComposite(
 
 /**
  * Higher-order composite: soft-OR of generalized lead patterns.
- * AI polarity → evidenceAi; human polarity → evidenceHuman (elegant writing band).
+ * AI polarity → evidenceAi; human polarity → evidenceHuman (convergent / balanced human band).
  */
 function higherOrderLeadComposite(scores: Map<FreeDetectorId, number>): {
   evidenceAi: number;
@@ -484,7 +484,7 @@ function higherOrderLeadComposite(scores: Map<FreeDetectorId, number>): {
   const humanStrength = clamp(1 - failProdHuman, 0, 1);
   // Map composite strength into AI% evidence band (~50 neutral → ~92 strong)
   const evidenceAi = clamp(48 + strength * 48 + bestAi.e * 8, 0, 100);
-  // Human composite → low AI% evidence (~50 neutral → ~8 strong elegant-human)
+  // Human composite → low AI% evidence (~50 neutral → ~8 strong convergent-human)
   const evidenceHuman = clamp(52 - humanStrength * 46 - bestHuman.e * 6, 0, 100);
   return {
     evidenceAi,
@@ -1309,19 +1309,19 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   })();
 
   /**
-   * All scanners under 40% (often teens/20s) → most likely human.
-   * Simple ceiling rule — elegant-human lead-gap method does not apply here.
+   * All scanners under 40% (often teens/20s) → balanced human writing.
+   * Simple ceiling rule — convergent-human lead-gap method does not apply here.
    */
   const allUnder40Human =
     okRows.length >= 5 && okRows.every((r) => r.aiScore < 40);
 
   /**
-   * Elegant human writing (discrete band + higher-order human composite soft-OR).
+   * Convergent human writing (discrete band + higher-order human composite soft-OR).
    * ModernBERT > OpenAI RoBERTa (~55.8%) AND ModernBERT > sentence-mix (~53%),
    * with sentence-mix ≈53% OR OpenAI RoBERTa (~55.8%) > burstiness,
    * everything else ≤20%, and predictability / lexical / human-noise / HC3 ≈0.
    */
-  const elegantHumanDiscrete = (() => {
+  const convergentHumanDiscrete = (() => {
     if (!modern || !openai || !sentMix || !burst) return false;
     const modernLeadsOpenAi = modern.aiScore > openai.aiScore;
     const modernLeadsMix = modern.aiScore > sentMix.aiScore;
@@ -1401,20 +1401,20 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const scoreMapEarly = new Map<FreeDetectorId, number>();
   for (const r of okRows) scoreMapEarly.set(r.id as FreeDetectorId, r.aiScore);
   const leadCompositeEarly = higherOrderLeadComposite(scoreMapEarly);
-  const elegantHumanWriting =
-    (elegantHumanDiscrete ||
+  const convergentHumanWriting =
+    (convergentHumanDiscrete ||
       (leadCompositeEarly.humanFired &&
-        leadCompositeEarly.bestHumanId !== "all-under-40-human")) &&
+        leadCompositeEarly.bestHumanId !== "balanced-human-under-40")) &&
     !modernNearCertain &&
     !pitchStrong &&
     !storyStrong;
 
-  /** All < 40% — most likely human; elegant-human lead method does not apply. */
-  const mostLikelyHumanBand = allUnder40Human && !elegantHumanWriting;
+  /** All < 40% — balanced human writing; convergent-human lead method does not apply. */
+  const balancedHumanWriting = allUnder40Human && !convergentHumanWriting;
 
   const modernAiLead =
-    !elegantHumanWriting &&
-    !mostLikelyHumanBand &&
+    !convergentHumanWriting &&
+    !balancedHumanWriting &&
     (modernBurstAiPair ||
       modernOverBurstMix ||
       modernOverStorySoft ||
@@ -1497,7 +1497,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     (storyOverTwinHighMix ? 9 : 0) -
     (mixAloneHigh ? 10 : 0);
   // Higher-order composite dominates; legacy pair math is a light prior.
-  // Human-polarity composites (elegant writing) pull evidenceAi down continuously.
+  // Human-polarity composites (convergent writing) pull evidenceAi down continuously.
   const ruleEvidenceAi =
     0.55 * leadComposite.evidenceAi +
     0.28 * legacyEvidence +
@@ -1730,7 +1730,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   // Soft-OR composite fires when pattern is nearby but discrete flags miss exact %
   if (
     leadComposite.fired &&
-    !elegantHumanWriting &&
+    !convergentHumanWriting &&
     !modernNearCertain &&
     !modernOverStoryHard &&
     !modernBurstAiPair &&
@@ -1745,23 +1745,23 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (mixAloneHigh) {
     docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
-  // Elegant human — discrete band OR human-polarity composite weight → strong human
-  if (elegantHumanWriting) {
+  // Convergent human — discrete band OR human-polarity composite weight → strong human
+  if (convergentHumanWriting) {
     const humanPull = leadComposite.humanFired
       ? leadComposite.evidenceHuman
       : 8;
     docScore = invLogitAi(0.15 * logitAi(docScore) + 0.85 * logitAi(humanPull));
-  } else if (mostLikelyHumanBand) {
-    // Flat all-under-40 ceiling — not elegant-human method
+  } else if (balancedHumanWriting) {
+    // Flat all-under-40 ceiling — not convergent-human method
     const maxAi = Math.max(...okRows.map((r) => r.aiScore));
     docScore = invLogitAi(0.35 * logitAi(docScore) + 0.65 * logitAi(Math.min(maxAi * 0.55, 22)));
   }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (elegantHumanWriting) {
+  if (convergentHumanWriting) {
     agreement = "strong_human";
-  } else if (mostLikelyHumanBand) {
+  } else if (balancedHumanWriting) {
     agreement = docScore < 25 ? "strong_human" : "lean_human";
   } else if (modernNearCertain) agreement = "strong_ai";
   else if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
@@ -1782,12 +1782,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = elegantHumanWriting
-    ? leadComposite.humanFired && leadComposite.bestHumanId !== "all-under-40-human"
-      ? ` Elegant human writing — human composite (${leadComposite.bestHumanId || "elegant-human"}) weighted into lead system → human.`
-      : " Elegant human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
-    : mostLikelyHumanBand
-      ? " Most likely human — every scanner under 40% (teens/20s-style profile); elegant-human lead method does not apply."
+  const vetoNote = convergentHumanWriting
+    ? leadComposite.humanFired && leadComposite.bestHumanId !== "balanced-human-under-40"
+      ? ` Convergent human writing — human composite (${leadComposite.bestHumanId || "convergent-human"}) weighted into lead system → human.`
+      : " Convergent human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
+    : balancedHumanWriting
+      ? " Balanced human writing — every scanner under 40% (teens/20s-style profile); convergent-human lead method does not apply."
     : modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
     : leadComposite.fired && leadComposite.bestId
@@ -1820,13 +1820,13 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
                                 ? " LLM pitch/outline fingerprints dominate."
                                 : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
-    strong_human: elegantHumanWriting
-      ? `Elegant human writing (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`
-      : mostLikelyHumanBand
-        ? `Most likely human — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
+    strong_human: convergentHumanWriting
+      ? `Convergent human writing (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`
+      : balancedHumanWriting
+        ? `Balanced human writing — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
         : `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
-    lean_human: mostLikelyHumanBand
-      ? `Most likely human — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
+    lean_human: balancedHumanWriting
+      ? `Balanced human writing — all scanners under 40% (weighted AI ${docScore.toFixed(0)}%).`
       : `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
     split: `Uncertain / mixed (weighted AI ${docScore.toFixed(0)}%). Route to a human reviewer.`,
     lean_ai: `Lean AI (weighted AI ${docScore.toFixed(0)}%).`,
