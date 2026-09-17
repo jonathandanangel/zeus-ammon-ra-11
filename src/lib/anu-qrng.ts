@@ -18,7 +18,7 @@ export type QrngSource = "anu" | "local";
 const REFILL_LENGTH = 1024;
 const LOW_WATER = 64;
 
-let buffer = new Uint8Array(0);
+let buffer: Uint8Array<ArrayBuffer> = new Uint8Array(0);
 let cursor = 0;
 let source: QrngSource = "local";
 let refillPromise: Promise<void> | null = null;
@@ -28,7 +28,7 @@ function leftover(): number {
   return buffer.length - cursor;
 }
 
-function localBytes(n: number): Uint8Array {
+function localBytes(n: number): Uint8Array<ArrayBuffer> {
   const out = new Uint8Array(n);
   if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
     crypto.getRandomValues(out);
@@ -38,7 +38,7 @@ function localBytes(n: number): Uint8Array {
   return out;
 }
 
-function appendBytes(bytes: Uint8Array, fromAnu: boolean) {
+function appendBytes(bytes: Uint8Array<ArrayBuffer>, fromAnu: boolean) {
   if (leftover() === 0) {
     buffer = bytes;
     cursor = 0;
@@ -53,7 +53,7 @@ function appendBytes(bytes: Uint8Array, fromAnu: boolean) {
   if (fromAnu) source = "anu";
 }
 
-async function fetchAnuBatch(length: number): Promise<Uint8Array | null> {
+async function fetchAnuBatch(length: number): Promise<Uint8Array<ArrayBuffer> | null> {
   try {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/api/anu-qrng?length=${Math.min(1024, Math.max(1, length))}&type=uint8`;

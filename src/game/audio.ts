@@ -129,7 +129,7 @@ export type MusicAlbumCredit = {
 };
 
 export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
-  "/audio/ht-bananza-bed.mp3": {
+  [HT_BANANZA_BED_URL]: {
     id: "das-armageddon",
     albumTitle: "Das Armageddon",
     trackTitle: "Das Armageddon",
@@ -138,7 +138,7 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
     coverUrl: "/audio/albums/das-armageddon.jpg",
     related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
   },
-  "/audio/title-armageddon.mp3": {
+  [TITLE_ARMAGEDDON_URL]: {
     id: "das-armageddon",
     albumTitle: "Das Armageddon",
     trackTitle: "Das Armageddon",
@@ -147,28 +147,28 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
     coverUrl: "/audio/albums/das-armageddon.jpg",
     related: "Occult Tripping KVLT · Berdysh · Shypunch · SERAPHRID · Luxen",
   },
-  "/audio/title-crystal-vista.mp3": {
+  [TITLE_CRYSTAL_VISTA_URL]: {
     id: "crystal-vista",
     albumTitle: "Crystal Vista",
     trackTitle: "Crystal Vista",
     artist: "Iasos",
     year: "1981",
   },
-  "/audio/ht-bananza-portal.mp3": {
+  [HT_BANANZA_PORTAL_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
     artist: "Valve",
     year: "2011",
   },
-  "/audio/ht-portal-bed.mp3": {
+  [HT_PORTAL_BED_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
     artist: "Valve",
     year: "2011",
   },
-  "/audio/title-portal.mp3": {
+  [TITLE_PORTAL_URL]: {
     id: "portal-2",
     albumTitle: "Portal 2 OST",
     trackTitle: "Portal 2",
@@ -178,8 +178,8 @@ export const MUSIC_ALBUM_BY_URL: Record<string, MusicAlbumCredit> = {
 };
 
 export const FEATURED_HEAT_ALBUMS: MusicAlbumCredit[] = [
-  MUSIC_ALBUM_BY_URL["/audio/title-crystal-vista.mp3"]!,
-  MUSIC_ALBUM_BY_URL["/audio/title-armageddon.mp3"]!,
+  MUSIC_ALBUM_BY_URL[TITLE_CRYSTAL_VISTA_URL]!,
+  MUSIC_ALBUM_BY_URL[TITLE_ARMAGEDDON_URL]!,
 ];
 
 type BedListener = (credit: MusicAlbumCredit | null) => void;
