@@ -90,6 +90,8 @@ export function TitleScreen(p: TitleScreenProps) {
   const [brain, setBrain] = React.useState(() => pickBrainLook());
   const [brainVisible, setBrainVisible] = React.useState(true);
   const fadingRef = React.useRef(false);
+  const done = React.useRef(false);
+  const landingRef = React.useRef<HTMLDivElement | null>(null);
 
   const FADE_MS = 700;
 
