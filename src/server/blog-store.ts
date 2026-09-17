@@ -1,7 +1,13 @@
 /**
  * Creator blog store — public read, authenticated write.
- * Durable order: in-memory (process) → Cache API → data/ + public/ JSON → seed.
- * Posts remain until edit/delete; /api/blog serves the same list to every visitor.
+ *
+ * Shared source of truth for every visitor (not per-browser):
+ *   1) MantleDB remote JSON (cross-isolate / cross-user)
+ *   2) Cache API (edge hot cache)
+ *   3) data/ + public/ + /tmp JSON when the host allows disk
+ *   4) in-memory for the current isolate
+ *
+ * Seed post always merges in for first-time readers.
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -42,15 +48,24 @@ const SEED_POSTS: BlogPost[] = [
   },
 ];
 
-type StoreFile = { posts: BlogPost[] };
+type StoreFile = { posts: BlogPost[]; updatedAt?: string };
 
 type BlogGlobal = typeof globalThis & {
   __zeusBlogPosts?: BlogPost[];
   __zeusBlogHydrated?: boolean;
+  __zeusBlogHydrateAt?: number;
 };
 
 const CACHE_NAME = "zeus-blog-v1";
 const CACHE_REQ = "https://zeus-ammon-ra.internal/blog/posts.json";
+
+/** Shared remote so every online visitor sees the same posts (not isolate memory). */
+const REMOTE_MANTLE =
+  "https://mantledb.sh/v2/zeus-ammon-ra-11/blog/posts";
+const REMOTE_GITHUB_RAW =
+  "https://raw.githubusercontent.com/jonathandanangel/aero-flight-trivia/main/public/blog/posts.json";
+
+const HYDRATE_TTL_MS = 5_000;
 
 function g(): BlogGlobal {
   return globalThis as BlogGlobal;
@@ -93,7 +108,8 @@ function isPost(p: unknown): p is BlogPost {
 
 function parseStore(raw: string): BlogPost[] {
   try {
-    const parsed = JSON.parse(raw) as StoreFile;
+    const parsed = JSON.parse(raw) as StoreFile | BlogPost[];
+    if (Array.isArray(parsed)) return parsed.filter(isPost);
     if (!parsed || !Array.isArray(parsed.posts)) return [];
     return parsed.posts.filter(isPost);
   } catch {
@@ -113,7 +129,11 @@ function readJsonFile(path: string): BlogPost[] {
 function writeJsonFile(path: string, posts: BlogPost[]): boolean {
   try {
     mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, `${JSON.stringify({ posts }, null, 2)}\n`, "utf8");
+    writeFileSync(
+      path,
+      `${JSON.stringify({ posts, updatedAt: new Date().toISOString() }, null, 2)}\n`,
+      "utf8",
+    );
     return true;
   } catch {
     return false;
@@ -139,6 +159,10 @@ function durableOnly(posts: BlogPost[]): BlogPost[] {
   });
 }
 
+function payload(posts: BlogPost[]): StoreFile {
+  return { posts: durableOnly(posts), updatedAt: new Date().toISOString() };
+}
+
 async function readFromCache(): Promise<BlogPost[]> {
   try {
     const cachesApi = (globalThis as { caches?: CacheStorage }).caches;
@@ -159,10 +183,10 @@ async function writeToCache(posts: BlogPost[]): Promise<boolean> {
     const cache = await cachesApi.open(CACHE_NAME);
     await cache.put(
       CACHE_REQ,
-      new Response(JSON.stringify({ posts }), {
+      new Response(JSON.stringify(payload(posts)), {
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": "no-store",
         },
       }),
     );
@@ -172,16 +196,58 @@ async function writeToCache(posts: BlogPost[]): Promise<boolean> {
   }
 }
 
-function getMemory(): BlogPost[] {
-  return g().__zeusBlogPosts ?? [];
+async function fetchRemotePosts(url: string): Promise<BlogPost[]> {
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json", "Cache-Control": "no-store" },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return parseStore(await res.text());
+  } catch {
+    return [];
+  }
 }
 
-async function hydrate(): Promise<void> {
-  if (g().__zeusBlogHydrated && Array.isArray(g().__zeusBlogPosts)) return;
-  const fromCache = await readFromCache();
-  const fromFiles = writableCandidates().flatMap((path) => readJsonFile(path));
-  g().__zeusBlogPosts = durableOnly(mergeById(fromFiles, fromCache));
-  g().__zeusBlogHydrated = true;
+async function readFromSharedRemote(): Promise<BlogPost[]> {
+  const [mantle, github] = await Promise.all([
+    fetchRemotePosts(REMOTE_MANTLE),
+    fetchRemotePosts(REMOTE_GITHUB_RAW),
+  ]);
+  return mergeById(mantle, github);
+}
+
+async function writeToSharedRemote(posts: BlogPost[]): Promise<boolean> {
+  const body = JSON.stringify(payload(posts));
+  try {
+    const res = await fetch(REMOTE_MANTLE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body,
+      cache: "no-store",
+    });
+    if (res.ok || res.status === 200 || res.status === 201 || res.status === 204) {
+      return true;
+    }
+  } catch {
+    /* try PUT */
+  }
+  try {
+    const res = await fetch(REMOTE_MANTLE, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body,
+      cache: "no-store",
+    });
+    return res.ok || res.status === 200 || res.status === 201 || res.status === 204;
+  } catch {
+    return false;
+  }
+}
+
+function getMemory(): BlogPost[] {
+  return g().__zeusBlogPosts ?? [];
 }
 
 function writableCandidates(): string[] {
@@ -194,25 +260,56 @@ function writableCandidates(): string[] {
   return paths;
 }
 
+async function hydrate(force = false): Promise<void> {
+  const now = Date.now();
+  if (
+    !force &&
+    g().__zeusBlogHydrated &&
+    Array.isArray(g().__zeusBlogPosts) &&
+    typeof g().__zeusBlogHydrateAt === "number" &&
+    now - g().__zeusBlogHydrateAt! < HYDRATE_TTL_MS
+  ) {
+    return;
+  }
+
+  const [fromRemote, fromCache] = await Promise.all([
+    readFromSharedRemote(),
+    readFromCache(),
+  ]);
+  const fromFiles = writableCandidates().flatMap((path) => readJsonFile(path));
+  // Remote wins over stale isolate memory so every visitor converges.
+  g().__zeusBlogPosts = durableOnly(
+    mergeById(fromFiles, fromCache, getMemory(), fromRemote),
+  );
+  g().__zeusBlogHydrated = true;
+  g().__zeusBlogHydrateAt = now;
+}
+
 async function persistDurable(durable: BlogPost[]): Promise<{
   memory: true;
   disk: boolean;
   cache: boolean;
+  remote: boolean;
 }> {
   const next = durableOnly(durable);
   g().__zeusBlogPosts = next;
   g().__zeusBlogHydrated = true;
+  g().__zeusBlogHydrateAt = Date.now();
+
   let disk = false;
   for (const path of writableCandidates()) {
     if (writeJsonFile(path, next)) disk = true;
   }
-  const cache = await writeToCache(next);
-  return { memory: true, disk, cache };
+  const [cache, remote] = await Promise.all([
+    writeToCache(next),
+    writeToSharedRemote(next),
+  ]);
+  return { memory: true, disk, cache, remote };
 }
 
-/** Public list: seed + durable posts. Newest first. */
+/** Public list: seed + durable posts. Newest first. Always re-checks shared remote. */
 export async function listBlogPosts(): Promise<BlogPost[]> {
-  await hydrate();
+  await hydrate(true);
   return mergeById(SEED_POSTS, getMemory());
 }
 
@@ -221,7 +318,12 @@ export async function createBlogPost(input: {
   body: string;
   author: string;
 }): Promise<
-  | { ok: true; post: BlogPost; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | {
+      ok: true;
+      post: BlogPost;
+      persisted: boolean;
+      backends: { memory: true; disk: boolean; cache: boolean; remote: boolean };
+    }
   | { ok: false; error: string }
 > {
   const title = input.title.trim().slice(0, 200);
@@ -229,7 +331,7 @@ export async function createBlogPost(input: {
   if (!title) return { ok: false, error: "Title is required." };
   if (!body) return { ok: false, error: "Body is required." };
 
-  await hydrate();
+  await hydrate(true);
   const post: BlogPost = {
     id: randomUUID(),
     title,
@@ -243,8 +345,7 @@ export async function createBlogPost(input: {
     [post],
   );
   const backends = await persistDurable(next);
-  // Memory always holds the post for this runtime; cache/disk when available.
-  const persisted = backends.memory || backends.disk || backends.cache;
+  const persisted = backends.remote || backends.disk || backends.cache || backends.memory;
   return { ok: true, post, persisted, backends };
 }
 
@@ -253,7 +354,12 @@ export async function updateBlogPost(input: {
   title: string;
   body: string;
 }): Promise<
-  | { ok: true; post: BlogPost; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | {
+      ok: true;
+      post: BlogPost;
+      persisted: boolean;
+      backends: { memory: true; disk: boolean; cache: boolean; remote: boolean };
+    }
   | { ok: false; error: string }
 > {
   const id = input.id.trim();
@@ -263,7 +369,7 @@ export async function updateBlogPost(input: {
   if (!title) return { ok: false, error: "Title is required." };
   if (!body) return { ok: false, error: "Body is required." };
 
-  await hydrate();
+  await hydrate(true);
   const current = (await listBlogPosts()).find((p) => p.id === id);
   if (!current) return { ok: false, error: "Post not found." };
 
@@ -279,10 +385,14 @@ export async function updateBlogPost(input: {
 export async function deleteBlogPost(
   id: string,
 ): Promise<
-  | { ok: true; persisted: boolean; backends: { memory: true; disk: boolean; cache: boolean } }
+  | {
+      ok: true;
+      persisted: boolean;
+      backends: { memory: true; disk: boolean; cache: boolean; remote: boolean };
+    }
   | { ok: false; error: string }
 > {
-  await hydrate();
+  await hydrate(true);
   const seed = SEED_POSTS.find((p) => p.id === id);
   const mem = getMemory();
   if (seed && !mem.some((p) => p.id === id)) {
@@ -299,8 +409,11 @@ export async function deleteBlogPost(
 /** Merge creator-client posts into the shared store (authenticated). */
 export async function mergeBlogPosts(
   incoming: BlogPost[],
-): Promise<{ ok: true; backends: { memory: true; disk: boolean; cache: boolean } }> {
-  await hydrate();
+): Promise<{
+  ok: true;
+  backends: { memory: true; disk: boolean; cache: boolean; remote: boolean };
+}> {
+  await hydrate(true);
   const cleaned = incoming.filter(isPost);
   const next = durableOnly(mergeById(getMemory(), cleaned));
   const backends = await persistDurable(next);

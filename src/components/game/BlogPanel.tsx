@@ -130,9 +130,15 @@ async function apiPost(payload: Record<string, unknown>) {
     posts?: BlogPost[];
     post?: BlogPost;
     persisted?: boolean;
-    backends?: { memory?: boolean; disk?: boolean; cache?: boolean };
+    backends?: { memory?: boolean; disk?: boolean; cache?: boolean; remote?: boolean };
   };
   return { status: res.status, ...json };
+}
+
+function postsSignature(posts: BlogPost[]): string {
+  return posts
+    .map((p) => `${p.id}:${p.createdAt}:${p.title.length}:${p.body.length}`)
+    .join("|");
 }
 
 export function BlogPanel({ onBack }: { onBack: () => void }) {
@@ -146,6 +152,7 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");
   const [editingId, setEditingId] = React.useState<string | null>(null);
+  const signatureRef = React.useRef("");
 
   const field =
     "w-full rounded-sm border border-cyan/40 bg-deepblue/50 backdrop-blur-md px-3 py-2 font-mono text-xs text-moon outline-none transition placeholder:text-muted-foreground hover:border-cyan/60 focus:border-cyan focus:ring-1 focus:ring-cyan/30";
@@ -160,42 +167,70 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
   const btnGhost =
     "rounded-sm border border-cyan/40 bg-deepblue/50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-cyan transition hover:bg-cyan/10 disabled:opacity-40";
 
-  const applyPosts = React.useCallback((next: BlogPost[]) => {
+  const applyPosts = React.useCallback((next: BlogPost[], quiet = false) => {
     const merged = mergePosts(next);
+    const sig = postsSignature(merged);
+    const changed = sig !== signatureRef.current;
+    signatureRef.current = sig;
     setPosts(merged);
     saveLocalPosts(merged);
-    setStatus(
-      merged.length
-        ? `${merged.length} note${merged.length === 1 ? "" : "s"} from the creator`
-        : "No posts yet.",
-    );
+    if (!quiet || changed) {
+      setStatus(
+        merged.length
+          ? `${merged.length} note${merged.length === 1 ? "" : "s"} · shared for all visitors`
+          : "No posts yet.",
+      );
+    }
   }, []);
 
-  const refresh = React.useCallback(async () => {
-    try {
-      const local = loadLocalPosts();
-      const [api, stat] = await Promise.all([apiGet(), staticGet()]);
-      const server = api.ok ? (api.posts ?? []) : [];
-      const merged = mergePosts(local, stat, server);
-      if (!api.ok && !stat.length && !local.length) {
-        setStatus(api.error || "Could not load blog.");
-        return;
+  const refresh = React.useCallback(
+    async (quiet = false) => {
+      try {
+        const [api, stat] = await Promise.all([apiGet(), staticGet()]);
+        const server = api.ok ? (api.posts ?? []) : [];
+        // Shared server list is authoritative so every online user sees the same posts.
+        // localStorage is only an offline fallback when the API is down.
+        if (api.ok) {
+          applyPosts(mergePosts(server, stat), quiet);
+          return;
+        }
+        const local = loadLocalPosts();
+        const merged = mergePosts(stat, local);
+        if (!merged.length) {
+          if (!quiet) setStatus(api.error || "Could not load blog.");
+          return;
+        }
+        applyPosts(merged, quiet);
+        if (!quiet) setStatus("Showing cached creator notes (network/API unavailable).");
+      } catch (e) {
+        const local = loadLocalPosts();
+        if (local.length) {
+          applyPosts(local, quiet);
+          if (!quiet) setStatus("Showing cached creator notes (network/API unavailable).");
+          return;
+        }
+        if (!quiet) setStatus(e instanceof Error ? e.message : "Blog fetch failed.");
       }
-      applyPosts(merged);
-    } catch (e) {
-      const local = loadLocalPosts();
-      if (local.length) {
-        applyPosts(local);
-        setStatus("Showing cached creator notes (network/API unavailable).");
-        return;
-      }
-      setStatus(e instanceof Error ? e.message : "Blog fetch failed.");
-    }
-  }, [applyPosts]);
+    },
+    [applyPosts],
+  );
 
   React.useEffect(() => {
     setSession(loadSession());
-    void refresh();
+    void refresh(false);
+    const id = window.setInterval(() => {
+      void refresh(true);
+    }, 8000);
+    const onFocus = () => {
+      void refresh(true);
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [refresh]);
 
   function cancelCompose() {
@@ -250,7 +285,7 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
     e.preventDefault();
     if (!session) return;
     setBusy(true);
-    setStatus(editingId ? "Saving edits…" : "Publishing…");
+    setStatus(editingId ? "Saving edits for everyone…" : "Publishing for everyone…");
     try {
       const out = await apiPost(
         editingId
@@ -274,31 +309,32 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
         setStatus(out.error || (editingId ? "Save failed." : "Publish failed."));
         return;
       }
-      const next = mergePosts(
-        loadLocalPosts(),
-        out.posts ?? [],
-        out.post ? [out.post] : [],
-        posts,
-      );
-      applyPosts(next);
-      // Push full list back so every visitor's /api/blog sees the same posts
+      // Prefer the shared server list only — do not keep private local-only posts.
+      applyPosts(out.posts ?? (out.post ? [out.post] : []));
       try {
         const pushed = await apiPost({
           action: "push",
           username: session.username,
           password: session.password,
-          posts: next.filter((p) => !p.id.startsWith("seed-") || p.title !== "Why ZEUS AMMON-RA 11 exists"),
+          posts: (out.posts ?? []).filter((p) => !p.id.startsWith("seed-")),
         });
-        if (pushed.ok && pushed.posts) applyPosts(mergePosts(next, pushed.posts));
+        if (pushed.ok && pushed.posts) applyPosts(pushed.posts);
       } catch {
-        /* keep local/server create result */
+        /* keep create/update result */
       }
       cancelCompose();
+      const remoteOk = out.backends?.remote || false;
       setStatus(
         editingId
-          ? "Edits saved — everyone can see this post. It stays until you edit or delete."
-          : "Published — everyone can see this post. It stays until you edit or delete.",
+          ? remoteOk
+            ? "Edits saved for all online visitors. Stays until you edit or delete."
+            : "Edits saved on this host — refresh may be needed if remote sync is slow."
+          : remoteOk
+            ? "Published for all online visitors. Stays until you edit or delete."
+            : "Published on this host — refresh may be needed if remote sync is slow.",
       );
+      // Force a fresh pull so other open tabs converge quickly.
+      window.setTimeout(() => void refresh(true), 500);
     } finally {
       setBusy(false);
     }
@@ -306,7 +342,7 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
 
   async function handleDelete(id: string) {
     if (!session) return;
-    if (!window.confirm("Delete this post?")) return;
+    if (!window.confirm("Delete this post for everyone?")) return;
     setBusy(true);
     try {
       const out = await apiPost({
@@ -320,10 +356,9 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
         return;
       }
       if (editingId === id) cancelCompose();
-      const next = (out.posts ?? posts.filter((p) => p.id !== id)).filter((p) => p.id !== id);
-      // If server returned full list, prefer it; always drop deleted id locally
-      applyPosts(mergePosts(out.posts ?? [], next).filter((p) => p.id !== id));
-      setStatus("Post deleted.");
+      applyPosts((out.posts ?? []).filter((p) => p.id !== id));
+      setStatus("Post deleted for everyone.");
+      window.setTimeout(() => void refresh(true), 500);
     } finally {
       setBusy(false);
     }
@@ -351,8 +386,9 @@ export function BlogPanel({ onBack }: { onBack: () => void }) {
       </div>
 
       <p className="font-mono text-sm leading-relaxed text-muted-foreground">
-        Public notes stay on this page for everyone until you edit or delete them. Git history
-        still lives under <span className="text-cyan">Updates</span>.
+        Public notes sync for every online visitor (auto-refresh about every 8s). They stay until
+        you edit or delete them. Git history still lives under{" "}
+        <span className="text-cyan">Updates</span>.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
