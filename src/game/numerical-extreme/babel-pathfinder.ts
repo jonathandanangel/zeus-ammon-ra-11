@@ -766,6 +766,26 @@ export type BabelBookPage = {
   excerpt: string;
 };
 
+/** Bibliographic card — “new book information” for a located volume. */
+export type BabelBookInfo = {
+  callNumber: string;
+  hexagon: string;
+  wall: number;
+  shelf: number;
+  volume: number;
+  pageCount: number;
+  publisher: string;
+  imprintYear: number;
+  language: string;
+  subjects: string[];
+  contents: string[];
+  dedication: string;
+  isbnLike: string;
+  officialSearchUrl: string;
+  theoryUrl: string;
+  babeliaUrl: string;
+};
+
 export type BabelGeneratedBook = {
   id: string;
   title: string;
@@ -782,6 +802,7 @@ export type BabelGeneratedBook = {
   allMatched: string[];
   officialSearchUrl: string;
   blurb: string;
+  info: BabelBookInfo;
 };
 
 function artworkForPath(pathNumber: number): BabelArtwork {
@@ -1002,6 +1023,18 @@ export function generateBabelBooks(input: {
 
     const coverArt = artworkForPath(result.number + books.length);
     const searchPhrase = toBabelAlphabet(spec.combo.join(" ")).slice(0, 200);
+    const firstLoc = pages[0]!.page.location;
+    const seedNum = Number.parseInt(pages[0]!.page.seedDigest.replace(/[^0-9a-f]/gi, "").slice(0, 8) || "1", 16);
+    const imprintYear = 1600 + (seedNum % 400);
+    const isbnLike = `978-0-${String(result.number).padStart(2, "0")}-${String(seedNum % 1_000_000).padStart(6, "0")}-${seedNum % 10}`;
+    const subjects = [
+      result.title,
+      bundle.colorName,
+      result.tarot.name,
+      result.philosophy.sacredName,
+      "Library of Babel",
+      ...spec.combo.slice(0, 3),
+    ];
     books.push({
       id: `${spec.id}-${normalizeWord(result.normalized)}-${result.number}`,
       title: spec.title,
@@ -1017,6 +1050,24 @@ export function generateBabelBooks(input: {
       allMatched: [...new Set(allMatched)],
       officialSearchUrl: `${OFFICIAL_BABEL.search}?find=${encodeURIComponent(searchPhrase)}`,
       blurb: spec.blurb,
+      info: {
+        callNumber: `BABEL ${result.number}.${normalizeWord(result.normalized).slice(0, 6).toUpperCase()} ${spec.id.slice(0, 4).toUpperCase()}`,
+        hexagon: firstLoc.hexagon,
+        wall: firstLoc.wall,
+        shelf: firstLoc.shelf,
+        volume: firstLoc.volume,
+        pageCount: pages.length,
+        publisher: "Universal Library of Babel · Hexagon Press",
+        imprintYear,
+        language: "29-letter Babel alphabet (a–z, space, comma, period)",
+        subjects: [...new Set(subjects)],
+        contents: pages.map((p) => p.title),
+        dedication: `For the seekers of “${result.normalized}” on path ${result.number} — ${bundle.primaryFigure.emotion}.`,
+        isbnLike,
+        officialSearchUrl: `${OFFICIAL_BABEL.search}?find=${encodeURIComponent(searchPhrase)}`,
+        theoryUrl: OFFICIAL_BABEL.theory,
+        babeliaUrl: OFFICIAL_BABEL.babelia,
+      },
     });
   }
 

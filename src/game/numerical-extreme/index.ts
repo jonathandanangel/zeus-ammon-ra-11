@@ -204,8 +204,15 @@ export type {
   BabelLibraryReport,
   BabelArtwork,
   BabelBookPage,
+  BabelBookInfo,
   BabelGeneratedBook,
 } from "./babel-pathfinder";
+
+export {
+  locateBabelImages,
+  downloadDataUrl,
+} from "./babel-images";
+export type { BabelImageStyle, BabelLocatedImage } from "./babel-images";
 
 /** Format a number for display (null-safe). */
 export function formatNumber(

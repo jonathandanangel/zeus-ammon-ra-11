@@ -9,11 +9,14 @@ import {
 import {
   BABEL_ARTWORK,
   OFFICIAL_BABEL,
+  downloadDataUrl,
   formatBabelFindReport,
   generateBabelBooks,
+  locateBabelImages,
   searchBabelSecrets,
   type BabelGeneratedBook,
   type BabelLibraryReport,
+  type BabelLocatedImage,
   type BabelSecretFind,
   type GreekMythPassage,
   type JohnsonSense,
@@ -118,27 +121,32 @@ function BookReader({
   book,
   pageIdx,
   onPage,
+  images,
 }: {
   book: BabelGeneratedBook;
   pageIdx: number;
   onPage: (n: number) => void;
+  images: BabelLocatedImage[];
 }) {
   const leaf = book.pages[pageIdx] ?? book.pages[0];
   if (!leaf) return null;
   const body = leaf.page.lines.join("\n");
+  const { info } = book;
 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
         <figure className="overflow-hidden rounded-sm border border-amber/35 bg-black/50">
           <img
-            src={book.coverArt.src}
+            src={images.find((i) => i.style === "folio")?.dataUrl || book.coverArt.src}
             alt={book.coverArt.title}
-            className="h-40 w-full object-cover sm:h-full sm:min-h-[180px]"
+            className="h-48 w-full object-cover sm:h-full sm:min-h-[200px]"
             loading="lazy"
           />
           <figcaption className="px-2 py-1.5 font-mono text-[8px] leading-snug text-muted-foreground">
-            {book.coverArt.artist} · {book.coverArt.year}
+            {images.find((i) => i.style === "folio")
+              ? "Located folio cover · path seed"
+              : `${book.coverArt.artist} · ${book.coverArt.year}`}
           </figcaption>
         </figure>
         <div className="space-y-2">
@@ -152,9 +160,94 @@ function BookReader({
             <Metric label="Pages" value={String(book.pages.length)} />
             <Metric label="Path" value={String(book.pathNumber)} />
             <Metric label="Ray" value={book.colorName} />
+            <Metric label="Year" value={String(info.imprintYear)} />
           </div>
         </div>
       </div>
+
+      <div className="rounded-sm border border-cyan/25 bg-black/40 px-3 py-2.5 font-mono text-[10px] leading-relaxed text-moon/90">
+        <p className="mb-1 text-[9px] uppercase tracking-[0.16em] text-magenta">Book information</p>
+        <p>
+          <span className="text-cyan">Call no.</span> {info.callNumber}
+        </p>
+        <p>
+          <span className="text-cyan">Location</span> {info.hexagon} · wall {info.wall} · shelf{" "}
+          {info.shelf} · vol {info.volume}
+        </p>
+        <p>
+          <span className="text-cyan">Publisher</span> {info.publisher} · {info.imprintYear}
+        </p>
+        <p>
+          <span className="text-cyan">ISBN-like</span> {info.isbnLike}
+        </p>
+        <p>
+          <span className="text-cyan">Language</span> {info.language}
+        </p>
+        <p>
+          <span className="text-cyan">Subjects</span> {info.subjects.join(" · ")}
+        </p>
+        <p className="mt-1 italic text-amber/90">{info.dedication}</p>
+        <p className="mt-2 text-[9px] text-muted-foreground">
+          Contents: {info.contents.join(" · ")}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2 text-[9px]">
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={info.officialSearchUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            libraryofbabel.info search ↗
+          </a>
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={info.babeliaUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            babelia images ↗
+          </a>
+          <a
+            className="text-amber underline-offset-2 hover:underline"
+            href={info.theoryUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            theory ↗
+          </a>
+        </div>
+      </div>
+
+      {images.length > 0 && (
+        <div className="space-y-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-amber">
+            Located images · babelia-style (deterministic from your word)
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {images.map((img) => (
+              <figure
+                key={img.id}
+                className="overflow-hidden rounded-sm border border-cyan/25 bg-black/50"
+              >
+                <img src={img.dataUrl} alt={img.title} className="w-full object-cover" />
+                <figcaption className="space-y-1 px-2 py-1.5">
+                  <p className="font-mono text-[10px] text-cyan">{img.title}</p>
+                  <p className="font-mono text-[8px] text-muted-foreground">{img.address}</p>
+                  <button
+                    type="button"
+                    className="font-mono text-[8px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+                    onClick={() =>
+                      downloadDataUrl(img.dataUrl, `babel-${img.style}-${book.seedWord}.png`)
+                    }
+                  >
+                    Download PNG
+                  </button>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <GhostButton
@@ -281,6 +374,23 @@ export function BabelSecretPanel({
   const activeBook = books[bookIdx] ?? null;
   const hero = BABEL_ARTWORK[artIdx] ?? BABEL_ARTWORK[0]!;
 
+  const bookImages: BabelLocatedImage[] = React.useMemo(() => {
+    if (!activeBook) return [];
+    return locateBabelImages({
+      seedWord: activeBook.seedWord,
+      pathNumber: activeBook.pathNumber,
+      colorHex: activeBook.colorHex,
+      colorName: activeBook.colorName,
+      bookTitle: activeBook.title,
+      combination: activeBook.combination,
+      spineTitles: [
+        activeBook.seedWord,
+        ...activeBook.combination,
+        ...activeBook.pages.slice(0, 6).map((p) => p.title.replace(/^.*·\s*/, "")),
+      ],
+    });
+  }, [activeBook]);
+
   function downloadAll() {
     if (!report) return;
     downloadJson(`babel-secrets-${result.normalized}-path${result.number}.json`, {
@@ -334,10 +444,19 @@ export function BabelSecretPanel({
             >
               libraryofbabel.info
             </a>{" "}
-            (Basile — no public API). This panel locates pages from your path word plus Johnson,
-            Blavatsky, Graves anagrams, philosophy, tarot, and Thought-Forms — then generates new
-            multi-leaf books from those combinations. Yellow marks the same match classes as Greek
-            Myths / Secret Doctrine.
+            (Basile — no public API). Locates text pages and{" "}
+            <a
+              className="underline underline-offset-2"
+              href={OFFICIAL_BABEL.babelia}
+              target="_blank"
+              rel="noreferrer"
+            >
+              babelia-style images
+            </a>{" "}
+            from your path word plus Johnson, Blavatsky, Graves anagrams, philosophy, tarot, and
+            Thought-Forms — then generates multi-leaf books with call numbers, contents, and
+            deterministic covers. Amber marks the same match classes as Greek Myths / Secret
+            Doctrine.
           </p>
 
           <figure className="overflow-hidden rounded-sm border border-amber/40 bg-black/60">
@@ -455,7 +574,12 @@ export function BabelSecretPanel({
             </div>
           }
         >
-          <BookReader book={activeBook} pageIdx={pageIdx} onPage={setPageIdx} />
+          <BookReader
+            book={activeBook}
+            pageIdx={pageIdx}
+            onPage={setPageIdx}
+            images={bookImages}
+          />
         </Panel>
       )}
 
