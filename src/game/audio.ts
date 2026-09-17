@@ -55,7 +55,9 @@ export type SoundName =
   | "babel-open"
   | "babel-spirit"
   | "babel-air"
-  | "babel-close";
+  | "babel-close"
+  | "detect-coin"
+  | "detect-bing";
 
 export interface AudioSettings {
   master: number;
@@ -1100,6 +1102,22 @@ class AudioManager {
       case "babel-close":
         this.noiseBurst(0.55, 500, 0.08, this.fxGain!);
         this.blip([392, 311, 247], 0.22, "triangle", 0.08);
+        break;
+      case "detect-coin":
+        // Arcade coin flip / insert — metallic clinks then spin
+        this.noiseBurst(0.08, 4200, 0.07, this.fxGain!);
+        this.blip([1880, 1420, 2100, 1680], 0.055, "square", 0.11);
+        this.blip([980, 1320, 880, 1180, 1560], 0.07, "triangle", 0.09);
+        window.setTimeout(() => {
+          if (this.settings.muted) return;
+          this.noiseBurst(0.12, 2800, 0.05, this.fxGain!);
+          this.blip([1560, 990], 0.09, "square", 0.08);
+        }, 90);
+        break;
+      case "detect-bing":
+        // Soft finish chime when multi-scan completes
+        this.blip([784, 1046, 1568], 0.14, "sine", 0.15);
+        this.blip([1568], 0.28, "triangle", 0.08);
         break;
     }
   }

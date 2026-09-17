@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { audio } from "@/game/audio";
 import { runAiDetectorEnsemble } from "@/game/ai-detector/ensemble";
 import { FREE_DETECTORS, runFreeEnsemble } from "@/game/ai-detector/freeEnsemble";
 import {
@@ -49,6 +50,12 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
       setStatus("Paste ~50+ words. Short snippets are unreliable.");
       return;
     }
+    // Coin flip on free multi-scan press only — detection math unchanged.
+    if (mode === "free") {
+      audio.init();
+      audio.resume();
+      audio.play("detect-coin");
+    }
     setBusy(true);
     setResults(null);
     setConsensus(null);
@@ -71,6 +78,7 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
             ? "Free scanners failed — check network for first model downloads (OpenAI/HC3/ModernBERT)."
             : out.consensus.summary,
         );
+        audio.play("detect-bing");
       } else {
         if (readyIds.length === 0) {
           setStatus("API mode needs at least one enabled detector with a key — or use Free mode.");
@@ -161,6 +169,17 @@ export function AiDetectorApp({ onMenu }: { onMenu: () => void }) {
               Free mode needs no API keys. First scan downloads open ONNX detectors into your browser
               cache (OpenAI RoBERTa, HC3, ModernBERT). Still evidence, not proof — commercial GPTZero
               API (API mode) usually wins on newest LLMs if you have a key.
+            </p>
+            <p className="text-amber/90">
+              Notes / security: text is scored in your browser for Free mode (models cached locally
+              after first download). API mode sends paste content only to the vendors you enable and
+              key — keys stay in this session&apos;s memory, not committed to the repo. Do not paste
+              secrets, passwords, or private credentials into the box. Results are heuristic, not a
+              legal or academic verdict.
+            </p>
+            <p className="text-muted-foreground">
+              Free multi-scan plays a coin-flip SFX on press and a bing when the suite finishes —
+              scoring path unchanged.
             </p>
           </div>
         )}
