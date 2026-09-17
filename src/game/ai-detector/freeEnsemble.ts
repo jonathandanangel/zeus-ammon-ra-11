@@ -1057,17 +1057,44 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
       !modernNearCertain,
   );
 
-  // Continuous ModernBERT pairwise evidence (logistic of score gaps)
+  // Continuous rule evidence in AI% space (logistic gaps) — feeds log-odds fusion
   const gapVsMix = modern && sentMix ? modern.aiScore - sentMix.aiScore : 0;
   const gapVsBurst = modern && burst ? modern.aiScore - burst.aiScore : 0;
   const gapVsTwin = modern && twin ? modern.aiScore - twin.aiScore : 0;
+  const gapModernStory = modern && story ? modern.aiScore - story.aiScore : 0;
+  const gapStoryTwin = story && twin ? story.aiScore - twin.aiScore : 0;
+  const mixLevel = sentMix?.aiScore ?? 20;
+  // Supporting mix only when story≥twin; alone-high mix contributes negative (human) evidence
+  const mixSupport = storyOverTwinHighMix
+    ? sigmoidGap(mixLevel - 28, 6)
+    : mixAloneHigh
+      ? 1 - sigmoidGap(mixLevel - 28, 5) // high alone → push human
+      : 0.45;
   const modernPairEvidence =
     modern != null
       ? 100 *
-        (0.5 * sigmoidGap(gapVsMix, 10) +
-          0.3 * sigmoidGap(gapVsBurst, 12) +
-          0.2 * sigmoidGap(gapVsTwin, 14))
+        (0.34 * sigmoidGap(gapVsMix, 10) +
+          0.22 * sigmoidGap(gapVsBurst, 12) +
+          0.14 * sigmoidGap(gapVsTwin, 14) +
+          0.18 * sigmoidGap(gapModernStory, 11) +
+          0.12 * 0.5)
       : 50;
+  const storyTwinMixEvidence = storyOverTwinHighMix
+    ? 100 *
+      (0.45 * sigmoidGap(gapStoryTwin, 8) +
+        0.25 * sigmoidGap((story?.aiScore ?? 44) - 40, 6) +
+        0.3 * mixSupport)
+    : mixAloneHigh
+      ? 100 * (0.25 * mixSupport) // low → human-leaning
+      : 50;
+  // Blend ModernBERT-first and story/twin/mix evidence (weights sum to 1)
+  const ruleEvidenceAi =
+    0.62 * modernPairEvidence +
+    0.38 * storyTwinMixEvidence +
+    (modernOverStorySoft ? 8 : 0) +
+    (storyOverTwinHighMix ? 10 : 0) -
+    (mixAloneHigh ? 12 : 0);
+  const ruleEvidenceClamped = clamp(ruleEvidenceAi);
 
   const pairs: Array<{ id: FreeDetectorId; score: number; weight: number }> = [];
   let humanVotes = 0;
@@ -1210,11 +1237,12 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
 
   const logitFused = fuseLogOddsSoftmax(pairs);
   const med = weightedMedianPairs(pairs);
-  // Blend log-odds fusion with robust weighted median; inject continuous ModernBERT pair evidence
-  let docScore =
-    LOGIT_BLEND * logitFused +
-    (1 - LOGIT_BLEND) * med * 0.85 +
-    (1 - LOGIT_BLEND) * modernPairEvidence * 0.15;
+  // Math model: softmax log-odds + weighted median + continuous rule evidence (all in logit space)
+  let docScore = invLogitAi(
+    LOGIT_BLEND * logitAi(logitFused) +
+      (1 - LOGIT_BLEND) * 0.55 * logitAi(med) +
+      (1 - LOGIT_BLEND) * 0.45 * logitAi(ruleEvidenceClamped),
+  );
   docScore = sharpen(docScore, 1.06);
 
   if (humanHard && !modernNearCertain && !modernAiLead) {
@@ -1235,32 +1263,35 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (storyStrong && !modernHumanHard) {
     docScore = Math.max(docScore, 0.15 * docScore + 0.85 * Math.max(story?.aiScore ?? 82, 84));
   }
-  // ModernBERT custom AI leads — applied last so they win over the full suite
+  // Ceiling rules still win in logit space (ModernBERT-first / story-twin-mix leads)
   if (modernNearCertain) {
-    docScore = Math.max(docScore, 0.03 * docScore + 0.97 * Math.max(modern?.aiScore ?? 99, 97));
+    docScore = invLogitAi(0.08 * logitAi(docScore) + 0.92 * logitAi(Math.max(modern?.aiScore ?? 99, 97)));
   } else if (modernHard) {
-    docScore = Math.max(docScore, 0.12 * docScore + 0.88 * Math.max(modern?.aiScore ?? 90, 88));
+    docScore = invLogitAi(0.2 * logitAi(docScore) + 0.8 * logitAi(Math.max(modern?.aiScore ?? 90, 88)));
   } else if (modernStrong) {
-    docScore = Math.max(docScore, 0.28 * docScore + 0.72 * Math.max(modern?.aiScore ?? 78, 74));
+    docScore = invLogitAi(0.35 * logitAi(docScore) + 0.65 * logitAi(Math.max(modern?.aiScore ?? 78, 74)));
   }
   if (modernBurstAiPair && !modernNearCertain) {
     const pairScore = Math.max(modern?.aiScore ?? 70, burst?.aiScore ?? 70, 74);
-    docScore = Math.max(docScore, 0.18 * docScore + 0.82 * pairScore);
+    docScore = invLogitAi(0.25 * logitAi(docScore) + 0.75 * logitAi(pairScore));
   }
   if (modernOverBurstMix && !modernNearCertain) {
-    docScore = Math.max(docScore, 0.18 * docScore + 0.82 * Math.max(modern?.aiScore ?? 72, 72));
+    docScore = invLogitAi(
+      0.25 * logitAi(docScore) + 0.75 * logitAi(Math.max(modern?.aiScore ?? 72, 72)),
+    );
   }
   if (modernOverStorySoft && !modernNearCertain) {
-    const lead = Math.max(modern?.aiScore ?? 57, 62);
-    docScore = Math.max(docScore, 0.22 * docScore + 0.78 * lead);
+    docScore = invLogitAi(
+      0.28 * logitAi(docScore) + 0.72 * logitAi(Math.max(modern?.aiScore ?? 57, 62)),
+    );
   }
   if (storyOverTwinHighMix && !modernNearCertain) {
     const lead = Math.max(story?.aiScore ?? 44, (twin?.aiScore ?? 27) + 18, 58);
-    docScore = Math.max(docScore, 0.25 * docScore + 0.75 * lead);
+    docScore = invLogitAi(0.3 * logitAi(docScore) + 0.7 * logitAi(lead));
   }
-  // Alone-high sentence-mix must not pull toward AI
   if (mixAloneHigh) {
-    docScore = Math.min(docScore, Math.max(docScore * 0.85, 42));
+    // Alone-high mix: pull toward uncertain/human via log-odds, never an AI lead
+    docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
   docScore = clamp(docScore);
 
@@ -1329,7 +1360,7 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     aiVotes,
     uncertainVotes,
     agreement,
-    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax fusion · ModernBERT-first weights.`,
+    summary: `${summaryMap[agreement]}${vetoNote} Log-odds/softmax · rule-evidence fusion · ModernBERT-first.`,
   };
 }
 
