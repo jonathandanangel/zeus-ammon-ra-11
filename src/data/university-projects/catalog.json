@@ -1,6 +1,6 @@
 {
   "title": "University Projects",
-  "count": 76,
+  "count": 77,
   "projects": [
     {
       "id": "matlab/MATLABProject-1.m",
@@ -761,6 +761,16 @@
       "kind": "matlab",
       "lines": 3,
       "preview": "x = 12;\n\n"
+    },
+    {
+      "id": "python-misc-project_gui",
+      "collection": "python-misc",
+      "collectionTitle": "PyCharm Misc Python",
+      "name": "project_gui.py",
+      "path": "/university-projects/python/misc/project_gui.py",
+      "kind": "python",
+      "lines": 794,
+      "preview": "import os\nimport re\nimport PySimpleGUI as sg\n\n# ----------------------------- Configuration -----------------------------\n# Centralize values that were previously hardcoded so the app is easier to\n# customize or reuse. Change these values instead of editing code paths.\nTHEME = \"Dark\"\nCOLORS = {\n    \"window_bg\": \"#041428\",    # main window background\n    \"panel_bg\": \"#02121b\",     # multiline / panel background\n    \"text\": \"#ffffff\",         # default text color on dark bg\n}\nFONTS = {\n    \"title\": (\"Segoe UI\", 14, \"bold\"),\n    \"mono\": (\"Courier New\", 10),\n}\nSIZES = {\n    \"input\": (60, 1),\n    \"out\": (100, 28),\n}\nWINDOW_TITLE = \"Game Log Summarizer\"\nFILE_TYPES = ((\"Text Files\", \"*.txt\"), (\"All Files\", \"*.*\"))\n\n# Regex patterns used for parsing. These are configurable so the parsing\n# functions can be adapted to other log formats without changing code.\nREGEX = {\n    # group 1 should capture the PC name\n    \"pc_name\": r\"^\\[CHAT WINDOW TEXT\\]\\s*(?:\\[[^\\]]+\\]\\s*)*(.+?) has loot notification turned on\\.\",\n    # expects group 1 to capture the killed target\n    \"kill\": rf\"^\\[CHAT WINDOW TEXT\\]\\s*(?:\\[[^\\]]+\\]\\s*)*{{pc}} killed (.+)$\",\n    # expects groups: (target, amount)\n    \"damage\": rf\"^\\[CHAT WINDOW TEXT\\]\\s*(?:\\[[^\\]]+\\]\\s*)*{{pc}} damages (.+?): (\\d+)\",\n}\n\n# ----------------------------- Parsing Helpers -----------------------------\nimport re\nimport PySimpleGUI as sg\n\n"
     }
   ],
   "samples": [

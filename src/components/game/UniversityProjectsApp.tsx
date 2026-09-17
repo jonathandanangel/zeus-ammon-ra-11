@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Chart } from "@/components/game/numerical-extreme/Chart";
+import { ProjectGuiPanel } from "@/components/game/university-projects/ProjectGuiPanel";
 import { cn } from "@/lib/utils";
 import catalogJson from "@/data/university-projects/catalog.json";
 import {
@@ -28,7 +29,7 @@ type Catalog = {
   samples: Array<{ name: string; path: string }>;
 };
 
-type Tab = "plotter" | "sources";
+type Tab = "plotter" | "sources" | "me021";
 
 /**
  * University Projects — web port of MATLABProject-1.m (column pick → scatter/line plot
@@ -209,8 +210,8 @@ export function UniversityProjectsApp({ onMenu }: { onMenu: () => void }) {
             </h1>
             <p className="mt-1 max-w-3xl font-mono text-[10px] leading-relaxed text-muted-foreground">
               Web port of <code>MATLABProject-1.m</code>: load lab table → choose X/Y → scatter+line →
-              optional engineering picks → CSV. Improved: one plot path, upload, stats, linear fit,
-              true start/end markers. Also browses PyCharm Misc Python labs.
+              optional engineering picks → CSV. Also browses PyCharm coursework and ports{" "}
+              <code>project_gui.py</code> (game log · team scores · grades · data reader).
             </p>
           </div>
           <button
@@ -232,6 +233,7 @@ export function UniversityProjectsApp({ onMenu }: { onMenu: () => void }) {
           [
             ["plotter", "Data plotter"],
             ["sources", "Source files"],
+            ["me021", "project_gui.py"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -244,6 +246,8 @@ export function UniversityProjectsApp({ onMenu }: { onMenu: () => void }) {
           </button>
         ))}
       </nav>
+
+      {tab === "me021" && <ProjectGuiPanel />}
 
       {tab === "plotter" && (
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
