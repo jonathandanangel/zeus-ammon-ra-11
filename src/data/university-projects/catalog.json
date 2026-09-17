@@ -1,6 +1,6 @@
 {
   "title": "University Projects",
-  "count": 77,
+  "count": 78,
   "projects": [
     {
       "id": "matlab/MATLABProject-1.m",
@@ -11,6 +11,16 @@
       "kind": "matlab",
       "lines": 377,
       "preview": "filepath = input(\"Enter file name: \",'s');\n%filepath = \"Sample Data 01.txt\";\n\nif ~isfile(filepath)\n    error(\"notworking\")\n\nend\n\nlines = readlines(filepath);\n\nnewlines = strtrim(lines);\n\ntesting = splitlines(newlines);\n"
+    },
+    {
+      "id": "matlab/VibrationExp_SecantGA_LagAlign.m",
+      "collection": "matlab",
+      "collectionTitle": "MATLAB coursework",
+      "name": "VibrationExp_SecantGA_LagAlign.m",
+      "path": "/university-projects/matlab/VibrationExp_SecantGA_LagAlign.m",
+      "kind": "matlab",
+      "lines": 535,
+      "preview": "clc; close all; clear;\n\n%% Constants\ncount_per_mm = 160;\nN_per_V      = 3.35;\n\n%x1_mm = 18.2;\n%x6_mm = 10.9;\nTd    = 0.335333;\n\n%% Damping / natural frequency from log decrement\ndelta = 0.700363;"
     },
     {
       "id": "python-misc/2_dimensional_list_pattern.py",

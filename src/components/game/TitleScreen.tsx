@@ -28,6 +28,7 @@ export interface TitleScreenProps {
   onArcade: (game?: MemoryGameId) => void;
   onSettings: () => void;
   onValidate: () => void;
+  onUpdates: () => void;
 }
 
 const BRAIN_ASSETS = [
@@ -283,6 +284,13 @@ export function TitleScreen(p: TitleScreenProps) {
       actions: [
         { label: "Settings", onClick: p.onSettings },
         { label: "Developer validation", onClick: p.onValidate },
+        {
+          label: "Updates",
+          sub: "Full git history · human vs AI-assisted",
+          onClick: p.onUpdates,
+          buttonClass:
+            "border-mint/55 text-mint hover:bg-mint/15 shadow-[0_0_24px_rgba(52,211,153,0.18)]",
+        },
         {
           label: "AI Detector",
           sub: "Custom-weighted detectors · math fusion for efficiency",

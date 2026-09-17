@@ -45,6 +45,7 @@ import { NumericalExtremeGame } from "./NumericalExtremeGame";
 import { SpiritBoundGame } from "./SpiritBoundGame";
 import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
+import { UpdatesPanel } from "./UpdatesPanel";
 import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
 import { UniversityProjectsApp } from "./UniversityProjectsApp";
@@ -64,6 +65,7 @@ type Screen =
   | "settings"
   | "about-creator"
   | "validate"
+  | "updates"
   | "finale"
   | "gameover"
   | "lightcycle"
@@ -327,7 +329,8 @@ export function AeroGrid() {
     screen !== "title" &&
     screen !== "settings" &&
     screen !== "about-creator" &&
-    screen !== "validate"
+    screen !== "validate" &&
+    screen !== "updates"
       ? mode
       : null;
 
@@ -376,7 +379,7 @@ export function AeroGrid() {
   }, [htAudioSession, localIndex]);
 
   React.useEffect(() => {
-    if (screen === "title" || screen === "settings" || screen === "about-creator" || screen === "validate") {
+    if (screen === "title" || screen === "settings" || screen === "about-creator" || screen === "validate" || screen === "updates") {
       return undefined;
     }
     if (mode === "ht-intro" || mode === "ht-extreme") {
@@ -1027,6 +1030,7 @@ export function AeroGrid() {
           }}
           onSettings={() => setScreen("settings")}
           onValidate={() => setScreen("validate")}
+          onUpdates={() => setScreen("updates")}
         />
       )}
 
@@ -1073,6 +1077,7 @@ export function AeroGrid() {
         <AboutCreatorPanel onBack={() => setScreen("settings")} />
       )}
       {screen === "validate" && <ValidationPanel onBack={() => setScreen("title")} />}
+      {screen === "updates" && <UpdatesPanel onBack={() => setScreen("title")} />}
 
       {screen === "finale" && (
         <Finale
@@ -1546,7 +1551,8 @@ export function AeroGrid() {
         screen !== "title" &&
         screen !== "settings" &&
         screen !== "about-creator" &&
-        screen !== "validate" && (
+        screen !== "validate" &&
+        screen !== "updates" && (
           <NowPlayingAlbum accent={mode === "ht-extreme" ? "#ff2a2a" : "#ff8c1a"} />
         )}
     </div>

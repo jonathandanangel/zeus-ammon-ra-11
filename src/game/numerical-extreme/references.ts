@@ -544,6 +544,15 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         venue: "NUMEROLOGY · Babel Secret Library · babel-pathfinder.ts · BabelSecretPanel.tsx",
       },
       {
+        title: "Ordered Spatial Reasoning → Babel high-variance locate (V18)",
+        authors:
+          "NumericalAnalysisToolbox_V18 OrderedSpatialReasoning / Combined (Jonathan Angel); ZEUS TypeScript port",
+        detail:
+          "How sequence pattern types feed Library of Babel polish (silent): (1) Tokenize locate candidates (title / excerpt / colour / glossary words) into lossless string tokens. (2) Run the same OSR family search as MAIN — constant, arithmetic, geometric, polynomial fallback, affine recurrence, linear recurrence (orders 2–3), interleaved lanes (periods 2–4), digit reversal / digit-sum invariants, and fixed-width partition arithmetic. (3) scoreSequenceStructure() turns top coverage × cluster weight × confidence into a structureScore. (4) babel-writing-iq ranks polish candidates as: AI% ≤ ~10% first (Free ensemble / ModernBERT-first), then Writing IQ toward ~190, then OSR structureScore for coherent / low-entropy token islands — so high-variance word+colour combinations prefer structured recall over random noise. Predictions are hypotheses only; officially_verified stays false; not an IQ score. Combined reference profiles A/B activate operator families without embedding answer keys.",
+        venue:
+          "ordered-spatial-reasoning.ts · babel-writing-iq.ts · MAIN Ordered Spatial Reasoning · Babel Secret polish",
+      },
+      {
         title: "The Babel Library (EPUB companion · vendored)",
         authors: "clcreuso (MIT); vendored into ZEUS AMMON-RA 11",
         detail:
@@ -557,6 +566,12 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
     heading: "Project lineage",
     blurb: "Ports and presentation layers that carried the toolbox into ZEUS AMMON-RA 11.",
     entries: [
+      {
+        title: "NumericalAnalysisToolbox_V18",
+        authors: "Jonathan Angel (Octave/MATLAB GUI · Resonance and Ordered Reasoning)",
+        detail:
+          "V15 MAIN analyzer plus embedded Ordered Spatial Reasoning (Combined), optimizeGraphXOutputs (graph-evidence x clustering), vibrationV18Analysis (resonance / peak sequences), and optional experimental vib alignment (step/sin/impulse .txt). Predictions are hypotheses — not IQ scores and not officially verified without an external key.",
+      },
       {
         title: "NumericalAnalysisToolbox_V15",
         authors: "Jonathan Angel (original Octave/MATLAB GUI)",
@@ -573,7 +588,14 @@ export const TOOLBOX_REFERENCES: ReferenceSection[] = [
         title: "NUMERICAL EXTREME (ZEUS AMMON-RA 11)",
         authors: "Jonathan Angel · WOZKAF presentation layer",
         detail:
-          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, NUMEROLOGY (seven traditions · Johnson 1755/1773 · Secret Doctrine · Ruckman×1611 KJV · Greek Myths · Thought-Forms), REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER (Sauer 3.7), SYMBOLIC int(f,x), GENETIC (V11 GA roots), HEAT (HTANT V2), and THE VANITY APP Face++ batch.",
+          "Client-side TypeScript port of the math engine inside the ZEUS neon UI with Extreme-style SFX (no BGM on open), Enoch-Ra compute feedback, V18 Ordered Spatial Reasoning on MAIN, graph-optimized X + V18 vibration reports, NUMEROLOGY (Babel polish uses Free AI Detector + Writing IQ ~190 + OSR structure), REFS, ALGORITHMS (695 / 682 / 502), ACM SPARS (618 / 619 / 740), BEZIER, SYMBOLIC, GENETIC, HEAT, and THE VANITY APP Face++ batch.",
+      },
+      {
+        title: "SDOF experimental lag alignment (University Projects · MATLAB)",
+        authors: "Jonathan Angel (ME lab · secant + GA lag optimizers)",
+        detail:
+          "Loads bracketed encoder matrices (step / sin×3 / impulse), identifies ζ·wn·wd and k·m·c, simulates free/forced responses, then maximizes Pearson correlation vs lag with a secant root on dr/dτ and a toolbox-free GA. Also ships compareSignals best-lag metrics. Source: public/university-projects/matlab/VibrationExp_SecantGA_LagAlign.m — browse under University Projects → Sources.",
+        venue: "University Projects · matlab/VibrationExp_SecantGA_LagAlign.m · V18 optional experimental vib mode",
       },
     ],
   },
