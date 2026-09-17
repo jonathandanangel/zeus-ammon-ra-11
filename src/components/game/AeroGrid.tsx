@@ -49,6 +49,7 @@ import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
 import { UniversityProjectsApp } from "./UniversityProjectsApp";
 import { WorldBackground } from "./WorldBackground";
+import { MatrixRainBackground } from "./MatrixRainBackground";
 
 type Screen =
   | "title"
@@ -643,6 +644,15 @@ export function AeroGrid() {
         psychedelic={psychedelicActive}
         inferno={infernoActive}
       />
+
+      {screen === "title" && settings.matrixRain && !settings.reducedMotion && (
+        <MatrixRainBackground
+          active
+          reducedMotion={settings.reducedMotion}
+          opacity={0.14}
+          palette="zeus"
+        />
+      )}
 
       <BrainCelebration burst={celebrationBurst} reducedMotion={settings.reducedMotion} />
       <BrainOverload

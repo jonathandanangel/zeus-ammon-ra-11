@@ -9,6 +9,8 @@ export interface Settings extends AudioSettings {
   interstitials: "full" | "short" | "off";
   noTimer: boolean;
   photosensitiveAck: boolean;
+  /** Rezmason-style matrix digital rain on the title screen (opt-in). */
+  matrixRain: boolean;
 }
 
 export interface Progress {
@@ -50,6 +52,7 @@ export const defaultSettings: Settings = {
   interstitials: "full",
   noTimer: false,
   photosensitiveAck: false,
+  matrixRain: false,
 };
 
 export const defaultProgress: Progress = {
@@ -94,8 +97,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<SaveState>;
-        if (parsed.settings) setSettingsState({ ...defaultSettings, ...parsed.settings });
+        const parsed = JSON.parse(raw) as Partial<SaveState> & {
+          settings?: Partial<Settings> & { uiGlitch?: boolean };
+        };
+        if (parsed.settings) {
+          const { uiGlitch: _dropGlitch, ...rest } = parsed.settings;
+          const merged = { ...defaultSettings, ...rest };
+          // Prior default left matrix rain on in many saves — reset to opt-in.
+          if ((parsed.version ?? 1) < 2) merged.matrixRain = false;
+          setSettingsState(merged);
+        }
         if (parsed.progress) setProgressState({ ...defaultProgress, ...parsed.progress });
       }
     } catch {
@@ -109,7 +120,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ settings, progress, version: 1 } satisfies SaveState),
+        JSON.stringify({ settings, progress, version: 2 } satisfies SaveState),
       );
     } catch {
       /* storage unavailable */
