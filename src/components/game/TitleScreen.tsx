@@ -2,6 +2,10 @@ import * as React from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { cn } from "@/lib/utils";
 import { FEATURED_HEAT_ALBUMS } from "@/game/audio";
+import {
+  loadMemoryHighScores,
+  type MemoryGameId,
+} from "@/game/memory-extreme/scores";
 import { HeatAlbumCredits } from "./NowPlayingAlbum";
 import magentaBrain from "@/assets/winged-brain.png";
 import cyanBrain from "@/assets/winged-brain-cyan.png";
@@ -24,6 +28,7 @@ export interface TitleScreenProps {
   onVanityApp: () => void;
   onAiDetector: () => void;
   onUniversityProjects: () => void;
+  onArcade: (game?: MemoryGameId) => void;
   onSettings: () => void;
   onValidate: () => void;
 }
@@ -70,7 +75,7 @@ type ModeSection = {
   /** Soft full-screen wash while this topic is in view */
   wash: string;
   /** Frame glow family: aero = electric/mystique purple, fire = bright fiery */
-  glow: "aero" | "fire" | "story" | "tools" | "system";
+  glow: "aero" | "fire" | "story" | "tools" | "system" | "arcade";
   actions: Array<{
     label: string;
     sub?: string;
@@ -87,9 +92,15 @@ export function TitleScreen(p: TitleScreenProps) {
   const [leaving, setLeaving] = React.useState(false);
   const [brain, setBrain] = React.useState(() => pickBrainLook());
   const [brainVisible, setBrainVisible] = React.useState(true);
+  const [arcadeScores, setArcadeScores] = React.useState(() => loadMemoryHighScores());
   const fadingRef = React.useRef(false);
   const done = React.useRef(false);
   const landingRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (phase !== "landing") return;
+    setArcadeScores(loadMemoryHighScores());
+  }, [phase]);
 
   const FADE_MS = 700;
 
@@ -238,6 +249,40 @@ export function TitleScreen(p: TitleScreenProps) {
       ],
     },
     {
+      id: "arcade",
+      eyebrow: "Arcade",
+      title: "Arcade",
+      blurb:
+        "Memory games found in the trivia — solo runs with a high score for each.",
+      accentClass: "from-cyan/30 via-transparent to-[#38bdf8]/20 border-cyan/60",
+      buttonClass:
+        "border-cyan/65 text-cyan hover:bg-cyan/15 shadow-[0_0_24px_rgba(37,217,255,0.22)]",
+      wash: "rgba(37,217,255,0.36)",
+      glow: "arcade",
+      actions: [
+        {
+          label: "MEMORY EXTREME LIGHT CYCLE",
+          sub: `High score ${arcadeScores["grid-run"]}`,
+          onClick: () => p.onArcade("grid-run"),
+        },
+        {
+          label: "MEMORY EXTREME PACMAN",
+          sub: `High score ${arcadeScores["neon-maze"]}`,
+          onClick: () => p.onArcade("neon-maze"),
+        },
+        {
+          label: "MEMORY EXTREME RECALL",
+          sub: `High score ${arcadeScores["electric-recall"]}`,
+          onClick: () => p.onArcade("electric-recall"),
+        },
+        {
+          label: "MEMORY EXTREME GAUNTLET",
+          sub: `High score ${arcadeScores["memory-gauntlet"]}`,
+          onClick: () => p.onArcade("memory-gauntlet"),
+        },
+      ],
+    },
+    {
       id: "university",
       eyebrow: "Coursework labs",
       title: "University Projects",
@@ -363,12 +408,13 @@ export function TitleScreen(p: TitleScreenProps) {
             id={`mode-${section.id}`}
             className={cn(
               "zeus-snap-slide zeus-topic-slide relative flex min-h-[100dvh] w-full items-center",
-              section.glow === "aero" && "zeus-glow-aero",
-              section.glow === "fire" && "zeus-glow-fire",
-              section.glow === "story" && "zeus-glow-story",
-              section.glow === "tools" && "zeus-glow-tools",
-              section.glow === "system" && "zeus-glow-system",
-            )}
+                  section.glow === "aero" && "zeus-glow-aero",
+                  section.glow === "fire" && "zeus-glow-fire",
+                  section.glow === "story" && "zeus-glow-story",
+                  section.glow === "tools" && "zeus-glow-tools",
+                  section.glow === "arcade" && "zeus-glow-arcade",
+                  section.glow === "system" && "zeus-glow-system",
+                )}
             style={{ ["--zeus-topic-wash" as string]: section.wash }}
           >
             <div className="zeus-topic-wash pointer-events-none absolute inset-0" aria-hidden />

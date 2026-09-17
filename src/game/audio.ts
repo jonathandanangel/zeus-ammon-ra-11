@@ -48,6 +48,10 @@ export type SoundName =
   | "numeric-run"
   | "numeric-result"
   | "numeric-error"
+  | "numeric-boot"
+  | "numeric-click"
+  | "numeric-hover"
+  | "numeric-type"
   | "babel-open"
   | "babel-spirit"
   | "babel-air"
@@ -217,6 +221,9 @@ class AudioManager {
   private babelTimer: number | null = null;
   private babelActive = false;
   private babelStep = 0;
+  private numericTimer: number | null = null;
+  private numericActive = false;
+  private numericStep = 0;
   settings: AudioSettings = { master: 0.7, music: 0.5, effects: 0.8, muted: false };
 
   get ready() {
@@ -561,6 +568,63 @@ class AudioManager {
       window.clearTimeout(this.babelTimer);
       this.babelTimer = null;
     }
+  }
+
+  /** Quiet cybernetic lab bed while Numerical Extreme is open. */
+  startNumericAmbience() {
+    this.init();
+    if (!this.ctx || this.numericActive || this.settings.muted) return;
+    this.resume();
+    this.numericActive = true;
+    this.numericStep = 0;
+    this.scheduleNumericTick();
+  }
+
+  stopNumericAmbience() {
+    this.numericActive = false;
+    if (this.numericTimer !== null) {
+      window.clearTimeout(this.numericTimer);
+      this.numericTimer = null;
+    }
+  }
+
+  private scheduleNumericTick() {
+    if (!this.numericActive || !this.ctx) return;
+    this.playNumericAmbienceStep();
+    this.numericTimer = window.setTimeout(() => this.scheduleNumericTick(), 780);
+  }
+
+  private playNumericAmbienceStep() {
+    const ctx = this.ctx;
+    const bus = this.fxGain;
+    if (!ctx || !bus || !this.numericActive || this.settings.muted) return;
+    const step = this.numericStep++;
+    const base = 180 + (step % 8) * 28;
+
+    // Soft servo / data-tick
+    this.blip([base * 4 + (step % 3) * 40], 0.028, "square", 0.028);
+    if (step % 4 === 0) {
+      this.blip([base * 2, base * 3], 0.05, "sawtooth", 0.03);
+    }
+    if (step % 6 === 2) {
+      this.noiseBurst(0.22, 2800 + (step % 5) * 180, 0.018, bus);
+    }
+    if (step % 11 === 0) {
+      this.blip([740, 980, 1310], 0.07, "square", 0.035);
+    }
+  }
+
+  /** Layered robotic chirp used by Numerical Extreme UI. */
+  private cyberChirp(freqs: number[], duration: number, level = 0.12) {
+    if (!this.fxGain) return;
+    this.blip(freqs, duration, "square", level);
+    this.blip(
+      freqs.map((f) => f * 1.5),
+      duration * 0.7,
+      "sawtooth",
+      level * 0.45,
+    );
+    this.noiseBurst(0.12, 3800, level * 0.35, this.fxGain);
   }
 
   private scheduleBabelTick() {
@@ -992,20 +1056,35 @@ class AudioManager {
         this.blip([131, 165, 196, 262, 330, 392], 0.5, "triangle", 0.18);
         break;
       case "numeric-tab":
-        this.blip([880 + extra * 60, 1320 + extra * 60], 0.06, "square", 0.09);
-        this.noiseBurst(0.1, 4200, 0.03, this.fxGain!);
+        this.cyberChirp([920 + extra * 55, 1380 + extra * 40], 0.055, 0.1);
         break;
       case "numeric-run":
-        this.blip([196, 294, 440, 659], 0.09, "sawtooth", 0.14);
-        this.noiseBurst(0.35, 1600, 0.07, this.fxGain!);
+        this.cyberChirp([196, 294, 440, 660, 990], 0.1, 0.15);
+        this.noiseBurst(0.45, 1800, 0.08, this.fxGain!);
         break;
       case "numeric-result":
-        this.blip([659, 880, 1175, 1568], 0.1, "triangle", 0.15);
-        this.noiseBurst(0.2, 5200, 0.04, this.fxGain!);
+        this.cyberChirp([660, 880, 1175, 1568, 1980], 0.09, 0.13);
         break;
       case "numeric-error":
-        this.blip([330, 233, 165], 0.18, "sawtooth", 0.15);
-        this.noiseBurst(0.4, 700, 0.09, this.fxGain!);
+        this.blip([330, 220, 150, 110], 0.2, "sawtooth", 0.14);
+        this.noiseBurst(0.5, 900, 0.1, this.fxGain!);
+        break;
+      case "numeric-boot":
+        this.noiseBurst(0.8, 900, 0.1, this.fxGain!);
+        this.cyberChirp([110, 165, 247, 370, 555, 830], 0.14, 0.14);
+        window.setTimeout(() => {
+          if (this.settings.muted) return;
+          this.cyberChirp([880, 1320, 1760], 0.08, 0.1);
+        }, 180);
+        break;
+      case "numeric-click":
+        this.cyberChirp([640 + extra * 30, 960 + extra * 30], 0.04, 0.09);
+        break;
+      case "numeric-hover":
+        this.blip([1240 + extra * 40], 0.025, "square", 0.045);
+        break;
+      case "numeric-type":
+        this.blip([1480 + (extra % 5) * 70], 0.018, "square", 0.035);
         break;
       case "babel-open":
         this.playBabelOpenBurst();

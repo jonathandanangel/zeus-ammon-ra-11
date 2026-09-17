@@ -99,9 +99,24 @@ export function Field({
 
 export function TextInput({
   className,
+  onFocus,
+  onChange,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(controlClass, className)} {...props} />;
+  return (
+    <input
+      {...props}
+      className={cn(controlClass, className)}
+      onFocus={(event) => {
+        audio.play("numeric-type");
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        audio.play("numeric-type", event.target.value.length);
+        onChange?.(event);
+      }}
+    />
+  );
 }
 
 export function NumberInput({
@@ -188,6 +203,7 @@ export function BoundNumberInput({
       value={draft}
       onFocus={(event) => {
         focusedRef.current = true;
+        audio.play("numeric-type");
         onFocus?.(event);
       }}
       onBlur={(event) => {
@@ -198,6 +214,7 @@ export function BoundNumberInput({
       onChange={(event) => {
         const raw = event.target.value;
         if (!isAllowedNumericDraft(raw)) return;
+        audio.play("numeric-type", raw.length);
         setDraft(raw);
         if (isCompleteNumeric(raw)) {
           onChange(clampNumber(Number(raw), min, max));
@@ -213,6 +230,7 @@ export function DraftNumberInput({
   onChange,
   className,
   onBlur,
+  onFocus,
   ...props
 }: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> & {
   value: string;
@@ -225,9 +243,16 @@ export function DraftNumberInput({
       inputMode="decimal"
       className={cn(controlClass, "tabular-nums", className)}
       value={value}
+      onFocus={(event) => {
+        audio.play("numeric-type");
+        onFocus?.(event);
+      }}
       onChange={(event) => {
         const raw = event.target.value;
-        if (raw === "" || isAllowedNumericDraft(raw)) onChange(raw);
+        if (raw === "" || isAllowedNumericDraft(raw)) {
+          audio.play("numeric-type", raw.length);
+          onChange(raw);
+        }
       }}
       onBlur={(event) => {
         if (value === "-" || value === "+" || value === "." || value === "-." || value === "+.") {
@@ -271,21 +296,46 @@ export function GraphBoundsFields({
 
 export function TextArea({
   className,
+  onFocus,
+  onChange,
   ...props
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={cn(controlClass, "min-h-24 resize-y leading-relaxed", className)}
       {...props}
+      className={cn(controlClass, "min-h-24 resize-y leading-relaxed", className)}
+      onFocus={(event) => {
+        audio.play("numeric-type");
+        onFocus?.(event);
+      }}
+      onChange={(event) => {
+        audio.play("numeric-type", event.target.value.length);
+        onChange?.(event);
+      }}
     />
   );
 }
 
 export function Select({
   className,
+  onChange,
+  onMouseEnter,
   ...props
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(controlClass, "appearance-none", className)} {...props} />;
+  return (
+    <select
+      className={cn(controlClass, "appearance-none", className)}
+      onMouseEnter={(event) => {
+        audio.play("numeric-hover");
+        onMouseEnter?.(event);
+      }}
+      onChange={(event) => {
+        audio.play("numeric-click");
+        onChange?.(event);
+      }}
+      {...props}
+    />
+  );
 }
 
 export function RunButton({
@@ -306,7 +356,7 @@ export function RunButton({
         props.onClick?.(event);
       }}
       onMouseEnter={(event) => {
-        audio.play("hover");
+        audio.play("numeric-hover");
         props.onMouseEnter?.(event);
       }}
       type={props.type ?? "submit"}
@@ -324,6 +374,8 @@ export function RunButton({
 export function GhostButton({
   className,
   children,
+  onClick,
+  onMouseEnter,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
@@ -332,6 +384,14 @@ export function GhostButton({
         "inline-flex items-center justify-center gap-2 rounded-sm border border-cyan/30 bg-deepblue/50 backdrop-blur-md px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-moon/80 transition hover:border-amber/50 hover:text-amber disabled:opacity-40",
         className,
       )}
+      onMouseEnter={(event) => {
+        audio.play("numeric-hover");
+        onMouseEnter?.(event);
+      }}
+      onClick={(event) => {
+        audio.play("numeric-click");
+        onClick?.(event);
+      }}
       {...props}
     >
       {children}

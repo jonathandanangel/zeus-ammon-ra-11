@@ -212,10 +212,11 @@ function drawMaze(
 const controlClass =
   "grid size-12 place-items-center rounded-md border border-cyan/60 bg-deepblue/85 font-display text-xl text-cyan transition-colors hover:bg-cyan/20 active:bg-cyan/30";
 
-export function NeonMazeGame({ milestone, reducedMotion, onComplete }: {
+export function NeonMazeGame({ milestone, reducedMotion, onComplete, onScoreChange }: {
   milestone: number;
   reducedMotion: boolean;
   onComplete: (outcome: "won" | "lost") => void;
+  onScoreChange?: (score: number) => void;
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const playerRef = React.useRef<Point>({ ...playerSpawn });
@@ -236,6 +237,10 @@ export function NeonMazeGame({ milestone, reducedMotion, onComplete }: {
   const [pelletsLeft, setPelletsLeft] = React.useState(initialPellets.size + initialPowerPellets.size);
   const tempo = Math.min(1.9, 1.18 + milestone * 0.035);
   const tickMs = Math.max(82, 130 - milestone * 2);
+
+  React.useEffect(() => {
+    onScoreChange?.(score);
+  }, [score, onScoreChange]);
 
   const redraw = React.useCallback(() => {
     const canvas = canvasRef.current;

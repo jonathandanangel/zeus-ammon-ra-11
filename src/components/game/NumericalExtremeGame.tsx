@@ -1901,7 +1901,7 @@ function BezierPanel() {
     if (done) return;
     const pt = unmap(event.clientX, event.clientY);
     if (!pt) return;
-    audio.play("hover");
+    audio.play("numeric-click");
 
     if (!anchor) {
       setAnchor(pt);
@@ -3955,6 +3955,16 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
     setOverloadBurst((value) => value + 1);
   }, []);
 
+  React.useEffect(() => {
+    audio.init();
+    audio.resume();
+    audio.play("numeric-boot");
+    audio.startNumericAmbience();
+    return () => {
+      audio.stopNumericAmbience();
+    };
+  }, []);
+
   return (
     <NumericalComputeContext.Provider value={triggerEnochRa}>
       <div className="numerical-extreme-shell relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-2 py-4">
@@ -3980,7 +3990,11 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
             </div>
             <button
               type="button"
-              onClick={onMenu}
+              onClick={() => {
+                audio.play("numeric-click");
+                onMenu();
+              }}
+              onMouseEnter={() => audio.play("numeric-hover")}
               className="rounded-sm border border-amber/50 bg-deepblue/50 backdrop-blur-md px-4 py-2 font-display text-xs uppercase tracking-[0.2em] text-amber transition hover:bg-amber/15"
             >
               Main menu
@@ -3991,7 +4005,7 @@ export function NumericalExtremeGame({ onMenu }: NumericalExtremeGameProps) {
               <button
                 key={item.id}
                 type="button"
-                onMouseEnter={() => audio.play("hover")}
+                onMouseEnter={() => audio.play("numeric-hover", index)}
                 onClick={() => {
                   audio.play("numeric-tab", index);
                   setMode(item.id);
