@@ -1143,6 +1143,10 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   const sentMix = okRows.find((r) => r.id === "sentence-mix");
   const burst = okRows.find((r) => r.id === "burstiness");
   const twin = okRows.find((r) => r.id === "gptzero-twin");
+  const openai = okRows.find((r) => r.id === "openai-roberta");
+  const hc3 = okRows.find((r) => r.id === "hc3-roberta");
+  const perplexity = okRows.find((r) => r.id === "perplexity-proxy");
+  const lexical = okRows.find((r) => r.id === "lexical");
   const pitchStrong = Boolean(pitch && pitch.aiScore >= 68);
   const storyStrong = Boolean(story && story.aiScore >= 72);
   const modernStrong = Boolean(modern && modern.aiScore >= 70);
@@ -1163,6 +1167,39 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
     if (!soft.length) return true;
     return mean(soft.map((r) => r.aiScore)) <= 38;
   })();
+
+  /**
+   * Elegant human writing (very specific band):
+   * ModernBERT > OpenAI RoBERTa (~55.8%) AND ModernBERT > sentence-mix (~53%),
+   * with sentence-mix ≈53% OR OpenAI RoBERTa (~55.8%) > burstiness,
+   * everything else ≤20%, and predictability / lexical / human-noise / HC3 ≈0.
+   */
+  const elegantHumanWriting = (() => {
+    if (!modern || !openai || !sentMix || !burst) return false;
+    const modernLeadsOpenAi = modern.aiScore > openai.aiScore;
+    const modernLeadsMix = modern.aiScore > sentMix.aiScore;
+    if (!modernLeadsOpenAi || !modernLeadsMix) return false;
+
+    const mixAround53 = sentMix.aiScore >= 45 && sentMix.aiScore <= 62;
+    const openAiAround56 = openai.aiScore >= 48 && openai.aiScore <= 65;
+    const openAiOverBurst = openai.aiScore > burst.aiScore;
+    if (!(mixAround53 || (openAiAround56 && openAiOverBurst))) return false;
+
+    // Predictability, lexical diversity, human-noise, HC3 — very low / ~0
+    const nearZero = (r: DetectorScanResult | undefined) => !r || !r.ok || r.aiScore <= 12;
+    if (!nearZero(perplexity) || !nearZero(lexical) || !nearZero(noise) || !nearZero(hc3)) {
+      return false;
+    }
+
+    // Everything else (not ModernBERT / OpenAI / sentence-mix) ≤ ~20%
+    const exempt = new Set(["modernbert", "openai-roberta", "sentence-mix"]);
+    for (const r of okRows) {
+      if (exempt.has(r.id)) continue;
+      if (r.aiScore > 22) return false;
+    }
+    return true;
+  })();
+
   const modernBurstAiPair = Boolean(
     modern &&
       burst &&
@@ -1546,10 +1583,16 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   if (mixAloneHigh) {
     docScore = invLogitAi(0.7 * logitAi(docScore) + 0.3 * logitAi(28));
   }
+  // Elegant human writing — Mid ModernBERT / OpenAI / mix with near-zero soft stack → human
+  if (elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong) {
+    docScore = invLogitAi(0.18 * logitAi(docScore) + 0.82 * logitAi(8));
+  }
   docScore = clamp(docScore);
 
   let agreement: EnsembleConsensus["agreement"] = "split";
-  if (modernNearCertain) agreement = "strong_ai";
+  if (elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong) {
+    agreement = "strong_human";
+  } else if (modernNearCertain) agreement = "strong_ai";
   else if (modernAiLead && docScore >= 60) agreement = docScore >= 75 ? "strong_ai" : "lean_ai";
   else if ((docScore < 12 || modernHumanHard) && !modernStrong && !modernAiLead)
     agreement = "strong_human";
@@ -1568,7 +1611,9 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
   else agreement = "split";
 
   const band: Band = bandFromAiScore(docScore);
-  const vetoNote = modernNearCertain
+  const vetoNote = elegantHumanWriting && !modernNearCertain && !pitchStrong && !storyStrong
+    ? " Elegant human writing — ModernBERT > OpenAI RoBERTa (~56%) & sentence-mix (~53%), rest ≤20%, predictability/lexical/human-noise/HC3 ≈0 → human."
+    : modernNearCertain
     ? " ModernBERT ≈99% AI → treat as AI-generated."
     : leadComposite.fired && leadComposite.bestId
       ? ` Higher-order lead composite (${leadComposite.bestId}) → lean AI.`
@@ -1600,7 +1645,9 @@ function weightedConsensus(results: DetectorScanResult[]): EnsembleConsensus {
                                 ? " LLM pitch/outline fingerprints dominate."
                                 : "";
   const summaryMap: Record<EnsembleConsensus["agreement"], string> = {
-    strong_human: `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
+    strong_human: elegantHumanWriting
+      ? `Elegant human writing (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`
+      : `Strong human signal (weighted AI ${docScore.toFixed(0)}% · ${labelFromBand(band)}).`,
     lean_human: `Lean human (weighted AI ${docScore.toFixed(0)}%). Low false-positive bias like GPTZero.`,
     split: `Uncertain / mixed (weighted AI ${docScore.toFixed(0)}%). Route to a human reviewer.`,
     lean_ai: `Lean AI (weighted AI ${docScore.toFixed(0)}%).`,
