@@ -75,7 +75,7 @@ export function ArcadeApp({
     const milestone = Math.max(1, scores["grid-run"] + 1);
     return (
       <div className="arcade-shell mx-auto flex w-full max-w-6xl flex-col gap-3 px-2 py-4">
-        <HubChrome onBack={backToHub} title="MEMORY EXTREME LIGHT CYCLE" />
+        <HubChrome onBack={backToHub} title="EXTREME LIGHT CYCLE" />
         <LightCycleGame
           key={`cycle-${milestone}`}
           milestone={milestone}
@@ -92,7 +92,7 @@ export function ArcadeApp({
   if (play === "neon-maze") {
     return (
       <div className="arcade-shell mx-auto flex w-full max-w-6xl flex-col gap-3 px-2 py-4">
-        <HubChrome onBack={backToHub} title="MEMORY EXTREME PACMAN" />
+        <HubChrome onBack={backToHub} title="EXTREME PACMAN" />
         <NeonMazeGame
           milestone={3}
           reducedMotion={settings.reducedMotion}
@@ -111,7 +111,7 @@ export function ArcadeApp({
   if (play === "electric-recall") {
     return (
       <div className="arcade-shell mx-auto flex w-full max-w-3xl flex-col gap-3 px-2 py-4">
-        <HubChrome onBack={backToHub} title="MEMORY EXTREME RECALL" />
+        <HubChrome onBack={backToHub} title="EXTREME RECALL" />
         <div className="flex flex-wrap items-center gap-2 px-1">
           <label className="font-mono text-[10px] uppercase tracking-widest text-cyan/80">
             Length
@@ -146,11 +146,11 @@ export function ArcadeApp({
   if (play === "memory-gauntlet") {
     return (
       <div className="arcade-shell mx-auto flex w-full max-w-3xl flex-col gap-3 px-2 py-4">
-        <HubChrome onBack={backToHub} title="MEMORY EXTREME GAUNTLET" />
+        <HubChrome onBack={backToHub} title="EXTREME GAUNTLET" />
         <MemoryGauntlet
           reducedMotion={settings.reducedMotion}
           hp={11}
-          banner="MEMORY EXTREME GAUNTLET"
+          banner="EXTREME GAUNTLET"
           onOvercharge={() => undefined}
           onDamage={() => undefined}
           onComplete={(score) => {
