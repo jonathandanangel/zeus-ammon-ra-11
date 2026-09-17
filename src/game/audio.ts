@@ -1,4 +1,16 @@
 import type { AudioGenre } from "./types";
+import htBananzaBedAsset from "@/assets/ht-bananza-bed.mp3.asset.json";
+import htBananzaPortalAsset from "@/assets/ht-bananza-portal.mp3.asset.json";
+import htPortalBedAsset from "@/assets/ht-portal-bed.mp3.asset.json";
+import titleArmageddonAsset from "@/assets/title-armageddon.mp3.asset.json";
+import titlePortalAsset from "@/assets/title-portal.mp3.asset.json";
+
+const HT_BANANZA_BED_URL = htBananzaBedAsset.url;
+const HT_BANANZA_PORTAL_URL = htBananzaPortalAsset.url;
+const HT_PORTAL_BED_URL = htPortalBedAsset.url;
+const TITLE_ARMAGEDDON_URL = titleArmageddonAsset.url;
+const TITLE_PORTAL_URL = titlePortalAsset.url;
+const TITLE_CRYSTAL_VISTA_URL = "/audio/title-crystal-vista.mp3";
 
 export type SoundName =
   | "hover"
