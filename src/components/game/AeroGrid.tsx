@@ -46,6 +46,7 @@ import { TitleScreen } from "./TitleScreen";
 import { ValidationPanel } from "./ValidationPanel";
 import { VanityApp } from "./VanityApp";
 import { AiDetectorApp } from "./AiDetectorApp";
+import { WhoAmIApp } from "./WhoAmIApp";
 import { UniversityProjectsApp } from "./UniversityProjectsApp";
 import { WorldBackground } from "./WorldBackground";
 import { CyberChrome } from "./CyberChrome";
@@ -70,6 +71,7 @@ type Screen =
   | "numerical-extreme"
   | "vanity-app"
   | "ai-detector"
+  | "who-am-i"
   | "university-projects";
 type Mode =
   | "campaign"
@@ -85,6 +87,7 @@ type Mode =
   | "numerical-extreme"
   | "vanity-app"
   | "ai-detector"
+  | "who-am-i"
   | "university-projects";
 type Phase = "answering" | "revealed" | "recall";
 type IntermissionGame = "lightcycle" | "maze";
@@ -196,6 +199,7 @@ export function AeroGrid() {
       case "numerical-extreme":
       case "vanity-app":
       case "ai-detector":
+      case "who-am-i":
       case "university-projects":
         return [];
       case "mastery":
@@ -285,7 +289,7 @@ export function AeroGrid() {
     if (mode === "ht-intro" || mode === "ht-extreme") {
       return undefined;
     }
-    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "ai-detector" || mode === "university-projects" || mode === "spirit-bound") {
+    if (mode === "numerical-extreme" || mode === "vanity-app" || mode === "ai-detector" || mode === "who-am-i" || mode === "university-projects" || mode === "spirit-bound") {
       // Legend / Numerical / Vanity / AI Detector manage their own beds — no title or Extreme track.
       return undefined;
     }
@@ -848,6 +852,28 @@ export function AeroGrid() {
             setPsychedelicActive(false);
             setScreen("ai-detector");
           }}
+          onWhoAmI={() => {
+            audio.init();
+            audio.resume();
+            audio.stopTitlePlaylist();
+            audio.stopMusic();
+            setMode("who-am-i");
+            setReviewIds([]);
+            setLocalIndex(0);
+            setAnswer([]);
+            setPhase("answering");
+            setShowHint(false);
+            setExtremeScore(0);
+            setExtremeCorrectCount(0);
+            setV2Log([]);
+            setHtLog([]);
+            setHtiLog([]);
+            setPendingIntermission(null);
+            setGauntletRecovery(false);
+            setOverloadBurst(0);
+            setPsychedelicActive(false);
+            setScreen("who-am-i");
+          }}
           onUniversityProjects={() => {
             audio.init();
             audio.resume();
@@ -892,6 +918,8 @@ export function AeroGrid() {
       {screen === "vanity-app" && <VanityApp onMenu={() => setScreen("title")} />}
 
       {screen === "ai-detector" && <AiDetectorApp onMenu={() => setScreen("title")} />}
+
+      {screen === "who-am-i" && <WhoAmIApp onMenu={() => setScreen("title")} />}
 
       {screen === "university-projects" && (
         <UniversityProjectsApp onMenu={() => setScreen("title")} />
