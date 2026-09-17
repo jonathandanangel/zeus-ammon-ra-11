@@ -850,18 +850,27 @@ export function BabelSecretPanel({
     });
     setBooks(base);
 
-    // Idle local polish only (no network / neural) — typing & scroll stay smooth.
+    // Idle polish: light keep typing smooth (no SFX). Deferred ModernBERT pass bings when done
+    // (coin already on grimoire press — same Free multi-scan pairing).
     let cancelled = false;
-    const run = () => {
+    const runLight = () => {
       if (cancelled) return;
-      void quietlyPolishBabelBooks(base, { light: true }).then((polished) => {
+      void quietlyPolishBabelBooks(base, { light: true, sfx: false }).then((polished) => {
         if (!cancelled && polished.length) setBooks(polished);
       });
     };
-    const idleId = window.setTimeout(run, 900);
+    const runNeural = () => {
+      if (cancelled) return;
+      void quietlyPolishBabelBooks(base, { light: false, sfx: "end" }).then((polished) => {
+        if (!cancelled && polished.length) setBooks(polished);
+      });
+    };
+    const idleLight = window.setTimeout(runLight, 900);
+    const idleNeural = window.setTimeout(runNeural, 2200);
     return () => {
       cancelled = true;
-      window.clearTimeout(idleId);
+      window.clearTimeout(idleLight);
+      window.clearTimeout(idleNeural);
     };
   }, [
     begun,
@@ -1002,6 +1011,7 @@ export function BabelSecretPanel({
             type="button"
             onClick={() => {
               audio.openBabelGrimoire();
+              audio.play("detect-coin");
               setBegun(true);
             }}
             className="group relative max-w-sm overflow-hidden rounded-sm border-2 border-amber/60 bg-black/70 p-2 transition hover:border-amber hover:shadow-[0_0_32px_rgba(251,191,36,0.25)] focus:outline-none focus:ring-2 focus:ring-amber/50"
@@ -1025,7 +1035,8 @@ export function BabelSecretPanel({
           </button>
           <p className="font-mono text-[9px] text-muted-foreground">
             Hierarchy after open: grimoire → folio → babelia → hexagon → shelf (likelihood %).
-            Opening plays air + spirit archive tones (mute in Settings if needed).
+            Opening plays coin-flip SFX (same as Free multi-scan); polish ends with a bing. Mute in
+            Settings if needed.
           </p>
         </div>
       </Panel>

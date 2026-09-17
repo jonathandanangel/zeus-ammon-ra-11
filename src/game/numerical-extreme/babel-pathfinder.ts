@@ -27,6 +27,7 @@ import {
   pickBestRelevantProse,
   silentlyPickBestBabelProse,
 } from "./babel-writing-iq";
+import { audio } from "@/game/audio";
 
 /** Basile / Borges library alphabet — 29 glyphs. */
 export const BABEL_ALPHABET = "abcdefghijklmnopqrstuvwxyz, .";
@@ -1502,15 +1503,27 @@ export function generateBabelBooks(input: {
  * Background polish: re-locate leaf coherent islands using Writing IQ + AI checks
  * (prefer AI &lt; 10%). Silent — do not show scores in UI.
  * `light: true` skips neural models and only polishes the first leaf (typing/scroll safe).
+ * Same Free multi-scan SFX: coin at start, bing when finished (scoring unchanged).
  */
 export async function quietlyPolishBabelBooks(
   books: BabelGeneratedBook[],
-  opts?: { light?: boolean },
+  opts?: { light?: boolean; sfx?: boolean | "end" },
 ): Promise<BabelGeneratedBook[]> {
   if (!books.length) return books;
   const light = opts?.light !== false;
+  const sfxMode = opts?.sfx === false ? "off" : opts?.sfx === "end" ? "end" : "full";
   const out: BabelGeneratedBook[] = [];
   const booksToTouch = light ? books.slice(0, 1) : books;
+
+  if (sfxMode === "full") {
+    try {
+      audio.init();
+      audio.resume();
+      audio.play("detect-coin");
+    } catch {
+      /* audio optional */
+    }
+  }
 
   const yieldMain = () =>
     new Promise<void>((resolve) => {
@@ -1521,59 +1534,68 @@ export async function quietlyPolishBabelBooks(
       else window.setTimeout(() => resolve(), 0);
     });
 
-  for (const book of booksToTouch) {
-    const pages: BabelBookPage[] = [...book.pages];
-    const leafLimit = light ? Math.min(1, pages.length) : Math.min(3, pages.length);
+  try {
+    for (const book of booksToTouch) {
+      const pages: BabelBookPage[] = [...book.pages];
+      const leafLimit = light ? Math.min(1, pages.length) : Math.min(3, pages.length);
 
-    for (let i = 0; i < leafLimit; i += 1) {
-      await yieldMain();
-      const leaf = pages[i]!;
-      const parts = [
-        leaf.title.replace(/^\d+%\s*·\s*/, ""),
-        leaf.excerpt,
-        ...leaf.highlight.map((h) => h.word).slice(0, 6),
-      ];
-      const candidates = babelProseCandidates(parts).slice(0, 3);
-      const bodyPad = leaf.bodyText
-        .split("\n")
-        .filter((l) => l.trim().length > 40 && !l.startsWith("["))
-        .slice(0, 3)
-        .join(" ");
-      const padded = candidates.map((c) => `${c} ${bodyPad}`.trim());
+      for (let i = 0; i < leafLimit; i += 1) {
+        await yieldMain();
+        const leaf = pages[i]!;
+        const parts = [
+          leaf.title.replace(/^\d+%\s*·\s*/, ""),
+          leaf.excerpt,
+          ...leaf.highlight.map((h) => h.word).slice(0, 6),
+        ];
+        const candidates = babelProseCandidates(parts).slice(0, 3);
+        const bodyPad = leaf.bodyText
+          .split("\n")
+          .filter((l) => l.trim().length > 40 && !l.startsWith("["))
+          .slice(0, 3)
+          .join(" ");
+        const padded = candidates.map((c) => `${c} ${bodyPad}`.trim());
 
-      let coherent = candidates[0] ?? leaf.excerpt;
-      try {
-        coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
-          neural: light ? "none" : "modernbert",
-          localOnly: light,
-          maxCandidates: light ? 2 : 3,
-        });
-      } catch {
-        coherent = pickBestRelevantProse(parts, 4).prose || leaf.excerpt;
+        let coherent = candidates[0] ?? leaf.excerpt;
+        try {
+          coherent = await silentlyPickBestBabelProse(padded.length ? padded : candidates, {
+            neural: light ? "none" : "modernbert",
+            localOnly: light,
+            maxCandidates: light ? 2 : 3,
+          });
+        } catch {
+          coherent = pickBestRelevantProse(parts, 4).prose || leaf.excerpt;
+        }
+
+        const woven = weaveBabelPageText(
+          coherent,
+          book.pathNumber,
+          `${book.id}-polish-${i}`,
+          leaf.accuracy,
+        );
+        const page = pageFromWovenText(
+          woven,
+          book.pathNumber,
+          [book.seedWord, ...leaf.highlight.map((h) => h.word)],
+          coherent.slice(0, 200),
+        );
+        pages[i] = { ...leaf, page, excerpt: leaf.excerpt };
       }
 
-      const woven = weaveBabelPageText(
-        coherent,
-        book.pathNumber,
-        `${book.id}-polish-${i}`,
-        leaf.accuracy,
-      );
-      const page = pageFromWovenText(
-        woven,
-        book.pathNumber,
-        [book.seedWord, ...leaf.highlight.map((h) => h.word)],
-        coherent.slice(0, 200),
-      );
-      pages[i] = { ...leaf, page, excerpt: leaf.excerpt };
+      out.push({ ...book, pages });
     }
 
-    out.push({ ...book, pages });
+    // Keep remaining books untouched
+    for (let i = booksToTouch.length; i < books.length; i += 1) {
+      out.push(books[i]!);
+    }
+    return out;
+  } finally {
+    if (sfxMode !== "off") {
+      try {
+        audio.play("detect-bing");
+      } catch {
+        /* audio optional */
+      }
+    }
   }
-
-  // Keep remaining books untouched
-  for (let i = booksToTouch.length; i < books.length; i += 1) {
-    out.push(books[i]!);
-  }
-
-  return out;
 }
