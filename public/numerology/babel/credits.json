@@ -3,6 +3,16 @@
   "note": "Faithful reproductions of 2D public-domain works (Wikimedia Commons / PD-Art). Used as atmosphere for the NUMEROLOGY Babel Secret Library.",
   "works": [
     {
+      "id": "retro-grimoire",
+      "src": "/numerology/babel/retro-grimoire.png",
+      "title": "Retro Grimoire (pixel)",
+      "artist": "Path hexagon press · ZEUS",
+      "year": "—",
+      "medium": "Pixel art tome",
+      "collection": "Babel Secret Library entry ritual",
+      "credit": "Press-to-begin cover with Babel-alphabet caption"
+    },
+    {
       "id": "bruegel-vienna",
       "src": "/numerology/babel/bruegel-vienna.jpg",
       "title": "The Tower of Babel (Vienna)",

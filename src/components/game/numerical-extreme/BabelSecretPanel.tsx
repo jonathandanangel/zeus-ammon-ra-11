@@ -9,11 +9,14 @@ import {
 import {
   BABEL_ARTWORK,
   OFFICIAL_BABEL,
+  RETRO_GRIMOIRE_SRC,
+  composeGrimoireWithBabelText,
   downloadDataUrl,
   formatBabelFindReport,
   generateBabelBooks,
   locateBabelImages,
   searchBabelSecrets,
+  toBabelCaption,
   type BabelGeneratedBook,
   type BabelLibraryReport,
   type BabelLocatedImage,
@@ -137,16 +140,21 @@ function BookReader({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
         <figure className="overflow-hidden rounded-sm border border-amber/35 bg-black/50">
-          <img
-            src={images.find((i) => i.style === "folio")?.dataUrl || book.coverArt.src}
+            <img
+            src={images.find((i) => i.style === "grimoire")?.dataUrl ||
+              images.find((i) => i.style === "folio")?.dataUrl ||
+              book.coverArt.src}
             alt={book.coverArt.title}
-            className="h-48 w-full object-cover sm:h-full sm:min-h-[200px]"
+            className="h-48 w-full object-contain sm:h-full sm:min-h-[200px]"
+            style={{ imageRendering: "pixelated" }}
             loading="lazy"
           />
           <figcaption className="px-2 py-1.5 font-mono text-[8px] leading-snug text-muted-foreground">
-            {images.find((i) => i.style === "folio")
-              ? "Located folio cover · path seed"
-              : `${book.coverArt.artist} · ${book.coverArt.year}`}
+            {images.find((i) => i.style === "grimoire")
+              ? "Retro grimoire · most likely"
+              : images.find((i) => i.style === "folio")
+                ? "Located folio cover · path seed"
+                : `${book.coverArt.artist} · ${book.coverArt.year}`}
           </figcaption>
         </figure>
         <div className="space-y-2">
@@ -221,30 +229,45 @@ function BookReader({
       {images.length > 0 && (
         <div className="space-y-2">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-amber">
-            Located images · babelia-style (deterministic from your word)
+            Image hierarchy · most likely → least likely
           </p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {images.map((img) => (
-              <figure
-                key={img.id}
-                className="overflow-hidden rounded-sm border border-cyan/25 bg-black/50"
-              >
-                <img src={img.dataUrl} alt={img.title} className="w-full object-cover" />
-                <figcaption className="space-y-1 px-2 py-1.5">
-                  <p className="font-mono text-[10px] text-cyan">{img.title}</p>
-                  <p className="font-mono text-[8px] text-muted-foreground">{img.address}</p>
-                  <button
-                    type="button"
-                    className="font-mono text-[8px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
-                    onClick={() =>
-                      downloadDataUrl(img.dataUrl, `babel-${img.style}-${book.seedWord}.png`)
-                    }
-                  >
-                    Download PNG
-                  </button>
-                </figcaption>
-              </figure>
-            ))}
+          <div className="space-y-2">
+            {[...images]
+              .sort((a, b) => b.likelihood - a.likelihood)
+              .map((img, rank) => (
+                <figure
+                  key={img.id}
+                  className="overflow-hidden rounded-sm border border-cyan/25 bg-black/50"
+                  style={{
+                    opacity: Math.max(0.55, 1 - rank * 0.08),
+                  }}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan/15 px-2 py-1.5">
+                    <p className="font-mono text-[10px] text-cyan">
+                      #{rank + 1} · {img.likelihood}% · {img.title}
+                    </p>
+                    <p className="font-mono text-[8px] text-amber">{img.likelihoodWhy}</p>
+                  </div>
+                  <img
+                    src={img.dataUrl}
+                    alt={img.title}
+                    className="mx-auto max-h-64 w-auto object-contain"
+                    style={img.style === "grimoire" ? { imageRendering: "pixelated" } : undefined}
+                  />
+                  <figcaption className="space-y-1 px-2 py-1.5">
+                    <p className="font-mono text-[8px] text-muted-foreground">{img.address}</p>
+                    <button
+                      type="button"
+                      className="font-mono text-[8px] uppercase tracking-[0.12em] text-amber underline-offset-2 hover:underline"
+                      onClick={() =>
+                        downloadDataUrl(img.dataUrl, `babel-${img.style}-${book.seedWord}.png`)
+                      }
+                    >
+                      Download PNG
+                    </button>
+                  </figcaption>
+                </figure>
+              ))}
           </div>
         </div>
       )}
@@ -322,6 +345,8 @@ export function BabelSecretPanel({
   const [bookIdx, setBookIdx] = React.useState(0);
   const [pageIdx, setPageIdx] = React.useState(0);
   const [showFinds, setShowFinds] = React.useState(true);
+  const [begun, setBegun] = React.useState(false);
+  const [grimoireUrl, setGrimoireUrl] = React.useState(RETRO_GRIMOIRE_SRC);
 
   const report: BabelLibraryReport | null = React.useMemo(() => {
     if (!sourcesReady) return null;
@@ -368,15 +393,38 @@ export function BabelSecretPanel({
   React.useEffect(() => {
     setBookIdx(0);
     setPageIdx(0);
-    setArtIdx(Math.abs(result.number - 1) % BABEL_ARTWORK.length);
+    setBegun(false);
+    setArtIdx(0);
   }, [result.number, result.normalized]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const snippet = [
+      result.normalized,
+      result.title,
+      ...(secretPassages[0]?.matched.slice(0, 2) ?? []),
+      ...(mythPassages[0]?.matched.slice(0, 2) ?? []),
+    ].join(" ");
+    void composeGrimoireWithBabelText({
+      seedWord: result.normalized,
+      pathNumber: result.number,
+      colorHex: result.philosophy.geometry.hex,
+      colorName: result.philosophy.geometry.colorName,
+      babelSnippet: snippet,
+    }).then((url) => {
+      if (!cancelled) setGrimoireUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [result, secretPassages, mythPassages]);
 
   const activeBook = books[bookIdx] ?? null;
   const hero = BABEL_ARTWORK[artIdx] ?? BABEL_ARTWORK[0]!;
 
   const bookImages: BabelLocatedImage[] = React.useMemo(() => {
     if (!activeBook) return [];
-    return locateBabelImages({
+    const located = locateBabelImages({
       seedWord: activeBook.seedWord,
       pathNumber: activeBook.pathNumber,
       colorHex: activeBook.colorHex,
@@ -388,8 +436,29 @@ export function BabelSecretPanel({
         ...activeBook.combination,
         ...activeBook.pages.slice(0, 6).map((p) => p.title.replace(/^.*·\s*/, "")),
       ],
+      sourceHits: {
+        johnson: johnsonWord || johnsonWord1773 ? 2 : 0,
+        doctrine: secretPassages.length,
+        myth: mythPassages.length,
+        philosophy: result.philosophy.thoughts.length,
+      },
     });
-  }, [activeBook]);
+    return located.map((img) =>
+      img.style === "grimoire" ? { ...img, dataUrl: grimoireUrl } : img,
+    );
+  }, [
+    activeBook,
+    grimoireUrl,
+    johnsonWord,
+    johnsonWord1773,
+    secretPassages.length,
+    mythPassages.length,
+    result.philosophy.thoughts.length,
+  ]);
+
+  const babelPressLine = toBabelCaption(
+    `${result.normalized}, ${result.title}. path ${result.number}.`,
+  );
 
   function downloadAll() {
     if (!report) return;
@@ -422,15 +491,58 @@ export function BabelSecretPanel({
     );
   }
 
+  if (!begun) {
+    return (
+      <Panel title="Babel Secret Library" eyebrow="PRESS THE GRIMOIRE · BABEL FONT">
+        <div className="flex flex-col items-center gap-4 py-2">
+          <p className="max-w-xl text-center font-mono text-[10px] leading-relaxed text-amber">
+            Most likely image for this path sits on top once opened. Press the retro book to begin —
+            Babel-alphabet caption under the pentagram (Courier press · a–z , . space).
+          </p>
+          <button
+            type="button"
+            onClick={() => setBegun(true)}
+            className="group relative max-w-sm overflow-hidden rounded-sm border-2 border-amber/60 bg-black/70 p-2 transition hover:border-amber hover:shadow-[0_0_32px_rgba(251,191,36,0.25)] focus:outline-none focus:ring-2 focus:ring-amber/50"
+            aria-label="Press the grimoire to begin the Babel Secret Library"
+          >
+            <img
+              src={grimoireUrl}
+              alt="Retro grimoire — press to begin"
+              className="mx-auto w-full max-w-[280px] transition group-hover:scale-[1.02]"
+              style={{ imageRendering: "pixelated" }}
+            />
+            <span
+              className="mt-2 block rounded-sm border border-amber/40 bg-black/80 px-3 py-2 text-center font-mono text-[11px] leading-relaxed tracking-wide text-amber"
+              style={{ fontFamily: '"Courier New", Courier, monospace' }}
+            >
+              {babelPressLine || toBabelCaption(result.normalized)}
+              <span className="mt-1 block text-[9px] uppercase tracking-[0.2em] text-moon/80">
+                path {result.number} · press to begin
+              </span>
+            </span>
+          </button>
+          <p className="font-mono text-[9px] text-muted-foreground">
+            Hierarchy after open: grimoire → folio → babelia → hexagon → shelf (likelihood %).
+          </p>
+        </div>
+      </Panel>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <Panel
         title="Babel Secret Library"
         eyebrow="NUMEROLOGY · locate · do not invent · amber = source matches"
         action={
-          <RunButton type="button" onClick={downloadAll}>
-            Download JSON
-          </RunButton>
+          <div className="flex flex-wrap gap-1.5">
+            <GhostButton type="button" onClick={() => setBegun(false)}>
+              Close grimoire
+            </GhostButton>
+            <RunButton type="button" onClick={downloadAll}>
+              Download JSON
+            </RunButton>
+          </div>
         }
       >
         <div className="space-y-3">

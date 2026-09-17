@@ -210,7 +210,10 @@ export type {
 
 export {
   locateBabelImages,
+  composeGrimoireWithBabelText,
+  toBabelCaption,
   downloadDataUrl,
+  RETRO_GRIMOIRE_SRC,
 } from "./babel-images";
 export type { BabelImageStyle, BabelLocatedImage } from "./babel-images";
 

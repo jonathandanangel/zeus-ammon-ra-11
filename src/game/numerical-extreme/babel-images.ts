@@ -9,7 +9,7 @@
 
 import { OFFICIAL_BABEL } from "./babel-pathfinder";
 
-export type BabelImageStyle = "hexagon" | "babelia" | "folio" | "shelf";
+export type BabelImageStyle = "hexagon" | "babelia" | "folio" | "shelf" | "grimoire";
 
 export type BabelLocatedImage = {
   id: string;
@@ -25,7 +25,13 @@ export type BabelLocatedImage = {
   colorHex: string;
   officialBabelia: string;
   note: string;
+  /** 0–100 · most likely matches for this word/path rank higher (UI: top → bottom). */
+  likelihood: number;
+  likelihoodWhy: string;
 };
+
+/** Pixel grimoire cover shipped for the Babel entry ritual. */
+export const RETRO_GRIMOIRE_SRC = "/numerology/babel/retro-grimoire.png";
 
 function hashSeed(s: string): number {
   let h = 2166136261;
@@ -297,12 +303,97 @@ export type LocateBabelImagesInput = {
   combination: string[];
   /** Optional extra titles for shelf spines */
   spineTitles?: string[];
+  /** Optional Johnson / doctrine / myth hit counts boost likelihood. */
+  sourceHits?: {
+    johnson?: number;
+    doctrine?: number;
+    myth?: number;
+    philosophy?: number;
+  };
 };
 
+function likelihoodForStyle(
+  style: BabelImageStyle,
+  input: LocateBabelImagesInput,
+): { score: number; why: string } {
+  const hits = input.sourceHits ?? {};
+  const wordLen = input.seedWord.replace(/[^a-z]/gi, "").length;
+  const comboN = input.combination.length;
+  const path = input.pathNumber;
+
+  switch (style) {
+    case "grimoire":
+      // Always the most likely “true book” for occult/numerology paths
+      return {
+        score: Math.min(
+          99,
+          88 + (hits.doctrine ?? 0) * 2 + (hits.philosophy ?? 0) + (path === 5 || path === 7 ? 4 : 0),
+        ),
+        why: "Retro grimoire · strongest match for path lore & occult sources",
+      };
+    case "folio":
+      return {
+        score: Math.min(92, 70 + comboN * 2 + (hits.johnson ?? 0) * 3),
+        why: "Located folio cover · title + combination seed",
+      };
+    case "babelia":
+      return {
+        score: Math.min(85, 55 + wordLen * 2 + (hits.myth ?? 0) * 3),
+        why: "Babelia plate · letter-seed noise (Basile image archive idea)",
+      };
+    case "hexagon":
+      return {
+        score: Math.min(78, 48 + path * 2 + (hits.doctrine ?? 0)),
+        why: "Hexagonal gallery · Borges library geometry",
+      };
+    case "shelf":
+      return {
+        score: Math.min(70, 40 + comboN * 3),
+        why: "Shelf spines · combination tokens as volumes",
+      };
+    default:
+      return { score: 30, why: "Lower-likelihood plate" };
+  }
+}
+
+function renderGrimoirePlate(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  w: number,
+  h: number,
+  babelLine: string,
+  pathLine: string,
+  rgb: { r: number; g: number; b: number },
+) {
+  ctx.fillStyle = "#0a0610";
+  ctx.fillRect(0, 0, w, h);
+  // pixel-crisp draw of the retro book
+  const scale = Math.min((w - 24) / img.width, (h - 72) / img.height);
+  const dw = img.width * scale;
+  const dh = img.height * scale;
+  const dx = (w - dw) / 2;
+  const dy = 12;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, dx, dy, dw, dh);
+
+  // Babel-font strip (monospace = 29-letter press feel)
+  ctx.fillStyle = "rgba(0,0,0,0.72)";
+  ctx.fillRect(0, h - 64, w, 64);
+  ctx.strokeStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},0.85)`;
+  ctx.strokeRect(6, h - 58, w - 12, 52);
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "bold 11px Courier New, Courier, monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(babelLine.slice(0, 42), w / 2, h - 36);
+  ctx.fillStyle = "#e2e8f0";
+  ctx.font = "10px Courier New, Courier, monospace";
+  ctx.fillText(pathLine.slice(0, 48), w / 2, h - 16);
+  ctx.textAlign = "left";
+}
+
 /**
- * Locate (generate) a set of Babelia-style images for a word/book.
- * Requires a browser canvas — returns empty dataUrl if Offscreen unavailable
- * and document is missing (SSR).
+ * Locate (generate) Babelia-style images ranked by likelihood (high → low).
+ * Grimoire composites the retro pixel book + Babel-alphabet caption.
  */
 export function locateBabelImages(input: LocateBabelImagesInput): BabelLocatedImage[] {
   if (typeof document === "undefined") return [];
@@ -311,13 +402,35 @@ export function locateBabelImages(input: LocateBabelImagesInput): BabelLocatedIm
     `${input.pathNumber}|${input.seedWord}|${input.bookTitle}|${input.combination.join(",")}|babelia`,
   );
   const rgb = parseHex(input.colorHex);
-  const styles: BabelImageStyle[] = ["hexagon", "babelia", "folio", "shelf"];
+  const styles: BabelImageStyle[] = ["grimoire", "folio", "babelia", "hexagon", "shelf"];
   const out: BabelLocatedImage[] = [];
 
+  // Sync path: grimoire uses static URL until async composite is ready (UI may replace).
   for (let i = 0; i < styles.length; i += 1) {
     const style = styles[i]!;
     const seed = (baseSeed + i * 9973) >>> 0;
     const rand = mulberry32(seed);
+    const { score, why } = likelihoodForStyle(style, input);
+
+    if (style === "grimoire") {
+      out.push({
+        id: `grimoire-${seed.toString(16)}`,
+        style,
+        title: "Retro grimoire · press to open",
+        address: addressFromSeed(seed, input.pathNumber),
+        seedDigest: seed.toString(16),
+        width: 360,
+        height: 420,
+        dataUrl: RETRO_GRIMOIRE_SRC,
+        colorHex: input.colorHex,
+        officialBabelia: OFFICIAL_BABEL.babelia,
+        note: "Pixel grimoire with Babel-alphabet caption — most likely image for this path.",
+        likelihood: score,
+        likelihoodWhy: why,
+      });
+      continue;
+    }
+
     const w = style === "folio" ? 320 : 360;
     const h = style === "folio" ? 440 : style === "shelf" ? 220 : 280;
     const canvas = document.createElement("canvas");
@@ -374,12 +487,59 @@ export function locateBabelImages(input: LocateBabelImagesInput): BabelLocatedIm
       officialBabelia: OFFICIAL_BABEL.babelia,
       note:
         style === "babelia"
-          ? "Deterministic plate from your word/combination seed — same idea as babelia.libraryofbabel.info (locate, don’t invent)."
-          : "Located from path colour + seed; antique Bruegel/Kircher/Doré plates remain in the gallery above.",
+          ? "Deterministic plate from your word/combination seed — same idea as babelia.libraryofbabel.info."
+          : "Located from path colour + seed.",
+      likelihood: score,
+      likelihoodWhy: why,
     });
   }
 
-  return out;
+  return out.sort((a, b) => b.likelihood - a.likelihood);
+}
+
+/** Async: stamp Babel text onto the retro grimoire (pixel-perfect). */
+export function composeGrimoireWithBabelText(input: {
+  seedWord: string;
+  pathNumber: number;
+  colorHex: string;
+  colorName: string;
+  babelSnippet: string;
+}): Promise<string> {
+  if (typeof document === "undefined") return Promise.resolve(RETRO_GRIMOIRE_SRC);
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      const w = 360;
+      const h = 420;
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(RETRO_GRIMOIRE_SRC);
+        return;
+      }
+      const rgb = parseHex(input.colorHex);
+      const babelLine = toBabelCaption(input.babelSnippet || input.seedWord);
+      const pathLine = `path ${input.pathNumber} · ${input.colorName} · press to begin`;
+      renderGrimoirePlate(ctx, img, w, h, babelLine, pathLine, rgb);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(RETRO_GRIMOIRE_SRC);
+    img.src = RETRO_GRIMOIRE_SRC;
+  });
+}
+
+/** Collapse to Basile’s 29-letter press (a–z, space, comma, period). */
+export function toBabelCaption(raw: string): string {
+  return [...raw.toLowerCase()]
+    .map((ch) => (/[a-z, .]/.test(ch) ? ch : " "))
+    .join("")
+    .replace(/ +/g, " ")
+    .trim()
+    .slice(0, 64);
 }
 
 export function downloadDataUrl(dataUrl: string, filename: string) {

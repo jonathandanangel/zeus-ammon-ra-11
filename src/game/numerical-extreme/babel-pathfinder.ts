@@ -713,8 +713,16 @@ export type BabelArtwork = {
   credit: string;
 };
 
-/** Local antique plates shipped under /numerology/babel/. */
+/** Local antique + retro plates shipped under /numerology/babel/. */
 export const BABEL_ARTWORK: BabelArtwork[] = [
+  {
+    id: "retro-grimoire",
+    src: "/numerology/babel/retro-grimoire.png",
+    title: "Retro Grimoire (pixel)",
+    artist: "Path hexagon press · ZEUS",
+    year: "—",
+    credit: "Entry tome for Babel Secret Library",
+  },
   {
     id: "bruegel-vienna",
     src: "/numerology/babel/bruegel-vienna.jpg",
