@@ -413,11 +413,11 @@ export function TitleScreen(p: TitleScreenProps) {
                     ))}
                 </div>
                 {section.id === "system" ? (
-                  <div className="mt-10 max-w-md space-y-4">
+                  <div className="mt-10 max-w-md space-y-4 text-center sm:max-w-none">
                     <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
                       Very bright and vibrant be warned.
                     </p>
-                    <div className="flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <div className="mx-auto flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                       <span>WOZKAF</span>
                       <span>Jonathan Angel</span>
                     </div>
