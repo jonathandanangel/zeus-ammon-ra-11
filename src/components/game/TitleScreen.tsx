@@ -341,7 +341,7 @@ export function TitleScreen(p: TitleScreenProps) {
             data-scroll-hint
             className="zeus-scroll-hint mt-10 font-mono text-[11px] uppercase tracking-[0.35em] text-amber outline-none"
             onClick={() =>
-              document.getElementById("zeus-modes")?.scrollIntoView({ behavior: "smooth", block: "start" })
+              document.getElementById("zeus-modes")?.scrollIntoView({ behavior: "instant", block: "start" })
             }
           >
             Rise ↓
@@ -412,20 +412,21 @@ export function TitleScreen(p: TitleScreenProps) {
                       </button>
                     ))}
                 </div>
+                {section.id === "system" ? (
+                  <div className="mt-10 max-w-md space-y-4">
+                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      Very bright and vibrant be warned.
+                    </p>
+                    <div className="flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <span>WOZKAF</span>
+                      <span>Jonathan Angel</span>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>
         ))}
-
-        <div className="zeus-snap-slide zeus-topic-slide flex min-h-[40dvh] flex-col items-center justify-center gap-4 pb-16">
-          <p className="mx-auto max-w-md text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
-            Very bright and vibrant be warned.
-          </p>
-          <div className="flex w-full max-w-sm justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            <span>WOZKAF</span>
-            <span>Jonathan Angel</span>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -2244,16 +2244,17 @@
   animation: zeus-landing-in 0.85s ease both;
 }
 
-/* Same sections + wording — full-bleed topic frames, seamless scroll */
+/* Same sections + wording — full-bleed topic frames, snappy scroll */
 .zeus-landing-snap {
-  scroll-snap-type: y proximity;
-  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: auto;
   overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .zeus-snap-slide {
   scroll-snap-align: start;
-  scroll-snap-stop: normal;
+  scroll-snap-stop: always;
 }
 
 .zeus-topic-slide {
